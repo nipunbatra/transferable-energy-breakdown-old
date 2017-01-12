@@ -25,11 +25,11 @@ from features import feature_map
 import subprocess
 
 
-out_overall = pickle.load(open('../../data/input/all_regions.pkl', 'r'))
+out_overall = pickle.load(open('../create_dataset/metadata/all_regions_years.pkl', 'r'))
 
 region = "SanDiego"
 
-df = out_overall[region]
+df = out_overall[2014][region]
 
 df_copy = df.copy()
 #drop_rows_having_no_data
@@ -76,24 +76,25 @@ for appliance in ['hvac','fridge']:
     from copy import deepcopy
     all_cols = deepcopy(appliance_cols)
     all_cols.extend(aggregate_cols)
+    for num_homes in range(4, len(df), 4):
 
-    for home in X_matrix.index:
-        OFILE = "%s/%s_%d.out" % (SLURM_OUT, appliance, home)
-        EFILE = "%s/%s_%d.err" % (SLURM_OUT, appliance, home)
-        SLURM_SCRIPT = "%s_%d.pbs" %(appliance, home)
-        CMD = 'python both_regions_dd.py %s %d %d %d' %(appliance, home, home_var, case)
-        lines = []
-        lines.append("#!/bin/sh\n")
-        lines.append('#SBATCH --time=0-01:0:00\n')
-        lines.append('#SBATCH --mem=16\n')
-        lines.append('#SBATCH -o '+'"' +OFILE+'"\n')
-        lines.append('#SBATCH -e '+'"' +EFILE+'"\n')
-        lines.append(CMD+'\n')
+        for home in X_matrix.index:
+            OFILE = "%s/%s_%d.out" % (SLURM_OUT, appliance, home)
+            EFILE = "%s/%s_%d.err" % (SLURM_OUT, appliance, home)
+            SLURM_SCRIPT = "%s_%d.pbs" %(appliance, home)
+            CMD = 'python both_regions_dd_test_region_curve.py %s %d %d %d %d' %(appliance, home, home_var, case, num_homes)
+            lines = []
+            lines.append("#!/bin/sh\n")
+            lines.append('#SBATCH --time=0-01:0:00\n')
+            lines.append('#SBATCH --mem=16\n')
+            lines.append('#SBATCH -o '+'"' +OFILE+'"\n')
+            lines.append('#SBATCH -e '+'"' +EFILE+'"\n')
+            lines.append(CMD+'\n')
 
-        with open(SLURM_SCRIPT, 'w') as f:
-           f.writelines(lines)
-        command = ['sbatch', SLURM_SCRIPT]
-        time.sleep(2)
-        print Popen(command)
-    print "Now sleeping..."
+            with open(SLURM_SCRIPT, 'w') as f:
+               f.writelines(lines)
+            command = ['sbatch', SLURM_SCRIPT]
+            time.sleep(2)
+            print Popen(command)
+        print "Now sleeping..."
 

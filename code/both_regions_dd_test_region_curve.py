@@ -19,11 +19,16 @@ sys.path.append("../../code")
 from features import feature_map
 
 
-def _save_results(case, appliance, lat, feature_comb, test_home, pred_df):
+base_path =os.path.expanduser("~/transfer")
+
+def _save_results(num_homes, case, appliance, lat, feature_comb, test_home, pred_df):
+    directory_path = os.path.join(base_path, str(num_homes))
+    if not os.path.exists(os.path.join(directory_path)):
+        os.makedirs(directory_path)
     if ALL_HOMES:
-        pred_df.to_csv(os.path.expanduser("~/collab_all_homes_both_regions/%d_%s_%d_%s_%d.csv" %(case, appliance, lat, '_'.join(feature_comb), test_home)))
+        pred_df.to_csv(os.path.expanduser("%s/%d/%d_%s_%d_%s_%d.csv" %(base_path, num_homes, case, appliance, lat, '_'.join(feature_comb), test_home)))
     else:
-        pred_df.to_csv(os.path.expanduser("~/collab_subset_both_regions/%d_%s_%d_%s_%d.csv" %(case, appliance, lat, '_'.join(feature_comb), test_home)))
+        pred_df.to_csv(os.path.expanduser("%s/%d/%d_%s_%d_%s_%d.csv" %(base_path, num_homes, case, appliance, lat, '_'.join(feature_comb), test_home)))
 
 out_overall = pickle.load(open('../create_dataset/metadata/all_regions_years.pkl', 'r'))
 
@@ -57,11 +62,16 @@ dds = {'Austin':[x/747.0 for x in [0, 16, 97, 292, 438, 579, 724, 747, 617, 376,
 dd_keys = ['dd_'+str(x) for x in range(1,13)]
 
 
-appliance, test_home, ALL_HOMES, case = sys.argv[1:]
+appliance, test_home, ALL_HOMES, case, num_homes_test_region = sys.argv[1:]
 test_home = int(test_home)
 ALL_HOMES =bool(int(ALL_HOMES))
 case = int(case)
+num_homes_test_region = int(num_homes_test_region)
 
+all_homes_but_test = np.setdiff1d(sd_df.index.values, test_home)
+
+sd_df = pd.concat([sd_df.ix[[test_home]], sd_df.ix[all_homes_but_test].head(num_homes_test_region)])
+sd_dfc = pd.concat([sd_dfc.ix[[test_home]], sd_dfc.ix[all_homes_but_test].head(num_homes_test_region)])
 
 if case==1:
     df = sd_df
@@ -173,6 +183,6 @@ for feature_comb in np.array(feature_combinations)[:max_f]:
             pred_df.index = X_normalised.index
             out[tuple(feature_comb)][lat] = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
             pred_df = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
-            _save_results(case, appliance, lat, feature_comb, test_home, pred_df)
+            _save_results(num_homes_test_region, case, appliance, lat, feature_comb, test_home, pred_df)
         except Exception, e:
             print "Exception occurred", e

@@ -140,8 +140,10 @@ def preprocess(df, dfc, appliance):
 
     all_cols = deepcopy(appliance_cols)
     all_cols.extend(aggregate_cols)
+
     #X_matrix = dfc[all_cols].dropna()
-    X_matrix = dfc[all_cols].ix[dfc[appliance_cols].dropna().index]
+    #X_matrix = dfc[all_cols].ix[dfc[appliance_cols].dropna().index]
+    X_matrix =dfc.copy()
     columns_max = {}
     columns_min = {}
     col_max = X_matrix.max()
