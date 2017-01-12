@@ -77,6 +77,9 @@ for appliance in ['hvac','fridge']:
     all_cols = deepcopy(appliance_cols)
     all_cols.extend(aggregate_cols)
     for num_homes in range(4, len(df), 4):
+        print "*" * 40
+        print num_homes, appliance
+        print "*"*40
 
         for home in X_matrix.index:
             OFILE = "%s/%s_%d.out" % (SLURM_OUT, appliance, home)
