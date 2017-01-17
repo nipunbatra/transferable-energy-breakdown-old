@@ -1,6 +1,6 @@
-from common_functions import  create_region_df
+from common_functions import create_region_df
 from copy import deepcopy
-import  numpy as np
+import numpy as np
 
 REGIONS = ['SanDiego','Austin']
 APPLIANCES = ['hvac','fridge']
