@@ -9,6 +9,8 @@
 
 from matrix_factorisation import nmf_features, transform, transform_2, \
     preprocess, get_static_features, get_static_features_region_level
+
+from common_functions import create_region_df
 import  os
 
 import numpy as np
@@ -34,31 +36,9 @@ def _save_results(num_homes, case, appliance, lat, feature_comb, test_home, pred
     csv_path = create_file_store_path(base_path, num_homes, case, appliance, lat, feature_comb, test_home)
     pred_df.to_csv(csv_path)
 
-out_overall = pickle.load(open('../create_dataset/metadata/all_regions_years.pkl', 'r'))
 
 
-def create_region_df(region, year=2014):
-    df = out_overall[year][region]
 
-    df_copy = df.copy()
-    #drop_rows_having_no_data
-    o = {}
-    for h in df.index:
-        o[h]=len(df.ix[h][feature_map['Monthly']].dropna())
-    num_features_ser = pd.Series(o)
-    drop_rows = num_features_ser[num_features_ser==0].index
-
-    df = df.drop(drop_rows)
-    dfc = df.copy()
-
-
-    df = df.rename(columns={'house_num_rooms':'num_rooms',
-                            'num_occupants':'total_occupants',
-                            'difference_ratio_min_max':'ratio_difference_min_max'})
-    return df, dfc
-
-aus_df, aus_dfc = create_region_df("Austin")
-sd_df, sd_dfc = create_region_df("SanDiego")
 
 dds = {'Austin':[x/747.0 for x in [0, 16, 97, 292, 438, 579, 724, 747, 617, 376, 122, 46]],
        'SanDiego':[x/747.0 for x in [67, 92, 219, 183, 135, 272, 392, 478, 524, 451, 118, 32]]}
@@ -72,10 +52,25 @@ ALL_HOMES =bool(int(ALL_HOMES))
 case = int(case)
 num_homes_test_region = int(num_homes_test_region)
 
+aus_df, aus_dfc = create_region_df("Austin")
+sd_df, sd_dfc = create_region_df("SanDiego")
+
+from test_homes import valid_homes_data
+austin_valid_homes = valid_homes_data['Austin'][appliance]
+sd_valid_homes = valid_homes_data['SanDiego'][appliance]
+
+aus_df = aus_df.ix[austin_valid_homes]
+aus_dfc = aus_dfc.ix[austin_valid_homes]
+
+sd_df = sd_df.ix[sd_valid_homes]
+sd_dfc = sd_dfc.ix[sd_valid_homes]
+
 all_homes_but_test = np.setdiff1d(sd_df.index.values, test_home)
 
 sd_df = pd.concat([sd_df.ix[[test_home]], sd_df.ix[all_homes_but_test].head(num_homes_test_region)])
 sd_dfc = pd.concat([sd_dfc.ix[[test_home]], sd_dfc.ix[all_homes_but_test].head(num_homes_test_region)])
+
+
 
 if case==1:
     df = sd_df
@@ -166,7 +161,7 @@ for feature_comb in np.array(feature_combinations)[:max_f]:
             idx_user[fe]=np.where(static_features_df[fe].notnull())[0]
             data_user[fe]=static_features_df[fe].dropna().values
 
-    for lat in range(1,10):
+    for lat in range(1,6):
         try:
             print lat
 
@@ -187,7 +182,7 @@ for feature_comb in np.array(feature_combinations)[:max_f]:
                 mask = X_home.notnull().values
                 # Ensure repeatably random problem data.
                 A = X_home.copy()
-                X, Y, res = nmf_features(A, lat, 0.01, False, idx_user, data_user, 10)
+                X, Y, res = nmf_features(A, lat, 0.01, False, idx_user, data_user, 7)
 
                 pred_df = pd.DataFrame(Y*X)
                 pred_df.columns = X_normalised.columns

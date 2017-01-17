@@ -1,4 +1,5 @@
 import sys
+from test_homes import valid_homes_data
 ALL_HOMES, case = sys.argv[1:]
 ALL_HOMES = bool(int(ALL_HOMES))
 case = int(case)
@@ -70,18 +71,14 @@ for appliance in ['hvac','fridge']:
         start, end = 5,11
     else:
         start, end=1,13
-    X_matrix, X_normalised, col_max, col_min, appliance_cols, aggregate_cols = preprocess(df, dfc, appliance)
-    print len(X_matrix)
-    static_features= get_static_features(dfc, X_normalised)
-    from copy import deepcopy
-    all_cols = deepcopy(appliance_cols)
-    all_cols.extend(aggregate_cols)
-    for num_homes in range(4, len(df), 4):
+    homes_appliance_region =valid_homes_data[region][appliance]
+    total_num_homes = len(homes_appliance_region)
+    for num_homes in range(4, total_num_homes, 4):
         print "*" * 40
         print num_homes, appliance
         print "*"*40
 
-        for home in X_matrix.index:
+        for home in homes_appliance_region:
             OFILE = "%s/%s_%d.out" % (SLURM_OUT, appliance, home)
             EFILE = "%s/%s_%d.err" % (SLURM_OUT, appliance, home)
             SLURM_SCRIPT = "%s_%d.pbs" %(appliance, home)

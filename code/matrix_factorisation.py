@@ -132,14 +132,17 @@ def preprocess(df, dfc, appliance):
 
     if appliance=="hvac":
         start, end=5, 11
+
     else:
         start, end = 1, 13
+        max_cols = 24
 
     appliance_cols = ['%s_%d' %(appliance, month) for month in range(start, end)]
     aggregate_cols = ['aggregate_%d' %month for month in range(start, end)]
 
     all_cols = deepcopy(appliance_cols)
     all_cols.extend(aggregate_cols)
+
 
     #X_matrix = dfc[all_cols].dropna()
     #X_matrix = dfc[all_cols].ix[dfc[appliance_cols].dropna().index]
