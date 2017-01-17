@@ -21,14 +21,18 @@ from features import feature_map
 
 base_path =os.path.expanduser("~/transfer")
 
-def _save_results(num_homes, case, appliance, lat, feature_comb, test_home, pred_df):
+def create_directory_path(base_path, num_homes):
     directory_path = os.path.join(base_path, str(num_homes))
     if not os.path.exists(os.path.join(directory_path)):
         os.makedirs(directory_path)
-    if ALL_HOMES:
-        pred_df.to_csv(os.path.expanduser("%s/%d/%d_%s_%d_%s_%d.csv" %(base_path, num_homes, case, appliance, lat, '_'.join(feature_comb), test_home)))
-    else:
-        pred_df.to_csv(os.path.expanduser("%s/%d/%d_%s_%d_%s_%d.csv" %(base_path, num_homes, case, appliance, lat, '_'.join(feature_comb), test_home)))
+
+def create_file_store_path(base_path, num_homes, case, appliance, lat, feature_comb, test_home):
+    return os.path.expanduser("%s/%d/%d_%s_%d_%s_%d.csv" %(base_path, num_homes, case, appliance, lat, '_'.join(feature_comb), test_home))
+
+def _save_results(num_homes, case, appliance, lat, feature_comb, test_home, pred_df):
+    create_directory_path(base_path, num_homes)
+    csv_path = create_file_store_path(base_path, num_homes, case, appliance, lat, feature_comb, test_home)
+    pred_df.to_csv(csv_path)
 
 out_overall = pickle.load(open('../create_dataset/metadata/all_regions_years.pkl', 'r'))
 
@@ -166,23 +170,30 @@ for feature_comb in np.array(feature_combinations)[:max_f]:
         try:
             print lat
 
-            if lat<len(feature_comb):
-                continue
-            out[tuple(feature_comb)][lat]={}
+            # Check if exists or not
+            csv_path = create_file_store_path(base_path, num_homes_test_region, case, appliance, lat, feature_comb, test_home)
+            if os.path.isfile(csv_path):
+                print "skipping",csv_path
+                pass
+            else:
 
-            X_home = X_normalised.copy()
-            for month in range(start, end):
-                X_home.loc[test_home, '%s_%d' %(appliance, month)] = np.NAN
-            mask = X_home.notnull().values
-            # Ensure repeatably random problem data.
-            A = X_home.copy()
-            X, Y, res = nmf_features(A, lat, 0.01, False, idx_user, data_user, 10)
+                if lat<len(feature_comb):
+                    continue
+                out[tuple(feature_comb)][lat]={}
 
-            pred_df = pd.DataFrame(Y*X)
-            pred_df.columns = X_normalised.columns
-            pred_df.index = X_normalised.index
-            out[tuple(feature_comb)][lat] = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
-            pred_df = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
-            _save_results(num_homes_test_region, case, appliance, lat, feature_comb, test_home, pred_df)
+                X_home = X_normalised.copy()
+                for month in range(start, end):
+                    X_home.loc[test_home, '%s_%d' %(appliance, month)] = np.NAN
+                mask = X_home.notnull().values
+                # Ensure repeatably random problem data.
+                A = X_home.copy()
+                X, Y, res = nmf_features(A, lat, 0.01, False, idx_user, data_user, 10)
+
+                pred_df = pd.DataFrame(Y*X)
+                pred_df.columns = X_normalised.columns
+                pred_df.index = X_normalised.index
+                out[tuple(feature_comb)][lat] = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
+                pred_df = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
+                _save_results(num_homes_test_region, case, appliance, lat, feature_comb, test_home, pred_df)
         except Exception, e:
             print "Exception occurred", e

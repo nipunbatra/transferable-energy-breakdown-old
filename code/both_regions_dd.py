@@ -156,23 +156,30 @@ for feature_comb in np.array(feature_combinations)[:max_f]:
         try:
             print lat
 
-            if lat<len(feature_comb):
-                continue
-            out[tuple(feature_comb)][lat]={}
+            # Check if already created. Then don't repeat.
 
-            X_home = X_normalised.copy()
-            for month in range(start, end):
-                X_home.loc[test_home, '%s_%d' %(appliance, month)] = np.NAN
-            mask = X_home.notnull().values
-            # Ensure repeatably random problem data.
-            A = X_home.copy()
-            X, Y, res = nmf_features(A, lat, 0.01, False, idx_user, data_user, 10)
+            if os.path.isfile():
+                pass
+            else:
 
-            pred_df = pd.DataFrame(Y*X)
-            pred_df.columns = X_normalised.columns
-            pred_df.index = X_normalised.index
-            out[tuple(feature_comb)][lat] = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
-            pred_df = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
-            _save_results(case, appliance, lat, feature_comb, test_home, pred_df)
+
+                if lat<len(feature_comb):
+                    continue
+                out[tuple(feature_comb)][lat]={}
+
+                X_home = X_normalised.copy()
+                for month in range(start, end):
+                    X_home.loc[test_home, '%s_%d' %(appliance, month)] = np.NAN
+                mask = X_home.notnull().values
+                # Ensure repeatably random problem data.
+                A = X_home.copy()
+                X, Y, res = nmf_features(A, lat, 0.01, False, idx_user, data_user, 10)
+
+                pred_df = pd.DataFrame(Y*X)
+                pred_df.columns = X_normalised.columns
+                pred_df.index = X_normalised.index
+                out[tuple(feature_comb)][lat] = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
+                pred_df = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
+                _save_results(case, appliance, lat, feature_comb, test_home, pred_df)
         except Exception, e:
             print "Exception occurred", e
