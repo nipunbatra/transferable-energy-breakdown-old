@@ -113,6 +113,7 @@ def create_overall_dict(case):
     out = {}
     for num_homes in range(4, 40, 4):
         out[num_homes] = create_overall_dict_num_homes_case(num_homes, case)
+    return out
 
 def create_overall_dict_num_homes_case(num_homes, case):
     out = {}
