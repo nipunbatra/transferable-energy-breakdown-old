@@ -19,6 +19,7 @@ import pickle
 import sys
 sys.path.append("../../code")
 from features import feature_map
+import time
 
 
 base_path =os.path.expanduser("~/transfer")
@@ -52,6 +53,7 @@ ALL_HOMES =bool(int(ALL_HOMES))
 case = int(case)
 num_homes_test_region = int(num_homes_test_region)
 
+start_df_prep = time.time()
 aus_df, aus_dfc = create_region_df("Austin")
 sd_df, sd_dfc = create_region_df("SanDiego")
 
@@ -123,18 +125,23 @@ if appliance=="hvac":
     start, end = 5,11
 else:
     start, end=1,13
-X_matrix, X_normalised, col_max, col_min, appliance_cols, aggregate_cols = preprocess(df, dfc, appliance)
 
+end_df_prep = time.time()
+
+print "DF preparation took", end_df_prep-start_df_prep
+start_norm = time.time()
+X_matrix, X_normalised, col_max, col_min, appliance_cols, aggregate_cols = preprocess(df, dfc, appliance)
+end_norm = time.time()
+print "Normalisation took", end_norm-start_norm
+
+
+start_features = time.time()
 if case>=3:
     static_features = get_static_features_region_level(dfc, X_normalised)
 else:
     static_features = get_static_features(dfc, X_normalised)
-
-
-from copy import deepcopy
-all_cols = deepcopy(appliance_cols)
-all_cols.extend(aggregate_cols)
-#all_feature_homes = dfc[(dfc.full_agg_available == 1) & (dfc.md_available == 1)][all_cols].dropna().index
+end_features = time.time()
+print "Static features took", end_features-start_features
 
 
 if case==3:
@@ -143,6 +150,7 @@ else:
     max_f=3
 
 for feature_comb in np.array(feature_combinations)[:max_f]:
+    start_misc =time.time()
     print feature_comb
     out[tuple(feature_comb)]={}
     if 'None' in feature_comb:
@@ -160,7 +168,8 @@ for feature_comb in np.array(feature_combinations)[:max_f]:
         for fe in static_features_df.columns:
             idx_user[fe]=np.where(static_features_df[fe].notnull())[0]
             data_user[fe]=static_features_df[fe].dropna().values
-
+    end_misc = time.time()
+    print "MISC took", end_misc-start_misc
     for lat in range(6,10):
         try:
             print lat
@@ -170,25 +179,34 @@ for feature_comb in np.array(feature_combinations)[:max_f]:
             if os.path.isfile(csv_path):
                 print "skipping",csv_path
                 pass
+
             else:
 
                 if lat<len(feature_comb):
                     continue
                 out[tuple(feature_comb)][lat]={}
-
+                start_pre = time.time()
                 X_home = X_normalised.copy()
                 for month in range(start, end):
                     X_home.loc[test_home, '%s_%d' %(appliance, month)] = np.NAN
                 mask = X_home.notnull().values
                 # Ensure repeatably random problem data.
                 A = X_home.copy()
-                X, Y, res = nmf_features(A, lat, 0.01, False, idx_user, data_user, 7)
-
+                end_pre = time.time()
+                print "Preparing for NMF took", end_pre-start_pre
+                start_mf = time.time()
+                X, Y, res = nmf_features(A, lat, 0.01, False, idx_user, data_user, 10)
+                end_mf = time.time()
+                print "NMF took", end_mf-start_mf
+                start_post = time.time()
                 pred_df = pd.DataFrame(Y*X)
                 pred_df.columns = X_normalised.columns
                 pred_df.index = X_normalised.index
                 out[tuple(feature_comb)][lat] = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
                 pred_df = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
+                print pred_df
                 _save_results(num_homes_test_region, case, appliance, lat, feature_comb, test_home, pred_df)
+                end_post = time.time()
+                print "POST took", end_post-start_post
         except Exception, e:
             print "Exception occurred", e

@@ -146,7 +146,7 @@ def preprocess(df, dfc, appliance):
 
     #X_matrix = dfc[all_cols].dropna()
     #X_matrix = dfc[all_cols].ix[dfc[appliance_cols].dropna().index]
-    X_matrix =dfc.copy()
+    X_matrix =dfc[all_cols].copy()
     columns_max = {}
     columns_min = {}
     col_max = X_matrix.max()
