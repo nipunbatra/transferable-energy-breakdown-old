@@ -170,7 +170,7 @@ for feature_comb in np.array(feature_combinations)[:max_f]:
             data_user[fe]=static_features_df[fe].dropna().values
     end_misc = time.time()
     print "MISC took", end_misc-start_misc
-    for lat in range(6,10):
+    for lat in range(1,10):
         try:
             print lat
 
