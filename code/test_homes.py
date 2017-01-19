@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 
 REGIONS = ['SanDiego','Austin']
-APPLIANCES = ['hvac','fridge']
+APPLIANCES = ['hvac','fridge','wm']
 
 homes_with_problems = [
 	8061, # Jan Aggregate data reading is wrong!

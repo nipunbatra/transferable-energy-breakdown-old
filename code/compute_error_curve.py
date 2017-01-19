@@ -7,16 +7,14 @@ import os, glob
 import pandas as pd
 import itertools
 path = os.path.expanduser('~/transfer/')
+from common_functions import feature_combinations
+
 
 from test_homes import valid_homes_data
 
-feature_combinations_names = ['None']
-for l in range(1,2):
-    for a in itertools.combinations(['dd_1','dd_2','dd_3','dd_4','dd_5',
-                                     'dd_6','dd_7','dd_8','dd_9','dd_10',
-                                     'dd_11','dd_12',
-                                     'occ','area','rooms'], l):
-        feature_combinations_names.append('_'.join(list(a)))
+
+feature_combinations_names = ['_'.join(a) for a in feature_combinations]
+
 
 def compute_prediction_num_homes_case(num_homes, case, appliance, feature, k):
     """

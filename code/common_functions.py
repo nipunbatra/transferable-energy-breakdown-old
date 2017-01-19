@@ -24,3 +24,14 @@ def create_region_df(region, year=2014):
                             'num_occupants':'total_occupants',
                             'difference_ratio_min_max':'ratio_difference_min_max'})
     return df, dfc
+
+import itertools
+feature_combinations = [['None']]
+for l in range(1,3):
+    for a in itertools.combinations(['occ','area','rooms','dd_1','dd_2','dd_3','dd_4','dd_5',
+                                     'dd_6','dd_7','dd_8','dd_9','dd_10',
+                                     'dd_11','dd_12'
+                                     ], l):
+        feature_combinations.append(list(a))
+
+

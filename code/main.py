@@ -1,9 +1,5 @@
-###################CASES#######################################
-### CASE 1: Train and test on homes from SD w/o static features
-### CASE 2: Train on homes from SD and Austin w/o static features
-### Case 3: Train on homes from SD and Austin w/ static and temp feature
-### Case 4: Train and test on homes from SD w static and temp features
-### Case 5: Train on homes from
+###############################################################
+# Can us
 ################################################################
 
 
