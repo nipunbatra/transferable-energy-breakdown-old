@@ -5,6 +5,10 @@ import numpy as np
 REGIONS = ['SanDiego','Austin']
 APPLIANCES = ['hvac','fridge']
 
+homes_with_problems = [
+	8061, # Jan Aggregate data reading is wrong!
+]
+
 valid_homes_data = {}
 
 
@@ -30,6 +34,7 @@ def find_valid_homes(region, appliance, appliance_fraction, aggregate_fraction):
 
 	# Homes meeting both
 	valid_homes = np.intersect1d(valid_homes_aggregate, valid_homes_appliance)
+	valid_homes = np.setdiff1d(valid_homes, homes_with_problems)
 	return valid_homes
 
 

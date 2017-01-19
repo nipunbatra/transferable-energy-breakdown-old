@@ -110,7 +110,7 @@ if not ALL_HOMES:
 
 import itertools
 feature_combinations = [['None']]
-for l in range(1,2):
+for l in range(1,3):
     for a in itertools.combinations(['occ','area','rooms','dd_1','dd_2','dd_3','dd_4','dd_5',
                                      'dd_6','dd_7','dd_8','dd_9','dd_10',
                                      'dd_11','dd_12'
@@ -149,7 +149,7 @@ if case==3:
 else:
     max_f=3
 
-for feature_comb in np.array(feature_combinations)[:max_f]:
+for feature_comb in np.array(feature_combinations)[:]:
     start_misc =time.time()
     print feature_comb
     out[tuple(feature_comb)]={}
