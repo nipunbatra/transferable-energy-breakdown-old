@@ -60,11 +60,11 @@ for appliance in APPLIANCES:
 
     for fe in FEATURE_LISTS:
         feature_string = "--feature_list='%s'" %fe
-        time.sleep(120)
+        #time.sleep(120)
 
-        for austin_fraction in np.linspace(0.0,1.0,11):
-            for boulder_fraction in np.linspace(0.0,1.0,11):
-                for sd_fraction in np.linspace(0.0,1.0,11):
+        for austin_fraction in np.linspace(0.0,1.0,6):
+            for boulder_fraction in np.linspace(0.0,1.0,6):
+                for sd_fraction in np.linspace(0.0,1.0,6):
                     fraction_string = "--Austin_fraction=%.2f --SanDiego_fraction=%.2f --Boulder_fraction=%.2f" %(austin_fraction, sd_fraction, boulder_fraction)
                     for home in homes_appliance_region:
                         test_home_string = '--test_home=%d' %(home)
@@ -91,7 +91,7 @@ for appliance in APPLIANCES:
                         with open(SLURM_SCRIPT, 'w') as f:
                            f.writelines(lines)
                         command = ['sbatch', SLURM_SCRIPT]
-                        time.sleep(1)
+                        time.sleep(0.1)
                         Popen(command)
-        time.sleep(120)
-    time.sleep(600)
+        #time.sleep(120)
+    #time.sleep(600)
