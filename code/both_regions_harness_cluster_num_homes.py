@@ -54,14 +54,7 @@ if not ALL_HOMES:
 
 
 
-import itertools
-feature_combinations = [['None']]
-for l in range(1,2):
-    for a in itertools.combinations(['dd_1','dd_2','dd_3','dd_4','dd_5',
-                                     'dd_6','dd_7','dd_8','dd_9','dd_10',
-                                     'dd_11','dd_12',
-                                     'occ','area','rooms'], l):
-        feature_combinations.append(list(a))
+
 import time
 
 #for appliance in ['hvac','fridge','dw','wm','mw','oven']:
