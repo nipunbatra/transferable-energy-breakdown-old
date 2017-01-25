@@ -41,11 +41,13 @@ train_regions = ["Austin","Boulder","SanDiego"]
 train_fraction_dict = {region:float(arguments['--%s_fraction' %region]) for region in train_regions}
 test_region=arguments['--test_region']
 feature_list = [x.strip() for x in arguments['--feature_list'].split(",")]
+feature_list_path = "_".join(feature_list)
 base_path =os.path.expanduser("~/transfer")
 
 def create_directory_path(base_path, train_fraction_dict):
     train_regions_string = "_".join([str(int(100*train_fraction_dict[x])) for x in train_regions])
-    directory_path = os.path.join(base_path, train_regions_string)
+    directory_path = os.path.join(base_path, test_region,
+                                  feature_list_path,train_regions_string)
     if not os.path.exists(os.path.join(directory_path)):
         os.makedirs(directory_path)
     return directory_path

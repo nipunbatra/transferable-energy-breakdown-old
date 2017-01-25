@@ -1,7 +1,13 @@
 APPLIANCES = ['hvac','fridge']
 TRAIN_REGIONS = ['Austin','Boulder','SanDiego']
-TRAIN_FRACTIONS = {'Austin':0.0,'Boulder':0.0,'SanDiego':0}
 TEST_REGION = 'SanDiego'
+
+FEATURE_LISTS = [
+    'energy',
+    'energy, home',
+    'energy, region',
+    'energy, home, region'
+]
 
 import sys
 from test_homes import valid_homes_data
@@ -23,7 +29,7 @@ import subprocess
 
 
 region='SanDiego'
-df = create_region_df(region, 2014)
+df, dfc = create_region_df(region, 2014)
 
 df_copy = df.copy()
 #drop_rows_having_no_data
@@ -40,8 +46,11 @@ dfc = df.copy()
 
 
 
+test_region_string = '--test_region=%s' %(TEST_REGION)
+feature_string = '--feature_list='
 
 for appliance in APPLIANCES:
+    appliance_string = '--appliance=%s' % (appliance)
 
     if appliance=="hvac":
         start, end = 5,11
@@ -49,29 +58,37 @@ for appliance in APPLIANCES:
         start, end=1,13
     homes_appliance_region =valid_homes_data[region][appliance]
 
-    for austin_fraction in np.linspace(0.0,1.0,11):
-        for boulder_fraction in np.linspace(0.0,1.0,11):
-            for sd_fraction in np.linspace(0.0,1.0,11):
+    for fe in FEATURE_LISTS:
+        feature_string = "--feature_list='%s'" %fe
+
+        for austin_fraction in np.linspace(0.0,1.0,11):
+            for boulder_fraction in np.linspace(0.0,1.0,11):
+                for sd_fraction in np.linspace(0.0,1.0,11):
+                    fraction_string = "--Austin_fraction=%.2f --SanDiego_fraction=%.2f --Boulder_fraction=%.2f" %(austin_fraction, sd_fraction, boulder_fraction)
+                    for home in homes_appliance_region:
+                        test_home_string = '--test_home=%d' %(home)
+
+                        total_string = 'python main.py --year=2014'
+                        total_string = " ".join([total_string, appliance_string,
+                                                 fraction_string, test_region_string,
+                                                 test_home_string, feature_string])
+                        print total_string
 
 
 
-                for home in homes_appliance_region:
-                    OFILE = "%s/%s_%d.out" % (SLURM_OUT, appliance, home)
-                    EFILE = "%s/%s_%d.err" % (SLURM_OUT, appliance, home)
-                    SLURM_SCRIPT = "%s_%d.pbs" %(appliance, home)
-                    CMD = 'python both_regions_dd_test_region_curve.py %s %d %d %d %d' %(appliance, home, home_var, case, num_homes)
-                    lines = []
-                    lines.append("#!/bin/sh\n")
-                    lines.append('#SBATCH --time=0-01:0:00\n')
-                    lines.append('#SBATCH --mem=16\n')
-                    lines.append('#SBATCH -o '+'"' +OFILE+'"\n')
-                    lines.append('#SBATCH -e '+'"' +EFILE+'"\n')
-                    lines.append(CMD+'\n')
+                        OFILE = "%s/%s.out" % (SLURM_OUT, total_string)
+                        EFILE = "%s/%s.err" % (SLURM_OUT, total_string)
+                        SLURM_SCRIPT = "%s_%d_%s.pbs" %(appliance, home, fe)
+                        lines = []
+                        lines.append("#!/bin/sh\n")
+                        lines.append('#SBATCH --time=0-01:0:00\n')
+                        lines.append('#SBATCH --mem=16\n')
+                        lines.append('#SBATCH -o '+'"' +OFILE+'"\n')
+                        lines.append('#SBATCH -e '+'"' +EFILE+'"\n')
+                        lines.append(total_string+'\n')
 
-                with open(SLURM_SCRIPT, 'w') as f:
-                   f.writelines(lines)
-                command = ['sbatch', SLURM_SCRIPT]
-                time.sleep(1)
-                Popen(command)
-                print CMD
-        print "Now sleeping..."
+                        with open(SLURM_SCRIPT, 'w') as f:
+                           f.writelines(lines)
+                        command = ['sbatch', SLURM_SCRIPT]
+                        time.sleep(1)
+                        Popen(command)
