@@ -60,6 +60,7 @@ for appliance in APPLIANCES:
 
     for fe in FEATURE_LISTS:
         feature_string = "--feature_list='%s'" %fe
+        time.sleep(120)
 
         for austin_fraction in np.linspace(0.0,1.0,11):
             for boulder_fraction in np.linspace(0.0,1.0,11):
@@ -92,3 +93,5 @@ for appliance in APPLIANCES:
                         command = ['sbatch', SLURM_SCRIPT]
                         time.sleep(1)
                         Popen(command)
+        time.sleep(120)
+    time.sleep(600)
