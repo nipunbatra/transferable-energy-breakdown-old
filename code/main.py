@@ -1,110 +1,102 @@
-###############################################################
-# Can us
-################################################################
+"""
+Sample Usage
+run main.py --year=2014 --appliance='fridge' --Austin_fraction=0.1 --SanDiego_fraction=0.0 --Boulder_fraction=0.0 --test_region="SanDiego" --test_home=26 --feature_list="energy, household, region"
 
 
+Usage: main.py --year=Y --appliance=A --Austin_fraction=au_frac --SanDiego_fraction=sd_frac --Boulder_fraction=bo_frac --test_region=TSR --test_home=TSH --feature_list=FL
+
+Options:
+    --year=Y [2014, 2015, ..]
+    --appliance=A  appliance [can be 'fridge','hvac', etc]
+    --Austin_fraction=au_frac
+    --SanDiego_fraction=sd_frac
+    --Boulder_fraction=bo_frac
+    --test_region=TSR test region [str]
+    --test_home=TSH  test home [integer]
+    --feature_list=FL Feature List [list]
+"""
+
+import sys, traceback
+print sys.argv
+from docopt import docopt
+import pandas as pd
+import time
+import numpy as np
+import os
+
+from common_functions import create_region_df, features_dict, create_feature_combinations
+from test_homes import valid_homes_data
+from degree_days import dds, dd_keys
 from matrix_factorisation import nmf_features, transform, transform_2, \
     preprocess, get_static_features, get_static_features_region_level
 
-from common_functions import create_region_df, feature_combinations
-import os
-
-import numpy as np
-import pandas as pd
-import pickle
-import sys
-sys.path.append("../../code")
-from features import feature_map
-import time
 
 
+arguments = docopt(__doc__)
+appliance=arguments['--appliance']
+
+year = int(arguments['--year'])
+test_home = int(arguments['--test_home'])
+train_regions = ["Austin","Boulder","SanDiego"]
+train_fraction_dict = {region:float(arguments['--%s_fraction' %region]) for region in train_regions}
+test_region=arguments['--test_region']
+feature_list = [x.strip() for x in arguments['--feature_list'].split(",")]
 base_path =os.path.expanduser("~/transfer")
 
-def create_directory_path(base_path, num_homes):
-    directory_path = os.path.join(base_path, str(num_homes))
+def create_directory_path(base_path, train_fraction_dict):
+    train_regions_string = "_".join([str(int(100*train_fraction_dict[x])) for x in train_regions])
+    directory_path = os.path.join(base_path, train_regions_string)
     if not os.path.exists(os.path.join(directory_path)):
         os.makedirs(directory_path)
+    return directory_path
 
-def create_file_store_path(base_path, num_homes, case, appliance, lat, feature_comb, test_home):
-    return os.path.expanduser("%s/%d/%d_%s_%d_%s_%d.csv" %(base_path, num_homes, case, appliance, lat, '_'.join(feature_comb), test_home))
+def create_file_store_path(base_path, appliance, lat, feature_comb, test_home):
+    return os.path.expanduser("%s/%s_%d_%s_%d.csv" %(base_path, appliance, lat, '_'.join(feature_comb), test_home))
 
-def _save_results(num_homes, case, appliance, lat, feature_comb, test_home, pred_df):
-    create_directory_path(base_path, num_homes)
-    csv_path = create_file_store_path(base_path, num_homes, case, appliance, lat, feature_comb, test_home)
+def _save_results(appliance, lat, feature_comb, test_home, pred_df):
+    csv_path = create_file_store_path(dir_path, appliance, lat, feature_comb, test_home)
     pred_df.to_csv(csv_path)
 
 
+dir_path = create_directory_path(base_path, train_fraction_dict)
+
+dfs = {}
+dfcs = {}
+
+for train_region in train_regions:
+    temp_df, temp_dfc = create_region_df(train_region, year)
+    temp_valid_homes = valid_homes_data[train_region][appliance]
+    temp_df = temp_df.ix[temp_valid_homes]
+    # Number of homes to use from this region
+    temp_num_homes = int(len(temp_dfc)*train_fraction_dict[train_region])
+    # Choosing subset of homes
+    temp_df = temp_df.head(temp_num_homes)
+    # Check that the test home is not in our data
+    temp_df = temp_df.ix[[x for x in temp_df.index if x!=test_home]]
+    temp_dfc = temp_dfc.ix[temp_df.index]
+    # Add degree days
+    if "region" in feature_list:
+        for key_num, key in enumerate(dd_keys):
+            temp_df[key]=dds[year][train_region][key_num]
+            temp_dfc[key]=dds[year][train_region][key_num]
+    dfs[train_region] = temp_df
+    dfcs[train_region] = temp_dfc
+
+train_df = pd.concat(dfs.values())
+train_dfc = pd.concat(dfcs.values())
 
 
+test_df, test_dfc = create_region_df(test_region)
+test_df = test_df.ix[[test_home]]
+test_dfc = test_dfc.ix[[test_home]]
 
-dds = {'Austin':[x/747.0 for x in [0, 16, 97, 292, 438, 579, 724, 747, 617, 376, 122, 46]],
-       'SanDiego':[x/747.0 for x in [67, 92, 219, 183, 135, 272, 392, 478, 524, 451, 118, 32]]}
-
-dd_keys = ['dd_'+str(x) for x in range(1,13)]
-
-
-appliance, test_home, ALL_HOMES, case, num_homes_test_region = sys.argv[1:]
-test_home = int(test_home)
-ALL_HOMES =bool(int(ALL_HOMES))
-case = int(case)
-num_homes_test_region = int(num_homes_test_region)
-
-start_df_prep = time.time()
-aus_df, aus_dfc = create_region_df("Austin")
-sd_df, sd_dfc = create_region_df("SanDiego")
-
-from test_homes import valid_homes_data
-austin_valid_homes = valid_homes_data['Austin'][appliance]
-sd_valid_homes = valid_homes_data['SanDiego'][appliance]
-
-aus_df = aus_df.ix[austin_valid_homes]
-aus_dfc = aus_dfc.ix[austin_valid_homes]
-
-sd_df = sd_df.ix[sd_valid_homes]
-sd_dfc = sd_dfc.ix[sd_valid_homes]
-
-all_homes_but_test = np.setdiff1d(sd_df.index.values, test_home)
-
-sd_df = pd.concat([sd_df.ix[[test_home]], sd_df.ix[all_homes_but_test].head(num_homes_test_region)])
-sd_dfc = pd.concat([sd_dfc.ix[[test_home]], sd_dfc.ix[all_homes_but_test].head(num_homes_test_region)])
-
-
-
-if case==1:
-    df = sd_df
-    dfc = sd_dfc
-elif case==2:
-    df = pd.concat([sd_df, aus_df])
-    dfc = pd.concat([sd_dfc, aus_dfc])
-elif case==3:
+if "region" in feature_list:
     for key_num, key in enumerate(dd_keys):
-        sd_df[key]=dds['SanDiego'][key_num]
-        sd_dfc[key]=dds['SanDiego'][key_num]
-        aus_df[key]=dds['Austin'][key_num]
-        aus_dfc[key]=dds['Austin'][key_num]
-    df = pd.concat([sd_df, aus_df])
-    dfc = pd.concat([sd_dfc, aus_dfc])
-elif case==4:
-    df = sd_df
-    dfc = sd_dfc
-    """
-    for key_num, key in enumerate(dd_keys):
-        sd_df[key]=dds['SanDiego'][key_num]
-        sd_dfc[key]=dds['SanDiego'][key_num]
-    """
+        test_df[key]=dds[year][test_region][key_num]
+        test_dfc[key]=dds[year][test_region][key_num]
 
-
-
-
-
-
-
-if not ALL_HOMES:
-    df = df[(df.full_agg_available == 1) & (df.md_available == 1)]
-    dfc = dfc.ix[df.index]
-
-
-
+df = pd.concat([train_df, test_df])
+dfc = pd.concat([train_dfc, test_dfc])
 
 out = {}
 
@@ -115,7 +107,6 @@ else:
 
 end_df_prep = time.time()
 
-print "DF preparation took", end_df_prep-start_df_prep
 start_norm = time.time()
 X_matrix, X_normalised, col_max, col_min, appliance_cols, aggregate_cols = preprocess(df, dfc, appliance)
 end_norm = time.time()
@@ -123,7 +114,7 @@ print "Normalisation took", end_norm-start_norm
 
 
 start_features = time.time()
-if case>=3:
+if "region" in feature_list:
     static_features = get_static_features_region_level(dfc, X_normalised)
 else:
     static_features = get_static_features(dfc, X_normalised)
@@ -131,10 +122,12 @@ end_features = time.time()
 print "Static features took", end_features-start_features
 
 
-if case==3:
+if "region" in feature_list:
     max_f = 20
 else:
     max_f=3
+
+feature_combinations = create_feature_combinations(feature_list, 2)
 
 for feature_comb in np.array(feature_combinations)[:]:
     start_misc =time.time()
@@ -160,13 +153,11 @@ for feature_comb in np.array(feature_combinations)[:]:
             print lat
 
             # Check if exists or not
-            csv_path = create_file_store_path(base_path, num_homes_test_region, case, appliance, lat, feature_comb, test_home)
+            csv_path = create_file_store_path(dir_path, appliance, lat, feature_comb, test_home)
             if os.path.isfile(csv_path):
                 print "skipping",csv_path
                 pass
-
             else:
-
                 if lat<len(feature_comb):
                     continue
                 out[tuple(feature_comb)][lat]={}
@@ -190,8 +181,9 @@ for feature_comb in np.array(feature_combinations)[:]:
                 out[tuple(feature_comb)][lat] = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
                 pred_df = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
                 print pred_df
-                _save_results(num_homes_test_region, case, appliance, lat, feature_comb, test_home, pred_df)
+                _save_results(appliance, lat, feature_comb, test_home, pred_df)
                 end_post = time.time()
                 print "POST took", end_post-start_post
         except Exception, e:
             print "Exception occurred", e
+            traceback.print_exc()

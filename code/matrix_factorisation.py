@@ -164,17 +164,17 @@ def preprocess(df, dfc, appliance):
 def get_static_features(dfc, X_normalised):
     area = dfc.ix[X_normalised.index].area.div(dfc.ix[X_normalised.index].area.max()).values
     occ = dfc.ix[X_normalised.index].num_occupants.div(dfc.ix[X_normalised.index].num_occupants.max()).values
-    rooms = dfc.ix[X_normalised.index].house_num_rooms.div(dfc.ix[X_normalised.index].house_num_rooms.max())
+    rooms = dfc.ix[X_normalised.index].house_num_rooms.div(dfc.ix[X_normalised.index].house_num_rooms.max()).values
     return {"area":area,"occ": occ,"rooms": rooms}
 
 def get_static_features_region_level(dfc, X_normalised):
     area = dfc.ix[X_normalised.index].area.div(dfc.ix[X_normalised.index].area.max()).values
     occ = dfc.ix[X_normalised.index].num_occupants.div(dfc.ix[X_normalised.index].num_occupants.max()).values
-    rooms = dfc.ix[X_normalised.index].house_num_rooms.div(dfc.ix[X_normalised.index].house_num_rooms.max())
+    rooms = dfc.ix[X_normalised.index].house_num_rooms.div(dfc.ix[X_normalised.index].house_num_rooms.max()).values
     dd_keys = ['dd_' + str(x) for x in range(1, 13)]
     out =  {"area":area,"occ": occ,"rooms": rooms}
     for dd_k in dd_keys:
-        out[dd_k] =  dfc.ix[X_normalised.index][dd_k].div(dfc.ix[X_normalised.index][dd_k].max())
+        out[dd_k] =  dfc.ix[X_normalised.index][dd_k].div(dfc.ix[X_normalised.index][dd_k].max()).values
     return out
 
 def preprocess_all_appliances(df, dfc):

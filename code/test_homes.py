@@ -2,7 +2,7 @@ from common_functions import create_region_df
 from copy import deepcopy
 import numpy as np
 
-REGIONS = ['SanDiego','Austin']
+REGIONS = ['SanDiego','Austin','Boulder']
 APPLIANCES = ['hvac','fridge','wm']
 
 homes_with_problems = [
@@ -42,7 +42,7 @@ valid_homes_data = {}
 for region in REGIONS:
 	valid_homes_data[region] = {}
 	for appliance in APPLIANCES:
-		valid_homes_data[region][appliance] = find_valid_homes(region, appliance, 1.0, 1.0)
+		valid_homes_data[region][appliance] = find_valid_homes(region, appliance, 0.5, 0.5)
 
 
 """
