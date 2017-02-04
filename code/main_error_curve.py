@@ -30,7 +30,7 @@ out = {}
 for appliance in ['hvac']:
     out[appliance] = {}
     for feature in FEATURE_LISTS:
-        out[appliance][feature] = {}
+        out[appliance]["_".join(feature)] = {}
         test_path = os.path.join(path, test_region, "_".join(feature))
 
         for austin_fraction in np.linspace(0.0,1.0,6):
