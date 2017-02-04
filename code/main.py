@@ -24,9 +24,7 @@ import time
 import numpy as np
 import os
 
-from common_functions import create_region_df, features_dict, create_feature_combinations
-from test_homes import valid_homes_data
-from degree_days import dds, dd_keys
+from common_functions import create_region_df, features_dict,create_feature_combinations, create_df_main
 from matrix_factorisation import nmf_features, transform, transform_2, \
     preprocess, get_static_features, get_static_features_region_level
 
@@ -62,43 +60,8 @@ def _save_results(appliance, lat, feature_comb, test_home, pred_df):
 
 dir_path = create_directory_path(base_path, train_fraction_dict)
 
-dfs = {}
-dfcs = {}
-
-for train_region in train_regions:
-    temp_df, temp_dfc = create_region_df(train_region, year)
-    temp_valid_homes = valid_homes_data[train_region][appliance]
-    temp_df = temp_df.ix[temp_valid_homes]
-    # Number of homes to use from this region
-    temp_num_homes = int(len(temp_dfc)*train_fraction_dict[train_region])
-    # Choosing subset of homes
-    temp_df = temp_df.head(temp_num_homes)
-    # Check that the test home is not in our data
-    temp_df = temp_df.ix[[x for x in temp_df.index if x!=test_home]]
-    temp_dfc = temp_dfc.ix[temp_df.index]
-    # Add degree days
-    if "region" in feature_list:
-        for key_num, key in enumerate(dd_keys):
-            temp_df[key]=dds[year][train_region][key_num]
-            temp_dfc[key]=dds[year][train_region][key_num]
-    dfs[train_region] = temp_df
-    dfcs[train_region] = temp_dfc
-
-train_df = pd.concat(dfs.values())
-train_dfc = pd.concat(dfcs.values())
-
-
-test_df, test_dfc = create_region_df(test_region)
-test_df = test_df.ix[[test_home]]
-test_dfc = test_dfc.ix[[test_home]]
-
-if "region" in feature_list:
-    for key_num, key in enumerate(dd_keys):
-        test_df[key]=dds[year][test_region][key_num]
-        test_dfc[key]=dds[year][test_region][key_num]
-
-df = pd.concat([train_df, test_df])
-dfc = pd.concat([train_dfc, test_dfc])
+df, dfc = create_df_main(appliance, year, train_regions, train_fraction_dict,
+                test_region, test_home, feature_list)
 
 out = {}
 
