@@ -34,15 +34,15 @@ for appliance in ['hvac']:
         test_path = os.path.join(path, test_region, "_".join(feature))
 
         for austin_fraction in np.linspace(0.0,1.0,6):
-            out[appliance][feature][austin_fraction] = {}
+            out[appliance]["_".join(feature)][austin_fraction] = {}
             for boulder_fraction in np.linspace(0.0,1.0,6):
-                out[appliance][feature][austin_fraction][boulder_fraction] = {}
+                out[appliance]["_".join(feature)][austin_fraction][boulder_fraction] = {}
                 for sd_fraction in np.linspace(0.0,1.0,6):
                     for k in range(1,9):
                         train_fraction_dict = {'Austin':austin_fraction,'Boulder':boulder_fraction,'SanDiego':sd_fraction}
                         frac_string = "_".join([str(int(100*train_fraction_dict[x])) for x in train_regions])
                         frac_path = os.path.join(test_path, frac_string)
-                        out[appliance][feature][austin_fraction][boulder_fraction][sd_fraction] = compute_prediction(frac_path, appliance, feature, k)
+                        out[appliance]["_".join(feature)][austin_fraction][boulder_fraction][sd_fraction] = compute_prediction(frac_path, appliance, feature, k)
 
 
 """
