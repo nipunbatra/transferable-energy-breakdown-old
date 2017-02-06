@@ -31,7 +31,7 @@ def compute_prediction(frac_path, appliance, feature_comb, k):
 
 def main():
     out = {}
-    for appliance in ['hvac']:
+    for appliance in ['hvac','fridge']:
         out[appliance] = {}
         for feature in FEATURE_LISTS:
             feature_combinations = create_feature_combinations(feature, 2)
