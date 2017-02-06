@@ -53,7 +53,7 @@ def main():
                             frac_path = os.path.join(test_path, frac_string)
                             for feature_comb in np.array(feature_combinations)[:]:
                                 try:
-                                    print appliance, "_".join(feature), k
+                                    print appliance, "_".join(feature), austin_fraction, boulder_fraction, sd_fraction, k, feature_comb
                                     out[appliance]["_".join(feature)][austin_fraction][boulder_fraction][sd_fraction][k]["_".join(feature_comb)]=compute_prediction(frac_path, appliance, feature_comb, k)
                                 except:
                                     pass
