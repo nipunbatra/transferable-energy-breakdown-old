@@ -3,7 +3,7 @@ import pandas as pd
 import itertools
 import numpy as np
 path = os.path.expanduser('~/transfer/')
-#from common_functions import feature_combinations
+from common_functions import create_feature_combinations
 
 
 #from common_functions import valid_homes_data
@@ -17,14 +17,16 @@ FEATURE_LISTS = [
     ['energy', 'home', 'region']
 ]
 
-def compute_prediction(frac_path, appliance, feature, k):
-    file_path = os.path.join(frac_path, '%s_%d_%s_*.csv' %(appliance, k, feature))
-    print file_path
+def compute_prediction(frac_path, appliance, feature_comb, k):
+    file_path = os.path.join(frac_path, '%s_%d_%s_*.csv' %(appliance, k, "_".join(feature_comb)))
     files = glob.glob(file_path)
     out = {}
     for e in files:
         out[int(e.split('_')[-1][:-4])] = pd.read_csv(e,index_col=0, header=None).squeeze()
+
     return pd.DataFrame(out).T
+
+
 
 
 def main():
@@ -32,19 +34,29 @@ def main():
     for appliance in ['hvac']:
         out[appliance] = {}
         for feature in FEATURE_LISTS:
+            feature_combinations = create_feature_combinations(feature, 2)[:2]
+
             out[appliance]["_".join(feature)] = {}
             test_path = os.path.join(path, test_region, "_".join(feature))
 
-            for austin_fraction in np.linspace(0.0,1.0,6):
+            for austin_fraction in np.linspace(0.0,1.0,6)[:1]:
                 out[appliance]["_".join(feature)][austin_fraction] = {}
-                for boulder_fraction in np.linspace(0.0,1.0,6):
+                for boulder_fraction in np.linspace(0.0,1.0,6)[:1]:
                     out[appliance]["_".join(feature)][austin_fraction][boulder_fraction] = {}
-                    for sd_fraction in np.linspace(0.0,1.0,6):
-                        for k in range(1,9):
+                    for sd_fraction in np.linspace(0.0,1.0,6)[:1]:
+                        out[appliance]["_".join(feature)][austin_fraction][boulder_fraction][sd_fraction] = {}
+
+                        for k in range(1,9)[:1]:
+                            out[appliance]["_".join(feature)][austin_fraction][boulder_fraction][sd_fraction][k]={}
                             train_fraction_dict = {'Austin':austin_fraction,'Boulder':boulder_fraction,'SanDiego':sd_fraction}
                             frac_string = "_".join([str(int(100*train_fraction_dict[x])) for x in train_regions])
                             frac_path = os.path.join(test_path, frac_string)
-                            out[appliance]["_".join(feature)][austin_fraction][boulder_fraction][sd_fraction] = compute_prediction(frac_path, appliance, feature, k)
+                            for feature_comb in np.array(feature_combinations)[:]:
+                                try:
+                                    print appliance, "_".join(feature), k
+                                    out[appliance]["_".join(feature)][austin_fraction][boulder_fraction][sd_fraction][k]["_".join(feature_comb)]=compute_prediction(frac_path, appliance, feature_comb, k)
+                                except:
+                                    pass
 
     return out
 """
