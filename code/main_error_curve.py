@@ -59,6 +59,10 @@ def main():
                                     pass
 
     return out
+
+out = main()
+import pickle
+pickle.dump(out, open('out_fraction.pkl','wb'))
 """
 
 import os, glob
