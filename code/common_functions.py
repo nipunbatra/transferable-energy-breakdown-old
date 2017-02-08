@@ -150,6 +150,10 @@ homes_with_problems = []
 
 valid_homes_data = {}
 
+ALL_HOMES_REGION = {}
+for region in ['Austin','SanDiego','Boulder']:
+    ALL_HOMES_REGION[region] = create_region_df(region)[0].index
+
 
 def find_valid_homes(region, appliance, appliance_fraction, aggregate_fraction):
 	df, dfc = create_region_df(region)

@@ -6,30 +6,50 @@ ALL_REGIONS = ['Austin','SanDiego','Boulder']
 ALL_FRACTION = {k:1.0 for k in ALL_REGIONS}
 
 APPLIANCES = ['fridge','hvac']
+APPLIANCES = ['hvac']
 test_region = 'SanDiego'
+feature_list = ['energy', 'home','region']
 
-test_region_list = ['Austin','SanDiego','Boulder']
+
+def _find_region(ng):
+    o = {k:0 for k in ALL_REGIONS}
+    for h in ng:
+        for region in ALL_REGIONS:
+            if h in ALL_HOMES_REGION[region]:
+                o[region]+= 1
+                break
+    return o
+
+
+#test_region_list = ['Austin','SanDiego','Boulder']
+test_region_list = ['SanDiego']
 train_regions_list = [['Austin'],['Boulder'],['SanDiego'],
 ['Austin','SanDiego'],['Austin','Boulder'],['Boulder','SanDiego'],['Austin','Boulder','SanDiego']]
 
-k = 2
-feature_list=['energy','home']
+
+train_regions_list = [['SanDiego'],['SanDiego','Austin']]
+train_regions_list = [['SanDiego']]
+train_regions_list = [['SanDiego','Austin']]
+
+
+feature_list=['energy','home','region']
+#feature_list = ['energy','home']
+#feature_list = ['energy','home']
 year = 2014
 out = {}
-for appliance in APPLIANCES:
-    print appliance
-    out[appliance] = {}
-    for train_regions in train_regions_list:
-        out[appliance]['_'.join(train_regions)] = {}
-        for test_region in test_region_list:
-            print appliance, train_regions, test_region
-            print "*"*40
+out_nghbr = {}
+for train_regions in train_regions_list:
+    print train_regions
+    out['_'.join(train_regions)] = {}
+    out_nghbr['_'.join(train_regions)] = {}
+    for appliance in APPLIANCES:
+        out['_'.join(train_regions)][appliance] = {}
+        out_nghbr['_'.join(train_regions)][appliance] = {}
+        for k in range(2, 3):
+            print k, train_regions
             train_fraction_dict = {k:1.0 for k in train_regions}
-            feature_list=['energy','home']
             year = 2014
             test_home = 54
-
-
             df_main, dfc_main = create_df_main(appliance, year, train_regions, train_fraction_dict,
                     test_region, test_home, feature_list)
             valid_homes = valid_homes_data[test_region][appliance]
@@ -39,9 +59,9 @@ for appliance in APPLIANCES:
             else:
                 start, stop = 1, 13
             out_small = {}
+            out_small_n = {}
             for test_home in valid_homes[:2]:
-
-
+                #print test_home
                 df_main, dfc_main = create_df_main(appliance, year, train_regions, train_fraction_dict,
                                 test_region, test_home, feature_list)
                 df_main_norm = df_main.div(df_main.max())
@@ -60,6 +80,8 @@ for appliance in APPLIANCES:
                 feature_columns = [aggregate_columns]
                 if 'home' in feature_list:
                     feature_columns.append(['area','total_occupants'])
+                if 'region' in feature_list:
+                    feature_columns.append(['dd_1','dd_2','dd_3','dd_4','dd_5','dd_6','dd_7','dd_8','dd_9','dd_10','dd_11','dd_12'])
 
                 features = flatten(feature_columns)
 
@@ -69,23 +91,27 @@ for appliance in APPLIANCES:
                 df_test_home = df_main.ix[test_home][appliance_cols]
 
                 o = {}
-                valid_data_test_home = df_test_home.dropna().index
-                for m in valid_data_test_home:
-                    if m in valid_data_test_home:
-                        valid_train_homes = df_appliance[m].dropna().index
-                        df_train = df_features.ix[valid_train_homes]
+                o_n = {}
+                valid_data_test_home_months = df_test_home.dropna().index
+                for m in valid_data_test_home_months:
 
-                        # Find correlation
-                        corr = df_train.T.corr()
-                        corr_test_home = corr.ix[test_home].drop(test_home)
-                        top_k_nghbrs = corr_test_home.sort_values().tail(k).index
-                        o[m] = df_appliance[m].ix[top_k_nghbrs].mean()
-                        #print top_k_nghbrs, m, test_home
+                    valid_train_homes = df_appliance[m].dropna().index
+                    df_train = df_features.ix[valid_train_homes]
 
-                    else:
-                        o[m] = np.NaN
-                out[test_home] = pd.Series(o)
-            pred_df = pd.DataFrame(out).T
+                    # Find correlation
+                    corr = df_train.T.corr()
+                    corr_test_home = corr.ix[test_home].drop(test_home)
+                    top_k_nghbrs = corr_test_home.sort_values().tail(k).index
+                    o[m] = df_appliance[m].ix[top_k_nghbrs].mean()
+                    o_n[m] = _find_region(top_k_nghbrs)
+                    print top_k_nghbrs, m, test_home, o_n[m]
+                for m in np.setdiff1d(appliance_cols, valid_data_test_home_months):
+                    o[m] = np.NaN
+
+
+                out_small[test_home] = pd.Series(o)
+                out_small_n[test_home] = pd.Series(o_n)
+            pred_df = pd.DataFrame(out_small).T
             all_cols = np.intersect1d(appliance_cols,pred_df.columns )
             pred_df = pred_df[all_cols]
             df_mains,temp = create_df_main(appliance, year, ALL_REGIONS, ALL_FRACTION,
@@ -98,5 +124,5 @@ for appliance in APPLIANCES:
             pred_fraction = pred_df.div(aggregate_df)
             gt_fraction = gt_df.div(aggregate_df)
             error_fraction = (pred_fraction-gt_fraction).abs().div(gt_fraction).mul(100)
-            out[appliance]['_'.join(train_regions)][test_region] = error_fraction.unstack().mean()
-            print out[appliance]['_'.join(train_regions)][test_region]
+            out['_'.join(train_regions)][appliance][k] = error_fraction.unstack().mean()
+            print  pred_df, gt_df
