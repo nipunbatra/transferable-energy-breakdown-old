@@ -10,13 +10,12 @@ FEATURE_LISTS = [
 
 
 import sys
-from test_homes import valid_homes_data
 
 SLURM_OUT = "../../slurm_out"
 from subprocess import Popen
 import time
 from matrix_factorisation import nmf_features, transform, transform_2, preprocess, get_static_features
-from common_functions import create_region_df
+from common_functions import create_region_df, valid_homes_data
 import  os
 
 import numpy as np
