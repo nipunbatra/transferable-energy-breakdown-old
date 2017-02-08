@@ -40,7 +40,7 @@ train_fraction_dict = {region:float(arguments['--%s_fraction' %region]) for regi
 test_region=arguments['--test_region']
 feature_list = [x.strip() for x in arguments['--feature_list'].split(",")]
 feature_list_path = "_".join(feature_list)
-base_path =os.path.expanduser("~/transfer")
+base_path =os.path.expanduser("~/transfer_subset")
 
 def create_directory_path(base_path, train_fraction_dict):
     train_regions_string = "_".join([str(int(100*train_fraction_dict[x])) for x in train_regions])

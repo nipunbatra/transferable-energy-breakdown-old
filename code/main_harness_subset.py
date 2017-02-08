@@ -3,9 +3,7 @@ TRAIN_REGIONS = ['Austin','Boulder','SanDiego']
 TEST_REGION = 'SanDiego'
 
 FEATURE_LISTS = [
-    'energy',
     'energy, home',
-    'energy, region',
     'energy, home, region'
 ]
 
@@ -64,9 +62,9 @@ for appliance in APPLIANCES:
         feature_string = "--feature_list='%s'" %fe
         #time.sleep(120)
 
-        for austin_fraction in np.linspace(0.0,1.0,6):
-            for boulder_fraction in np.linspace(0.0,1.0,6):
-                for sd_fraction in np.linspace(0.0,1.0,6):
+        for austin_fraction in [0.0,1.0]:
+            for boulder_fraction in [0.0, 1.0]:
+                for sd_fraction in [1.0]:
                     fraction_string = "--Austin_fraction=%.2f --SanDiego_fraction=%.2f --Boulder_fraction=%.2f" %(austin_fraction, sd_fraction, boulder_fraction)
                     for home in homes_appliance_region:
                         test_home_string = '--test_home=%d' %(home)
@@ -95,5 +93,5 @@ for appliance in APPLIANCES:
                         command = ['sbatch', SLURM_SCRIPT]
                         time.sleep(0.5)
                         Popen(command)
-        time.sleep(120)
+        #time.sleep(120)
     #time.sleep(600)
