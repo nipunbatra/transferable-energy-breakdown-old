@@ -2,7 +2,7 @@ import os, glob
 import pandas as pd
 import itertools
 import numpy as np
-path = os.path.expanduser('~/transfer/')
+path = os.path.expanduser('~/transfer_subset/')
 from common_functions import create_feature_combinations
 
 
