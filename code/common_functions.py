@@ -5,10 +5,12 @@ import itertools
 from features import feature_map
 from degree_days import dds, dd_keys
 import os
+from sklearn.metrics import mean_squared_error
 
 upper_limit = {
 'hvac':40,
-'fridge':10
+'fridge':10,
+'wm':1
 }
 
 ### FIX This
@@ -20,11 +22,44 @@ data_path = os.path.expanduser("~/git/scalable-nilm/create_dataset/metadata/all_
 out_overall = pickle.load(open(data_path, 'r'))
 
 
+def compute_rmse_fraction(appliance, pred_df, region='Austin'):
+    year=2014
+    train_regions = [region]
+    train_fraction_dict = {'SanDiego':1.0,'Austin':0.0,'Boulder':0.0}
+    test_region=region
+    test_home = pred_df.index[0]
+    feature_list=['energy']
+    df, dfc = create_df_main(appliance, year, train_regions, train_fraction_dict,
+                    test_region, test_home, feature_list)
+    # pred_df = mf_pred[appliance][appliance_feature][latent_factors]
+    gt_df = df[pred_df.columns].ix[pred_df.index]
+    if appliance == "hvac":
+        start, stop = 5, 11
+    else:
+        start, stop = 1, 13
+    aggregate_df = df.ix[pred_df.index][['aggregate_%d' % month for month in range(start, stop)]]
+
+    aggregate_df.columns = gt_df.columns
+    rows, cols = np.where((aggregate_df < 100))
+    for r, c in zip(rows, cols):
+        r_i, c_i = aggregate_df.index[r], aggregate_df.columns[c]
+        aggregate_df.loc[r_i, c_i] = np.NaN
+
+    gt_fraction = gt_df.div(aggregate_df) * 100
+    pred_fraction = pred_df.div(aggregate_df) * 100
+
+
+
+
+    rms = np.sqrt(mean_squared_error(pred_fraction.unstack().dropna(), gt_fraction.unstack().dropna()))
+    return rms
+
+
 def create_region_df(region, year=2014):
     df = out_overall[year][region]
 
     df_copy = df.copy()
-    #drop_rows_having_no_data
+    # drop_rows_having_no_data
     o = {}
     for h in df.index:
         o[h]=len(df.ix[h][feature_map['Monthly']].dropna())
@@ -33,8 +68,6 @@ def create_region_df(region, year=2014):
 
     df = df.drop(drop_rows)
     dfc = df.copy()
-
-
     df = df.rename(columns={'house_num_rooms':'num_rooms',
                             'num_occupants':'total_occupants',
                             'difference_ratio_min_max':'ratio_difference_min_max'})
@@ -43,6 +76,7 @@ def create_region_df(region, year=2014):
 
 def flatten(l):
     return [item for sublist in l for item in sublist]
+
 
 def create_feature_combinations(list_of_features, size_combinations=2):
     f = []
@@ -55,8 +89,10 @@ def create_feature_combinations(list_of_features, size_combinations=2):
             feature_comb.append(list(a))
     return feature_comb
 
+
 def create_df_main(appliance, year, train_regions, train_fraction_dict,
-                test_region, test_home, feature_list ):
+                test_region, test_home, feature_list, seed):
+    np.random.seed(seed)
     dfs = {}
     dfcs = {}
 
@@ -66,8 +102,9 @@ def create_df_main(appliance, year, train_regions, train_fraction_dict,
         temp_df = temp_df.ix[temp_valid_homes]
         # Number of homes to use from this region
         temp_num_homes = int(len(temp_dfc)*train_fraction_dict[train_region])
-        # Choosing subset of homes
-        temp_df = temp_df.head(temp_num_homes)
+        # Randomly choosing subset of homes
+
+        temp_df = temp_df.sample(frac=train_fraction_dict[train_region])
         # Check that the test home is not in our data
         temp_df = temp_df.ix[[x for x in temp_df.index if x!=test_home]]
         temp_dfc = temp_dfc.ix[temp_df.index]

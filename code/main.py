@@ -1,9 +1,9 @@
 """
 Sample Usage
-run main.py --year=2014 --appliance='fridge' --Austin_fraction=0.1 --SanDiego_fraction=0.0 --Boulder_fraction=0.0 --test_region="SanDiego" --test_home=26 --feature_list="energy, household, region"
+run main.py --year=2014 --appliance='fridge' --Austin_fraction=0.1 --SanDiego_fraction=0.0 --Boulder_fraction=0.0 --test_region="SanDiego" --test_home=26 --feature_list="energy, household, region" --seed=0
 
 
-Usage: main.py --year=Y --appliance=A --Austin_fraction=au_frac --SanDiego_fraction=sd_frac --Boulder_fraction=bo_frac --test_region=TSR --test_home=TSH --feature_list=FL
+Usage: main.py --year=Y --appliance=A --Austin_fraction=au_frac --SanDiego_fraction=sd_frac --Boulder_fraction=bo_frac --test_region=TSR --test_home=TSH --feature_list=FL --seed=0
 
 Options:
     --year=Y [2014, 2015, ..]
@@ -14,33 +14,38 @@ Options:
     --test_region=TSR test region [str]
     --test_home=TSH  test home [integer]
     --feature_list=FL Feature List [list]
+    --seed=Seed Random Seed [int]
 """
 
-import sys, traceback
-print sys.argv
 from docopt import docopt
 import pandas as pd
 import time
 import numpy as np
+np.random.seed(0)
 import os
+import sys
+import traceback
+print sys.argv
+
 
 from common_functions import create_region_df, features_dict,create_feature_combinations, create_df_main
 from matrix_factorisation import nmf_features, transform, transform_2, \
     preprocess, get_static_features, get_static_features_region_level
 
-
-
 arguments = docopt(__doc__)
-appliance=arguments['--appliance']
+appliance = arguments['--appliance']
 
+random_seed = int(arguments['--seed'])
+np.random.seed(random_seed)
 year = int(arguments['--year'])
 test_home = int(arguments['--test_home'])
-train_regions = ["Austin","Boulder","SanDiego"]
-train_fraction_dict = {region:float(arguments['--%s_fraction' %region]) for region in train_regions}
-test_region=arguments['--test_region']
+train_regions = ["Austin", "Boulder", "SanDiego"]
+train_fraction_dict = {region: float(arguments['--%s_fraction' % region]) for region in train_regions}
+test_region = arguments['--test_region']
 feature_list = [x.strip() for x in arguments['--feature_list'].split(",")]
 feature_list_path = "_".join(feature_list)
-base_path =os.path.expanduser("~/transfer_subset")
+base_path = os.path.expanduser("~/transfer_subset")
+
 
 def create_directory_path(base_path, train_fraction_dict):
     train_regions_string = "_".join([str(int(100*train_fraction_dict[x])) for x in train_regions])
@@ -50,8 +55,10 @@ def create_directory_path(base_path, train_fraction_dict):
         os.makedirs(directory_path)
     return directory_path
 
+
 def create_file_store_path(base_path, appliance, lat, feature_comb, test_home):
     return os.path.expanduser("%s/%s_%d_%s_%d.csv" %(base_path, appliance, lat, '_'.join(feature_comb), test_home))
+
 
 def _save_results(appliance, lat, feature_comb, test_home, pred_df):
     csv_path = create_file_store_path(dir_path, appliance, lat, feature_comb, test_home)
@@ -61,7 +68,7 @@ def _save_results(appliance, lat, feature_comb, test_home, pred_df):
 dir_path = create_directory_path(base_path, train_fraction_dict)
 
 df, dfc = create_df_main(appliance, year, train_regions, train_fraction_dict,
-                test_region, test_home, feature_list)
+                         test_region, test_home, feature_list, seed)
 
 out = {}
 
@@ -113,7 +120,7 @@ for feature_comb in np.array(feature_combinations)[:]:
             data_user[fe]=static_features_df[fe].dropna().values
     end_misc = time.time()
     print "MISC took", end_misc-start_misc
-    for lat in range(1,10):
+    for lat in range(1, 10):
         try:
             print lat
 

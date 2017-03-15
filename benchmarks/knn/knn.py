@@ -6,7 +6,7 @@ ALL_REGIONS = ['Austin','SanDiego','Boulder']
 ALL_FRACTION = {k:1.0 for k in ALL_REGIONS}
 
 APPLIANCES = ['fridge','hvac']
-APPLIANCES = ['hvac']
+APPLIANCES = ['fridge']
 test_region = 'SanDiego'
 feature_list = ['energy', 'home','region']
 
@@ -45,7 +45,7 @@ for train_regions in train_regions_list:
     for appliance in APPLIANCES:
         out['_'.join(train_regions)][appliance] = {}
         out_nghbr['_'.join(train_regions)][appliance] = {}
-        for k in range(2, 3):
+        for k in range(1, 6):
             print k, train_regions
             train_fraction_dict = {k:1.0 for k in train_regions}
             year = 2014
@@ -60,7 +60,7 @@ for train_regions in train_regions_list:
                 start, stop = 1, 13
             out_small = {}
             out_small_n = {}
-            for test_home in valid_homes[:2]:
+            for test_home in valid_homes[:]:
                 #print test_home
                 df_main, dfc_main = create_df_main(appliance, year, train_regions, train_fraction_dict,
                                 test_region, test_home, feature_list)
@@ -104,7 +104,7 @@ for train_regions in train_regions_list:
                     top_k_nghbrs = corr_test_home.sort_values().tail(k).index
                     o[m] = df_appliance[m].ix[top_k_nghbrs].mean()
                     o_n[m] = _find_region(top_k_nghbrs)
-                    print top_k_nghbrs, m, test_home, o_n[m]
+                    #print top_k_nghbrs, m, test_home, o_n[m]
                 for m in np.setdiff1d(appliance_cols, valid_data_test_home_months):
                     o[m] = np.NaN
 
@@ -114,15 +114,7 @@ for train_regions in train_regions_list:
             pred_df = pd.DataFrame(out_small).T
             all_cols = np.intersect1d(appliance_cols,pred_df.columns )
             pred_df = pred_df[all_cols]
-            df_mains,temp = create_df_main(appliance, year, ALL_REGIONS, ALL_FRACTION,
-                            test_region, test_home, feature_list)
-            gt_df = df_mains.ix[pred_df.index][all_cols]
-            aggregate_columns = ['aggregate_%d' %month for month in range(start, stop)]
-            aggregate_df = df_mains.ix[gt_df.index][aggregate_columns]
-            aggregate_df.columns = gt_df.columns
+            temp = compute_rmse_fraction(appliance, pred_df)
+            out['_'.join(train_regions)][appliance][k] = temp
+            print temp, k
 
-            pred_fraction = pred_df.div(aggregate_df)
-            gt_fraction = gt_df.div(aggregate_df)
-            error_fraction = (pred_fraction-gt_fraction).abs().div(gt_fraction).mul(100)
-            out['_'.join(train_regions)][appliance][k] = error_fraction.unstack().mean()
-            print  pred_df, gt_df

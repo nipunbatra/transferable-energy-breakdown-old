@@ -4,12 +4,18 @@ sys.path.append('../../code/')
 
 from common_functions import *
 
-APPLIANCES = ['fridge','hvac','wm']
+APPLIANCES = ['fridge','hvac']
 ALL_REGIONS = ['Austin','SanDiego','Boulder']
 ALL_FRACTION = {k:1.0 for k in ALL_REGIONS}
 test_region_list = ['Austin','SanDiego','Boulder']
 train_regions_list = [['Austin'],['Boulder'],['SanDiego'],
 ['Austin','SanDiego'],['Austin','Boulder'],['Boulder','SanDiego'],['Austin','Boulder','SanDiego']]
+
+train_regions_list = [['SanDiego']]
+#train_regions_list = [['SanDiego','Austin']]
+
+test_region_list = ['SanDiego']
+
 
 out = {}
 for appliance in APPLIANCES:
@@ -57,15 +63,6 @@ for appliance in APPLIANCES:
             pred_df = pred_df[all_cols]
             out_overall[appliance]= pred_df
 
-            df_mains,temp = create_df_main(appliance, year, ALL_REGIONS, ALL_FRACTION,
-                            test_region, test_home, feature_list)
-            gt_df = df_mains.ix[pred_df.index][all_cols]
-            aggregate_columns = ['aggregate_%d' %month for month in range(start, stop)]
-            aggregate_df = df_mains.ix[gt_df.index][aggregate_columns]
-            aggregate_df.columns = gt_df.columns
 
-            pred_fraction = pred_df.div(aggregate_df)
-            gt_fraction = gt_df.div(aggregate_df)
-            error_fraction = (pred_fraction-gt_fraction).abs().div(gt_fraction).mul(100)
-            out[appliance]['_'.join(train_regions)][test_region] = error_fraction.unstack().mean()
+            out[appliance]['_'.join(train_regions)][test_region] = compute_rmse_fraction(appliance, pred_df)
             print out[appliance]['_'.join(train_regions)][test_region]
