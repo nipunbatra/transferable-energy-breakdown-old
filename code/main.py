@@ -67,8 +67,8 @@ def _save_results(appliance, lat, feature_comb, test_home, pred_df):
 
 dir_path = create_directory_path(base_path, train_fraction_dict)
 
-df, dfc = create_df_main(appliance, year, train_regions, train_fraction_dict,
-                         test_region, test_home, feature_list, seed)
+df = create_df_main(appliance, year, train_regions, train_fraction_dict,
+                         test_region, test_home, feature_list, random_seed)
 
 out = {}
 
@@ -80,16 +80,16 @@ else:
 end_df_prep = time.time()
 
 start_norm = time.time()
-X_matrix, X_normalised, col_max, col_min, appliance_cols, aggregate_cols = preprocess(df, dfc, appliance)
+X_matrix, X_normalised, col_max, col_min, appliance_cols, aggregate_cols = preprocess(df, appliance)
 end_norm = time.time()
 print "Normalisation took", end_norm-start_norm
 
 
 start_features = time.time()
 if "region" in feature_list:
-    static_features = get_static_features_region_level(dfc, X_normalised)
+    static_features = get_static_features_region_level(df, X_normalised)
 else:
-    static_features = get_static_features(dfc, X_normalised)
+    static_features = get_static_features(df, X_normalised)
 end_features = time.time()
 print "Static features took", end_features-start_features
 
@@ -97,7 +97,7 @@ print "Static features took", end_features-start_features
 if "region" in feature_list:
     max_f = 20
 else:
-    max_f=3
+    max_f = 3
 
 feature_combinations = create_feature_combinations(feature_list, 2)
 

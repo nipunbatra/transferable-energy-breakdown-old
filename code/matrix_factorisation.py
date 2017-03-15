@@ -128,7 +128,7 @@ def transform(pred_df,appliance,  col_max, col_min):
     return pred_df_copy
 
 
-def preprocess(df, dfc, appliance):
+def preprocess(df, appliance):
 
     if appliance=="hvac":
         start, end=5, 11
@@ -146,7 +146,7 @@ def preprocess(df, dfc, appliance):
 
     #X_matrix = dfc[all_cols].dropna()
     #X_matrix = dfc[all_cols].ix[dfc[appliance_cols].dropna().index]
-    X_matrix =dfc[all_cols].copy()
+    X_matrix =df[all_cols].copy()
     columns_max = {}
     columns_min = {}
     col_max = X_matrix.max()
@@ -161,20 +161,22 @@ def preprocess(df, dfc, appliance):
     df = pd.DataFrame(X_normalised)
     return X_matrix, X_normalised, col_max, col_min, appliance_cols, aggregate_cols
 
-def get_static_features(dfc, X_normalised):
-    area = dfc.ix[X_normalised.index].area.div(dfc.ix[X_normalised.index].area.max()).values
-    occ = dfc.ix[X_normalised.index].num_occupants.div(dfc.ix[X_normalised.index].num_occupants.max()).values
-    rooms = dfc.ix[X_normalised.index].house_num_rooms.div(dfc.ix[X_normalised.index].house_num_rooms.max()).values
-    return {"area":area,"occ": occ,"rooms": rooms}
 
-def get_static_features_region_level(dfc, X_normalised):
-    area = dfc.ix[X_normalised.index].area.div(dfc.ix[X_normalised.index].area.max()).values
-    occ = dfc.ix[X_normalised.index].num_occupants.div(dfc.ix[X_normalised.index].num_occupants.max()).values
-    rooms = dfc.ix[X_normalised.index].house_num_rooms.div(dfc.ix[X_normalised.index].house_num_rooms.max()).values
+def get_static_features(df, X_normalised):
+    area = df.ix[X_normalised.index].area.div(df.ix[X_normalised.index].area.max()).values
+    occ = df.ix[X_normalised.index].total_occupants.div(df.ix[X_normalised.index].total_occupants.max()).values
+    rooms = df.ix[X_normalised.index].num_rooms.div(df.ix[X_normalised.index].num_rooms.max()).values
+    return {"area": area, "occ": occ, "rooms": rooms}
+
+
+def get_static_features_region_level(df, X_normalised):
+    area = df.ix[X_normalised.index].area.div(df.ix[X_normalised.index].area.max()).values
+    occ = df.ix[X_normalised.index].total_occupants.div(df.ix[X_normalised.index].total_occupants.max()).values
+    rooms = df.ix[X_normalised.index].num_rooms.div(df.ix[X_normalised.index].num_rooms.max()).values
     dd_keys = ['dd_' + str(x) for x in range(1, 13)]
-    out =  {"area":area,"occ": occ,"rooms": rooms}
+    out = {"area": area, "occ": occ, "rooms": rooms}
     for dd_k in dd_keys:
-        out[dd_k] =  dfc.ix[X_normalised.index][dd_k].div(dfc.ix[X_normalised.index][dd_k].max()).values
+        out[dd_k] = df.ix[X_normalised.index][dd_k].div(df.ix[X_normalised.index][dd_k].max()).values
     return out
 
 def preprocess_all_appliances(df, dfc):

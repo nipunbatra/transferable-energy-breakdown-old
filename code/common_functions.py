@@ -29,7 +29,7 @@ def compute_rmse_fraction(appliance, pred_df, region='Austin'):
     test_region=region
     test_home = pred_df.index[0]
     feature_list=['energy']
-    df, dfc = create_df_main(appliance, year, train_regions, train_fraction_dict,
+    df = create_df_main(appliance, year, train_regions, train_fraction_dict,
                     test_region, test_home, feature_list)
     # pred_df = mf_pred[appliance][appliance_feature][latent_factors]
     gt_df = df[pred_df.columns].ix[pred_df.index]
@@ -67,11 +67,10 @@ def create_region_df(region, year=2014):
     drop_rows = num_features_ser[num_features_ser==0].index
 
     df = df.drop(drop_rows)
-    dfc = df.copy()
     df = df.rename(columns={'house_num_rooms':'num_rooms',
                             'num_occupants':'total_occupants',
                             'difference_ratio_min_max':'ratio_difference_min_max'})
-    return df, dfc
+    return df
 
 
 def flatten(l):
@@ -97,40 +96,31 @@ def create_df_main(appliance, year, train_regions, train_fraction_dict,
     dfcs = {}
 
     for train_region in train_regions:
-        temp_df, temp_dfc = create_region_df(train_region, year)
+        temp_df= create_region_df(train_region, year)
         temp_valid_homes = valid_homes_data[train_region][appliance]
         temp_df = temp_df.ix[temp_valid_homes]
-        # Number of homes to use from this region
-        temp_num_homes = int(len(temp_dfc)*train_fraction_dict[train_region])
         # Randomly choosing subset of homes
-
         temp_df = temp_df.sample(frac=train_fraction_dict[train_region])
+        print len(temp_df), temp_df.index
         # Check that the test home is not in our data
         temp_df = temp_df.ix[[x for x in temp_df.index if x!=test_home]]
-        temp_dfc = temp_dfc.ix[temp_df.index]
         # Add degree days
         if "region" in feature_list:
             for key_num, key in enumerate(dd_keys):
                 temp_df[key]=dds[year][train_region][key_num]
-                temp_dfc[key]=dds[year][train_region][key_num]
         dfs[train_region] = temp_df
-        dfcs[train_region] = temp_dfc
 
     train_df = pd.concat(dfs.values())
-    train_dfc = pd.concat(dfcs.values())
 
 
-    test_df, test_dfc = create_region_df(test_region)
+    test_df= create_region_df(test_region)
     test_df = test_df.ix[[test_home]]
-    test_dfc = test_dfc.ix[[test_home]]
 
     if "region" in feature_list:
         for key_num, key in enumerate(dd_keys):
             test_df[key]=dds[year][test_region][key_num]
-            test_dfc[key]=dds[year][test_region][key_num]
 
     df = pd.concat([train_df, test_df])
-    dfc = pd.concat([train_dfc, test_dfc])
 
     if appliance=="hvac":
         start, stop = 5, 11
@@ -148,7 +138,7 @@ def create_df_main(appliance, year, train_regions, train_fraction_dict,
         df.loc[home, col] = np.NaN
 
 
-    return df, dfc
+    return df
 
 features_dict = {}
 features_dict['energy'] = ['None']
@@ -189,11 +179,11 @@ valid_homes_data = {}
 
 ALL_HOMES_REGION = {}
 for region in ['Austin','SanDiego','Boulder']:
-    ALL_HOMES_REGION[region] = create_region_df(region)[0].index
+    ALL_HOMES_REGION[region] = create_region_df(region).index
 
 
 def find_valid_homes(region, appliance, appliance_fraction, aggregate_fraction):
-	df, dfc = create_region_df(region)
+	df = create_region_df(region)
 	if appliance == "hvac":
 		start, stop = 5, 11
 	else:
