@@ -19,6 +19,7 @@ from common_functions import create_region_df, valid_homes_data
 import  os
 
 import numpy as np
+np.random.seed(0)
 import pandas as pd
 import pickle
 import sys
@@ -60,37 +61,38 @@ for appliance in APPLIANCES:
     for fe in FEATURE_LISTS:
         feature_string = "--feature_list='%s'" %fe
         #time.sleep(120)
+        for random_state in range(0, 10):
+            random_state_string = "--seed=%d" %random_state
+            for austin_fraction in np.linspace(0.0, 1.0, 11):
+                for boulder_fraction in [0.0, 1.0]:
+                    for sd_fraction in [1.0]:
+                        fraction_string = "--Austin_fraction=%.2f --SanDiego_fraction=%.2f --Boulder_fraction=%.2f" %(austin_fraction, sd_fraction, boulder_fraction)
+                        for home in homes_appliance_region:
+                            test_home_string = '--test_home=%d' %(home)
 
-        for austin_fraction in [0.0,1.0]:
-            for boulder_fraction in [0.0, 1.0]:
-                for sd_fraction in [1.0]:
-                    fraction_string = "--Austin_fraction=%.2f --SanDiego_fraction=%.2f --Boulder_fraction=%.2f" %(austin_fraction, sd_fraction, boulder_fraction)
-                    for home in homes_appliance_region:
-                        test_home_string = '--test_home=%d' %(home)
-
-                        total_string = 'python main.py --year=2014'
-                        total_string = " ".join([total_string, appliance_string,
-                                                 fraction_string, test_region_string,
-                                                 test_home_string, feature_string])
-                        print total_string
+                            total_string = 'python main.py --year=2014'
+                            total_string = " ".join([total_string, appliance_string,
+                                                     fraction_string, test_region_string,
+                                                     test_home_string, feature_string, random_state_string])
+                            print total_string
 
 
 
-                        OFILE = "%s/%s.out" % (SLURM_OUT, total_string)
-                        EFILE = "%s/%s.err" % (SLURM_OUT, total_string)
-                        SLURM_SCRIPT = "%s_%d_%s.pbs" %(appliance, home, fe)
-                        lines = []
-                        lines.append("#!/bin/sh\n")
-                        lines.append('#SBATCH --time=0-01:0:00\n')
-                        lines.append('#SBATCH --mem=16\n')
-                        lines.append('#SBATCH -o '+'"' +OFILE+'"\n')
-                        lines.append('#SBATCH -e '+'"' +EFILE+'"\n')
-                        lines.append(total_string+'\n')
+                            OFILE = "%s/%s.out" % (SLURM_OUT, total_string)
+                            EFILE = "%s/%s.err" % (SLURM_OUT, total_string)
+                            SLURM_SCRIPT = "%s_%d_%s.pbs" %(appliance, home, fe)
+                            lines = []
+                            lines.append("#!/bin/sh\n")
+                            lines.append('#SBATCH --time=0-01:0:00\n')
+                            lines.append('#SBATCH --mem=16\n')
+                            lines.append('#SBATCH -o '+'"' +OFILE+'"\n')
+                            lines.append('#SBATCH -e '+'"' +EFILE+'"\n')
+                            lines.append(total_string+'\n')
 
-                        with open(SLURM_SCRIPT, 'w') as f:
-                           f.writelines(lines)
-                        command = ['sbatch', SLURM_SCRIPT]
-                        time.sleep(0.5)
-                        Popen(command)
-        #time.sleep(120)
-    #time.sleep(600)
+                            with open(SLURM_SCRIPT, 'w') as f:
+                               f.writelines(lines)
+                            command = ['sbatch', SLURM_SCRIPT]
+                            time.sleep(0.5)
+                            Popen(command)
+            #time.sleep(120)
+        #time.sleep(600)
