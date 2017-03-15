@@ -93,7 +93,8 @@ for appliance in APPLIANCES:
                                f.writelines(lines)
                             command = ['sbatch', SLURM_SCRIPT]
                             time.sleep(0.5)
-                            Popen(command)
+                            print Popen(command)
+
                         time.sleep(1)
                     time.sleep(10)
                 #time.sleep(1)
