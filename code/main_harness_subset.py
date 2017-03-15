@@ -63,7 +63,7 @@ for appliance in APPLIANCES:
         #time.sleep(120)
         for random_state in range(0, 10):
             random_state_string = "--seed=%d" %random_state
-            for austin_fraction in np.linspace(0.0, 1.0, 11):
+            for austin_fraction in np.linspace(0.0, 1.0, 5):
                 for boulder_fraction in [0.0]:
                     for sd_fraction in [1.0]:
                         fraction_string = "--Austin_fraction=%.2f --SanDiego_fraction=%.2f --Boulder_fraction=%.2f" %(austin_fraction, sd_fraction, boulder_fraction)
@@ -95,9 +95,10 @@ for appliance in APPLIANCES:
                             time.sleep(0.5)
                             Popen(command)
                         time.sleep(1)
-                    #time.sleep(1)
+                    time.sleep(10)
                 #time.sleep(1)
-            time.sleep(4)
-        time.sleep(10)
+            time.sleep(6)
+        time.sleep(100)
+    time.sleep(100)
             #time.sleep(120)
         #time.sleep(600)

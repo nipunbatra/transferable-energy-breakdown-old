@@ -118,7 +118,7 @@ for feature_comb in np.array(feature_combinations)[:]:
             data_user[fe]=static_features_df[fe].dropna().values
     end_misc = time.time()
     print "MISC took", end_misc-start_misc
-    for lat in range(1, 10):
+    for lat in range(1, 9):
         try:
             print lat
 
@@ -141,7 +141,7 @@ for feature_comb in np.array(feature_combinations)[:]:
                 end_pre = time.time()
                 print "Preparing for NMF took", end_pre-start_pre
                 start_mf = time.time()
-                X, Y, res = nmf_features(A, lat, 0.01, False, idx_user, data_user, 10)
+                X, Y, res = nmf_features(A, lat, 0.01, False, idx_user, data_user, 8)
                 end_mf = time.time()
                 print "NMF took", end_mf-start_mf
                 start_post = time.time()
