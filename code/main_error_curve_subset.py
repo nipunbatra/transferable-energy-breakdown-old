@@ -57,8 +57,8 @@ def main():
                                     try:
                                         print appliance, "_".join(feature), austin_fraction, boulder_fraction, sd_fraction, k, feature_comb
                                         out[appliance]["_".join(feature)][austin_fraction][boulder_fraction][sd_fraction][seed][k]["_".join(feature_comb)]=compute_prediction(frac_path, appliance, feature_comb, k)
-                                    except:
-                                        pass
+                                    except Exception, e:
+                                        print e
 
     return out
 
