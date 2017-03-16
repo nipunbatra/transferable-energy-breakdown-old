@@ -105,7 +105,6 @@ def create_df_main(appliance, year, train_regions, train_fraction_dict,
         temp_df = temp_df.sample(frac=train_fraction_dict[train_region], random_state=seed)
         # Check that the test home is not in our data
         temp_df = temp_df.ix[[x for x in temp_df.index if x!=test_home]]
-        print temp_df.index, len(temp_df)
         temp_dfc = temp_dfc.ix[temp_df.index]
         # Add degree days
         if "region" in feature_list:

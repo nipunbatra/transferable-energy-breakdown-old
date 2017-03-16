@@ -2,6 +2,7 @@ import numpy as np
 import cvxpy as cvx
 from copy import deepcopy
 import pandas as pd
+from common_functions import create_df_main
 
 def nmf_features(A, k, constant=0.01,regularisation=False, idx_user=None, data_user=None,
                  idx_item=None, data_item=None, MAX_ITERS=30):
@@ -54,6 +55,10 @@ def nmf_features(A, k, constant=0.01,regularisation=False, idx_user=None, data_u
         if iter_num % 2 == 1:
             X = cvx.Variable(k, n)
             constraint = [X >= 0]
+            if idx_item is not None:
+                for index_item, it_name in enumerate(idx_item):
+                    constraint.append(X[index_item:,][idx_item[it_name]] == data_item[it_name])
+
         # For even iterations, treat X constant, optimize over Y.
         else:
             Y = cvx.Variable(m, k)
@@ -229,3 +234,67 @@ def transform_all_appliances(pred_df,all_appliances,  col_max, col_min):
         for month in range(start, stop):
             pred_df_copy['%s_%d' %(appliance,month)] = (col_max.max()-col_min.min())*pred_df['%s_%d'%(appliance,month)] +col_min.min()
     return pred_df_copy
+
+def prepare_df_factorisation(appliance, year, train_regions, train_fraction_dict,
+                             test_region, test_home, feature_list, seed):
+	df, dfc = create_df_main(appliance, year, train_regions, train_fraction_dict,
+	                         test_region, test_home, feature_list, seed)
+
+	X_matrix, X_normalised, col_max, col_min, appliance_cols, aggregate_cols = preprocess(df, dfc, appliance)
+	if "region" in feature_list:
+		static_features = get_static_features_region_level(dfc, X_normalised)
+	else:
+		static_features = get_static_features(dfc, X_normalised)
+	if "region" in feature_list:
+		max_f = 20
+	else:
+		max_f = 3
+	return df, dfc, X_matrix, X_normalised, col_max, col_min, \
+	       appliance_cols, aggregate_cols, static_features, max_f
+
+
+def prepare_known_features(feature_comb, static_features, X_normalised):
+	"""
+	Example of idx_user: {'occ': array([ 0,  4,  7,  8,  9, 12, 14, 15, 16, 17, 20, 22, 23, 25, 31, 34, 37,
+		41, 50, 51, 55, 59])}
+	Example of data_user: {'occ': array([ 0.5 ,  0.5 ,  0.5 ,  0.25,  0.75,  1.  ,  0.75,  0.5 ,  0.5 ,
+		 0.5 ,  1.  ,  0.75,  1.  ,  0.75,  0.25,  0.5 ,  0.75,  0.25,
+		 0.25,  0.5 ,  0.5 ,  0.75])}
+
+	"""
+	if 'None' in feature_comb:
+		idx_user = None
+		data_user = None
+	else:
+		idx_user = {}
+		data_user = {}
+		dictionary_static = {}
+		for feature in feature_comb:
+			dictionary_static[feature] = static_features[feature]
+		static_features_df = pd.DataFrame(dictionary_static, index=range(len(X_normalised.index)))
+		for fe in static_features_df.columns:
+			idx_user[fe] = np.where(static_features_df[fe].notnull())[0]
+			data_user[fe] = static_features_df[fe].dropna().values
+	return idx_user, data_user
+
+
+def create_matrix_factorised(appliance, test_home, X_normalised):
+	X_home = X_normalised.copy()
+	if appliance == "hvac":
+		start, end = 5, 11
+	else:
+		start, end = 1, 13
+	for month in range(start, end):
+		X_home.loc[test_home, '%s_%d' % (appliance, month)] = np.NAN
+	mask = X_home.notnull().values
+	# Ensure repeatably random problem data.
+	A = X_home.copy()
+	return A
+
+
+def create_prediction(test_home, X, Y, X_normalised, appliance, col_max, col_min, appliance_cols):
+	pred_df = pd.DataFrame(Y * X)
+	pred_df.columns = X_normalised.columns
+	pred_df.index = X_normalised.index
+	pred_df = transform_2(pred_df.ix[test_home], appliance, col_max, col_min)[appliance_cols]
+	return pred_df
