@@ -3,6 +3,8 @@ import pandas as pd
 import itertools
 import numpy as np
 path = os.path.expanduser('~/transfer_subset/')
+path = os.path.expanduser('~/transfer_subset_seed/')
+
 from common_functions import create_feature_combinations
 
 
@@ -15,8 +17,9 @@ FEATURE_LISTS = [
     ['energy', 'home', 'region']
 ]
 
-def compute_prediction(frac_path, appliance, feature_comb, k):
-    file_path = os.path.join(frac_path, '%s_%d_%s_*.csv' %(appliance, k, "_".join(feature_comb)))
+
+def compute_prediction(frac_path, seed, appliance, feature_comb, k):
+    file_path = os.path.join(frac_path, '%d_%s_%d_%s_*.csv' %(seed, appliance, k, "_".join(feature_comb)))
     files = glob.glob(file_path)
     out = {}
     for e in files:
@@ -37,30 +40,31 @@ def main():
             out[appliance]["_".join(feature)] = {}
             test_path = os.path.join(path, test_region, "_".join(feature))
 
-            for austin_fraction in [0.0, 1.0]:
+            for austin_fraction in np.linspace(0.0,1.0,6):
                 out[appliance]["_".join(feature)][austin_fraction] = {}
                 for boulder_fraction in [0.0]:
                     out[appliance]["_".join(feature)][austin_fraction][boulder_fraction] = {}
                     for sd_fraction in [1.0]:
                         out[appliance]["_".join(feature)][austin_fraction][boulder_fraction][sd_fraction] = {}
-
-                        for k in range(1,9):
-                            out[appliance]["_".join(feature)][austin_fraction][boulder_fraction][sd_fraction][k]={}
-                            train_fraction_dict = {'Austin':austin_fraction,'Boulder':boulder_fraction,'SanDiego':sd_fraction}
-                            frac_string = "_".join([str(int(100*train_fraction_dict[x])) for x in train_regions])
-                            frac_path = os.path.join(test_path, frac_string)
-                            for feature_comb in np.array(feature_combinations)[:]:
-                                try:
-                                    print appliance, "_".join(feature), austin_fraction, boulder_fraction, sd_fraction, k, feature_comb
-                                    out[appliance]["_".join(feature)][austin_fraction][boulder_fraction][sd_fraction][k]["_".join(feature_comb)]=compute_prediction(frac_path, appliance, feature_comb, k)
-                                except:
-                                    pass
+                        for seed in range(0, 10):
+                            out[appliance]["_".join(feature)][austin_fraction][boulder_fraction][sd_fraction][seed]={}
+                            for k in range(1,9):
+                                out[appliance]["_".join(feature)][austin_fraction][boulder_fraction][sd_fraction][seed][k]={}
+                                train_fraction_dict = {'Austin':austin_fraction,'Boulder':boulder_fraction,'SanDiego':sd_fraction}
+                                frac_string = "_".join([str(int(100*train_fraction_dict[x])) for x in train_regions])
+                                frac_path = os.path.join(test_path, frac_string)
+                                for feature_comb in np.array(feature_combinations)[:]:
+                                    try:
+                                        print appliance, "_".join(feature), austin_fraction, boulder_fraction, sd_fraction, k, feature_comb
+                                        out[appliance]["_".join(feature)][austin_fraction][boulder_fraction][sd_fraction][seed][k]["_".join(feature_comb)]=compute_prediction(frac_path, appliance, feature_comb, k)
+                                    except:
+                                        pass
 
     return out
 
 out = main()
 import pickle
-pickle.dump(out, open('out_fraction_subset.pkl','wb'))
+pickle.dump(out, open('out_fraction_subset_seed.pkl','wb'))
 """
 
 import os, glob
