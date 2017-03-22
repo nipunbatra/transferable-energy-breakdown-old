@@ -48,11 +48,14 @@ def compute_rmse_fraction(appliance, pred_df, region='Austin'):
     gt_fraction = gt_df.div(aggregate_df) * 100
     pred_fraction = pred_df.div(aggregate_df) * 100
 
+    gt_fraction_dropna = gt_fraction.unstack().dropna()
+    pred_fraction_dropna = pred_fraction.unstack().dropna()
+    pred_fraction_dropna = pred_fraction_dropna.ix[gt_fraction_dropna.index]
 
 
 
-    rms = np.sqrt(mean_squared_error(pred_fraction.unstack().dropna(), gt_fraction.unstack().dropna()))
-    return rms
+    rms = np.sqrt(mean_squared_error(gt_fraction_dropna, pred_fraction_dropna))
+    return gt_fraction, pred_fraction, rms
 
 
 def create_region_df(region, year=2014):
