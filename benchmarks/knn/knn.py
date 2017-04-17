@@ -112,7 +112,7 @@ for train_regions in train_regions_list:
                 out_small[test_home] = pd.Series(o)
                 out_small_n[test_home] = pd.Series(o_n)
             pred_df = pd.DataFrame(out_small).T
-            all_cols = np.intersect1d(appliance_cols,pred_df.columns )
+            all_cols = np.intersect1d(appliance_cols,pred_df.columns)
             pred_df = pred_df[all_cols]
             temp = compute_rmse_fraction(appliance, pred_df)
             out['_'.join(train_regions)][appliance][k] = temp

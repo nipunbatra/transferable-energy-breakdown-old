@@ -1,9 +1,9 @@
 """
 Sample Usage
-run main.py --year=2014 --appliance='fridge' --Austin_fraction=0.1 --SanDiego_fraction=0.0 --Boulder_fraction=0.0 --test_region="SanDiego" --test_home=26 --feature_list="energy, household, region" --seed=0
+run main.py --year=2014 --appliance='fridge' --Austin_fraction=0.1 --SanDiego_fraction=0.0 --Boulder_fraction=0.0 --test_region="SanDiego" --test_home=26 --feature_list="energy, household, region" --seed=0 --cost="absolute" --useall=True
 
 
-Usage: main.py --year=Y --appliance=A --Austin_fraction=au_frac --SanDiego_fraction=sd_frac --Boulder_fraction=bo_frac --test_region=TSR --test_home=TSH --feature_list=FL --seed=0
+Usage: main.py --year=Y --appliance=A --Austin_fraction=au_frac --SanDiego_fraction=sd_frac --Boulder_fraction=bo_frac --test_region=TSR --test_home=TSH --feature_list=FL --seed=0 --cost=COST --useall=U
 
 Options:
     --year=Y [2014, 2015, ..]
@@ -15,6 +15,8 @@ Options:
     --test_home=TSH  test home [integer]
     --feature_list=FL Feature List [list]
     --seed = Seed Int
+    --cost = Cost String
+    --useall = UseAll Bool
 """
 
 import sys, traceback
@@ -29,11 +31,13 @@ import os
 np.random.seed(0)
 
 from common_functions import create_region_df, features_dict, create_feature_combinations, create_df_main
-from matrix_factorisation import nmf_features, prepare_df_factorisation,prepare_known_features, create_matrix_factorised, create_prediction
+from matrix_factorisation import nmf_features, prepare_df_factorisation, prepare_known_features, \
+	create_matrix_factorised, create_prediction
 
 arguments = docopt(__doc__)
 appliance = arguments['--appliance']
-
+cost = arguments['--cost']
+use_all = bool(arguments['--useall'])
 year = int(arguments['--year'])
 seed = int(arguments['--seed'])
 test_home = int(arguments['--test_home'])
@@ -72,17 +76,20 @@ for feature_comb in np.array(feature_combinations)[:]:
 	df, dfc, X_matrix, X_normalised, col_max, col_min, \
 	appliance_cols, aggregate_cols, static_features, max_f = prepare_df_factorisation(appliance, year, train_regions,
 	                                                                                  train_fraction_dict,
-	                                                                                  test_region, test_home,
-	                                                                                  feature_list, seed)
+	                                                                                  test_region, [test_home],
+	                                                                                  feature_list, seed, use_all)
 	idx_user, data_user = prepare_known_features(feature_comb, static_features, X_normalised)
 
-	for lat in range(1, 9):
+	for lat in range(1, 2):
+		print lat
+
 		try:
 			csv_path = create_file_store_path(dir_path, appliance, seed, lat, feature_comb, test_home)
 			if os.path.isfile(csv_path):
 				print "skipping", csv_path
 				pass
-			A = create_matrix_factorised(appliance, test_home, X_normalised)
+			A = create_matrix_factorised(appliance, [test_home], X_normalised)
+			print A
 			X, Y, res = nmf_features(A=A, k=lat, constant=0.01, regularisation=False,
 			                         idx_user=idx_user, data_user=data_user,
 			                         idx_item=None, data_item=None, MAX_ITERS=10)

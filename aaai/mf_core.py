@@ -2,7 +2,6 @@ import numpy as np
 import cvxpy as cvx
 from copy import deepcopy
 import pandas as pd
-from common_functions import create_df_main
 
 
 def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_user=None,
@@ -69,7 +68,6 @@ def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_
 				# print num_cols
 				for index_feature, fe_name in enumerate(idx_user):
 					constraint.append(Y[:, index_feature][idx_user[fe_name]] == data_user[fe_name])
-				# print constraint
 				# return constraint
 
 
@@ -185,9 +183,12 @@ def preprocess(df, dfc, appliance, matrix_max=None, matrix_min=None, use_all=Tru
 
 
 def get_static_features(dfc, X_normalised):
-	area = dfc.ix[X_normalised.index].area.div(dfc.ix[X_normalised.index].area.max()).values
-	occ = dfc.ix[X_normalised.index].num_occupants.div(dfc.ix[X_normalised.index].num_occupants.max()).values
-	rooms = dfc.ix[X_normalised.index].house_num_rooms.div(dfc.ix[X_normalised.index].house_num_rooms.max()).values
+	area_col = [x for x in dfc.columns if "area" in x][0]
+	rooms_col = [x for x in dfc.columns if "rooms" in x][0]
+	occ_col = [x for x in dfc.columns if "occupants" in x][0]
+	area = dfc.ix[X_normalised.index][area_col].div(dfc.ix[X_normalised.index][area_col].max()).values
+	occ = dfc.ix[X_normalised.index][occ_col].div(dfc.ix[X_normalised.index][occ_col].max()).values
+	rooms = dfc.ix[X_normalised.index][rooms_col].div(dfc.ix[X_normalised.index][rooms_col].max()).values
 	return {"area": area, "occ": occ, "rooms": rooms}
 
 

@@ -17,7 +17,7 @@ def autolabel(rects, ax):
             label_position = height + (y_height * 0.01)
 
         ax.text(rect.get_x() + rect.get_width()/2., label_position,
-                '%d' % int(height),
+                '%d' % height,
                 ha='center', va='bottom')
 
 
