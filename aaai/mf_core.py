@@ -50,6 +50,14 @@ def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_
 		if iter_num % 2 == 1:
 			X = cvx.Variable(k, n)
 			constraint = [X >= 0]
+
+			for ap in range(n/2):
+
+				# Put constraints that aggregate factor be more than
+				# appliance factor
+				constraint.append(X[:, ap] < X[:, ap+n/2])
+
+
 			if idx_item is not None:
 				for index_item, it_name in enumerate(idx_item):
 					temp_data = np.array(data_item[it_name]).flatten()

@@ -9,6 +9,7 @@ from scipy.optimize import nnls
 
 import pickle
 from tensorly.decomposition import parafac, non_negative_parafac
+from tensor_custom_core import *
 
 
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
@@ -17,6 +18,8 @@ year = 2014
 
 def un_normalize(x, maximum, minimum):
     return (maximum-minimum)*x + minimum
+
+a, b = 2, 3
 
 
 pred = {}
@@ -39,32 +42,26 @@ for appliance in APPLIANCES[:]:
 	df = df[energy_cols]
 	col_max = df.max().max()
 	col_min = df.min().min()
-	#df = (1.0*(df-col_min))/(col_max-col_min)
+	df = (1.0*(df-col_min))/(col_max-col_min)
 	tensor = df.values.reshape((len(df), 2, months))
 	M, N, O = tensor.shape
 	mask = np.ones(M).astype('bool')
 
-	for rank in range(1, 5):
-		print rank, appliance
-		pred[appliance][rank] = {}
+	for case in range(1, 5):
+		pred[appliance][case] = {}
 		for i, home in enumerate(df.index[:]):
+
 
 			tensor_copy = tensor.copy()
 			mask_i = mask.copy()
 			mask_i[i] = False
 			tensor_to_factorise = tensor_copy[mask_i]
 
-			X, Y, Z = non_negative_parafac(tensor_to_factorise, rank)
+			H, A, T = learn_HAT(case, tensor_to_factorise, a, b, num_iter=2000, lr=0.1, dis=False)
+			prediction = multiply_case(H, A, T, case)
+			pred_appliance = un_normalize(prediction[0, 1, :], col_max, col_min)
+			pred[appliance][case][home] = pred_appliance
+			print appliance, case, i, home, pred_appliance
+		pred[appliance][case] = pd.DataFrame(pred[appliance][case]).T
 
-			assert(X.shape[0]==M-1)
-			alpha = np.einsum('nk, ok -> nok', Y, Z).reshape((N * O, rank))
-			beta = tensor_copy[~mask_i].reshape(N * O, 1)
-			# Learn X_M from aggregate energy values
-			X_M = nnls(alpha[:months], beta[:months].reshape(-1, ))[0].reshape((1, rank))
-			prediction = np.einsum('ir, jr, kr -> ijk', X_M, Y, Z)
-			# Only the appliance energy
-			pred_appliance = prediction[0, 1, :]
-			pred[appliance][rank][home] = pred_appliance
-		pred[appliance][rank] = pd.DataFrame(pred[appliance][rank]).T
-
-pickle.dump(pred, open('predictions/tensor-parafac.pkl', 'w'))
+pickle.dump(pred, open('predictions/tensor-custom.pkl', 'w'))

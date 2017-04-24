@@ -1,0 +1,55 @@
+import autograd.numpy as np
+from autograd import multigrad
+
+cases = {
+	1: {'HA': 'Ma, Nb -> MNab', 'HAT': 'MNab, Oab -> MNO'},
+	2: {'HA': 'Ma, Nab -> MNb', 'HAT': 'MNb, Ob -> MNO'},
+	3: {'HA': 'Mab, Na -> MNb', 'HAT': 'MNb, Ob -> MNO'},
+	4: {'HA': 'Ma, Na -> MNa', 'HAT': 'MNa, Oa -> MNO'}
+}
+
+
+def multiply_case(H, A, T, case):
+	HA = np.einsum(cases[case]['HA'], H, A)
+	HAT = np.einsum(cases[case]['HAT'], HA, T)
+	return HAT
+
+
+def cost(H, A, T, E_np_masked, case):
+	HAT = multiply_case(H, A, T, case)
+	mask = ~np.isnan(E_np_masked)
+	error = (HAT - E_np_masked)[mask].flatten()
+	return np.sqrt((error ** 2).mean())
+
+
+def learn_HAT(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False):
+	mg = multigrad(cost, argnums=[0, 1, 2])
+
+	params = {}
+	params['M'], params['N'], params['O'] = E_np_masked.shape
+	params['a'] = a
+	params['b'] = b
+	H_dim_chars = list(cases[case]['HA'].split(",")[0].strip())
+	H_dim = tuple(params[x] for x in H_dim_chars)
+	A_dim_chars = list(cases[case]['HA'].split(",")[1].split("-")[0].strip())
+	A_dim = tuple(params[x] for x in A_dim_chars)
+	T_dim_chars = list(cases[case]['HAT'].split(",")[1].split("-")[0].strip())
+	T_dim = tuple(params[x] for x in T_dim_chars)
+	H = np.random.rand(*H_dim)
+	A = np.random.rand(*A_dim)
+	T = np.random.rand(*T_dim)
+
+	# GD procedure
+	for i in range(num_iter):
+		del_h, del_a, del_t = mg(H, A, T, E_np_masked, case)
+		H -= lr * del_h
+		A -= lr * del_a
+		T -= lr * del_t
+		# Projection to non-negative space
+		H[H < 0] = 0
+		A[A < 0] = 0
+		T[T < 0] = 0
+		if i % 500 == 0:
+			if dis:
+				print(cost(H, A, T, E_np_masked, case))
+	return H, A, T

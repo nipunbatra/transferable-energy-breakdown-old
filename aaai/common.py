@@ -2,6 +2,9 @@ from sklearn.metrics import mean_squared_error
 from create_matrix import *
 
 
+
+
+
 def compute_rmse_fraction(appliance, pred_df, region='Austin',year=2014):
 	appliance_df = create_matrix_all_entries(region, year, appliance)
 

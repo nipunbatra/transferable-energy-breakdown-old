@@ -4,6 +4,15 @@ import sys
 sys.path.append("../code/")
 from common_functions import create_region_df
 
+upper_limit = {
+	'hvac': 40.,
+	'fridge': 10.,
+	'wm': 1.,
+	'oven':1.,
+	'mw':1.,
+	'dw':1.
+
+}
 
 def create_matrix_single_region(region, year):
 	temp_df, temp_dfc = create_region_df(region, year)
@@ -23,5 +32,9 @@ def create_matrix_all_entries(region, year, appliance):
 	df = df[all_cols].dropna()
 	df = df[df["total_occupants"] > 0]
 	df = df[df["area"] > 100]
+	df = df[~(df[aggregate_cols] < 200).sum(axis=1).astype('bool')]
+	ul_appliance = upper_limit[appliance]
+	df = df[~(df[appliance_cols] < ul_appliance).sum(axis=1).astype('bool')]
+
 	return df
 

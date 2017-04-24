@@ -15,7 +15,7 @@ year = 2014
 
 
 pred = {}
-for appliance in APPLIANCES:
+for appliance in APPLIANCES[1:2]:
 	if appliance == "hvac":
 		start, stop = 5, 11
 	else:
@@ -54,8 +54,9 @@ for appliance in APPLIANCES:
 		idx_user, data_user = prepare_known_features(feature_comb, static_features, X_normalised)
 
 		for cost in ['absolute','relative']:
+		#for cost in ['absolute']:
 			pred[appliance][features][cost] = {}
-			for latent_factors in range(3, 9):
+			for latent_factors in range(3, 10):
 				pred[appliance][features][cost][latent_factors] = {}
 
 				print latent_factors, features, appliance, cost
@@ -70,6 +71,7 @@ for appliance in APPLIANCES:
 					pred_df = create_prediction(test_home, X, Y, X_normalised, appliance,
 					                            col_max, col_min, appliance_cols)
 					pred[appliance][features][cost][latent_factors][test_home] = pred_df
+
 				pred[appliance][features][cost][latent_factors] = pd.DataFrame(pred[appliance][features][cost][latent_factors]).T
 
 pickle.dump(pred, open('predictions/mf.pkl', 'w'))
