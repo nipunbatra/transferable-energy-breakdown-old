@@ -8,7 +8,7 @@ from sklearn.model_selection import LeaveOneOut
 from scipy.optimize import nnls
 
 import pickle
-from tensorly.decomposition import parafac, non_negative_parafac
+from tensor_custom_core import *
 
 
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
@@ -17,6 +17,11 @@ year = 2014
 
 def un_normalize(x, maximum, minimum):
     return (maximum-minimum)*x + minimum
+
+
+a, b = 3, 3
+
+print a, b
 
 
 pred = {}
@@ -35,36 +40,40 @@ for appliance in APPLIANCES[:]:
 
 	df = appliance_df.copy()
 	dfc = df.copy()
+	static_cols = ['area', 'total_occupants', 'num_rooms']
+	static_df = df[static_cols]
+	static_df = static_df.div(static_df.max())
 
 	df = df[energy_cols]
 	col_max = df.max().max()
 	col_min = df.min().min()
-	#df = (1.0*(df-col_min))/(col_max-col_min)
+	df = (1.0*(df-col_min))/(col_max-col_min)
 	tensor = df.values.reshape((len(df), 2, months))
 	M, N, O = tensor.shape
 	mask = np.ones(M).astype('bool')
 
-	for rank in range(1, 7):
-		print rank, appliance
-		pred[appliance][rank] = {}
+	case=4
+	pred[appliance][case] = {}
+	for a in range(1, 6):
+		print "*"*20
+		print a, case, appliance
+		print "*"*20
+
+		b = a
+		pred[appliance][case][a] = {}
 		for i, home in enumerate(df.index[:]):
 
+
 			tensor_copy = tensor.copy()
-			mask_i = mask.copy()
-			mask_i[i] = False
-			tensor_to_factorise = tensor_copy[mask_i]
+			tensor_copy[i, 1, :]=np.NaN
+			H, A, T = learn_HAT(case, tensor_copy, a, a, num_iter=2000, lr=0.1, dis=False, cost_function='rel',
+			                    H_known=static_df.values[:,:a])
+			prediction = multiply_case(H, A, T, case)
+			#pred_appliance = prediction[i, 1, :]
 
-			X, Y, Z = non_negative_parafac(tensor_to_factorise, rank)
+			pred_appliance = un_normalize(prediction[i, 1, :], col_max, col_min)
+			pred[appliance][case][a][home] = pred_appliance
+			print appliance, case, i, home, pred_appliance, un_normalize(tensor[i, 1, :], col_max, col_min)
+		pred[appliance][case][a] = pd.DataFrame(pred[appliance][case][a]).T
 
-			assert(X.shape[0]==M-1)
-			alpha = np.einsum('nk, ok -> nok', Y, Z).reshape((N * O, rank))
-			beta = tensor_copy[~mask_i].reshape(N * O, 1)
-			# Learn X_M from aggregate energy values
-			X_M = nnls(alpha[:months], beta[:months].reshape(-1, ))[0].reshape((1, rank))
-			prediction = np.einsum('ir, jr, kr -> ijk', X_M, Y, Z)
-			# Only the appliance energy
-			pred_appliance = prediction[0, 1, :]
-			pred[appliance][rank][home] = pred_appliance
-		pred[appliance][rank] = pd.DataFrame(pred[appliance][rank]).T
-
-pickle.dump(pred, open('predictions/tensor-parafac.pkl', 'w'))
+pickle.dump(pred, open('predictions/tensor-custom-parafac-static-rel.pkl', 'w'))

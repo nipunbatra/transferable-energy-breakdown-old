@@ -19,6 +19,29 @@ data_path = os.path.expanduser("~/git/scalable-nilm/create_dataset/metadata/all_
 out_overall = pickle.load(open(data_path, 'r'))
 
 
+
+
+def compute_rmse(appliance, pred_df, region='Austin'):
+	year = 2014
+	train_regions = [region]
+	train_fraction_dict = {'SanDiego': 1.0, 'Austin': 0.0, 'Boulder': 0.0}
+	test_region = region
+	test_home = pred_df.index[0]
+	feature_list = ['energy']
+	df, dfc = create_df_main(appliance, year, train_regions, train_fraction_dict,
+	                         test_region, [test_home], feature_list, seed=0)
+	# pred_df = mf_pred[appliance][appliance_feature][latent_factors]
+	gt_df = df[pred_df.columns].ix[pred_df.index]
+	gt_df = gt_df.unstack().dropna()
+	pred_df = pred_df.unstack().dropna()
+	pred_df = pred_df.ix[gt_df.index]
+
+	rms = np.sqrt(mean_squared_error(gt_df, pred_df))
+	return rms
+
+
+
+
 def compute_rmse_fraction(appliance, pred_df, region='Austin'):
 	year = 2014
 	train_regions = [region]

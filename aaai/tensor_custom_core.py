@@ -15,15 +15,31 @@ def multiply_case(H, A, T, case):
 	return HAT
 
 
-def cost(H, A, T, E_np_masked, case):
+def cost_abs(H, A, T, E_np_masked, case):
 	HAT = multiply_case(H, A, T, case)
 	mask = ~np.isnan(E_np_masked)
 	error = (HAT - E_np_masked)[mask].flatten()
 	return np.sqrt((error ** 2).mean())
 
+def cost_rel(H, A, T, E_np_masked, case):
+	HAT = multiply_case(H, A, T, case)
+	mask = ~np.isnan(E_np_masked)
+	error = (HAT - E_np_masked)[mask].flatten()/(1+E_np_masked[mask].flatten())
+	return np.sqrt((error ** 2).mean())
 
-def learn_HAT(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False):
+def set_known(A, W):
+    mask = ~np.isnan(W)
+    A[:,:mask.shape[1]][mask] = W[mask]
+    return A
+
+
+def learn_HAT(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, cost_function='abs', H_known=None, A_known=None, T_known=None):
+	if cost_function=='abs':
+		cost = cost_abs
+	else:
+		cost = cost_rel
 	mg = multigrad(cost, argnums=[0, 1, 2])
+
 
 	params = {}
 	params['M'], params['N'], params['O'] = E_np_masked.shape
@@ -36,6 +52,7 @@ def learn_HAT(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False):
 	T_dim_chars = list(cases[case]['HAT'].split(",")[1].split("-")[0].strip())
 	T_dim = tuple(params[x] for x in T_dim_chars)
 	H = np.random.rand(*H_dim)
+
 	A = np.random.rand(*A_dim)
 	T = np.random.rand(*T_dim)
 
@@ -45,6 +62,13 @@ def learn_HAT(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False):
 		H -= lr * del_h
 		A -= lr * del_a
 		T -= lr * del_t
+		# Projection to known values
+		if H_known is not None:
+			H = set_known(H, H_known)
+		if A_known is not None:
+			A = set_known(A, A_known)
+		if T_known is not None:
+			T = set_known(T, T_known)
 		# Projection to non-negative space
 		H[H < 0] = 0
 		A[A < 0] = 0

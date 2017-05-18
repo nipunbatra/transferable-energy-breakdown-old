@@ -3,6 +3,25 @@ from create_matrix import *
 
 
 
+def compute_rmse(appliance, pred_df, region='Austin',year=2014):
+	appliance_df = create_matrix_all_entries(region, year, appliance)
+
+	if appliance == "hvac":
+		start, stop = 5, 11
+	else:
+		start, stop = 1, 13
+	pred_df = pred_df.copy()
+	pred_df.columns = [['%s_%d' % (appliance, month) for month in range(start, stop)]]
+	gt_df = appliance_df[pred_df.columns].ix[pred_df.index]
+
+
+
+	gt_df = gt_df.unstack().dropna()
+	pred_df = pred_df.unstack().dropna()
+	pred_df = pred_df.ix[gt_df.index]
+
+	rms = np.sqrt(mean_squared_error(gt_df, pred_df))
+	return rms
 
 
 def compute_rmse_fraction(appliance, pred_df, region='Austin',year=2014):

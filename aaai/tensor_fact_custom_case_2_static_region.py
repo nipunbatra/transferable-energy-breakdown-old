@@ -9,6 +9,7 @@ from scipy.optimize import nnls
 
 import pickle
 from tensor_custom_core import *
+from degree_days import dds
 
 
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
@@ -40,6 +41,10 @@ for appliance in APPLIANCES[:]:
 
 	df = appliance_df.copy()
 	dfc = df.copy()
+	static_cols = ['area', 'total_occupants', 'num_rooms']
+	static_df = df[static_cols]
+	static_df = static_df.div(static_df.max())
+	weather_values = np.array(dds[2014]['Austin'][start-1:stop-1]).reshape(-1,1)
 
 	df = df[energy_cols]
 	col_max = df.max().max()
@@ -49,28 +54,28 @@ for appliance in APPLIANCES[:]:
 	M, N, O = tensor.shape
 	mask = np.ones(M).astype('bool')
 
-	for case in range(1, 5):
-		pred[appliance][case] = {}
-		for a in range(1, 6):
-			print "*"*20
-			print a, case, appliance
-			print "*"*20
+	case=2
+	pred[appliance][case] = {}
+	for a in range(1, 6):
+		print "*"*20
+		print a, case, appliance
+		print "*"*20
 
-			b = a
-			pred[appliance][case][a] = {}
-			for i, home in enumerate(df.index[:]):
+		b = a
+		pred[appliance][case][a] = {}
+		for i, home in enumerate(df.index[:]):
 
 
-				tensor_copy = tensor.copy()
-				tensor_copy[i, 1, :]=np.NaN
+			tensor_copy = tensor.copy()
+			tensor_copy[i, 1, :]=np.NaN
+			H, A, T = learn_HAT(case, tensor_copy, a, a, num_iter=2000, lr=0.1, dis=False, cost_function='rel',
+			                    H_known=static_df.values[:,:a])
+			prediction = multiply_case(H, A, T, case)
+			#pred_appliance = prediction[i, 1, :]
 
-				H, A, T = learn_HAT(case, tensor_copy, a, a, num_iter=2000, lr=0.1, dis=False, cost_function='rel')
-				prediction = multiply_case(H, A, T, case)
-				#pred_appliance = prediction[i, 1, :]
+			pred_appliance = un_normalize(prediction[i, 1, :], col_max, col_min)
+			pred[appliance][case][a][home] = pred_appliance
+			print appliance, case, i, home, pred_appliance, un_normalize(tensor[i, 1, :], col_max, col_min)
+		pred[appliance][case][a] = pd.DataFrame(pred[appliance][case][a]).T
 
-				pred_appliance = un_normalize(prediction[i, 1, :], col_max, col_min)
-				pred[appliance][case][a][home] = pred_appliance
-				print appliance, case, i, home, pred_appliance, un_normalize(tensor[i, 1, :], col_max, col_min)
-			pred[appliance][case][a] = pd.DataFrame(pred[appliance][case][a]).T
-
-pickle.dump(pred, open('predictions/tensor-custom-relative.pkl', 'w'))
+pickle.dump(pred, open('predictions/tensor-custom-2-static-rel.pkl', 'w'))
