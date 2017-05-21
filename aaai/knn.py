@@ -18,7 +18,7 @@ for appliance in APPLIANCES:
 	else:
 		start, stop = 1, 13
 	pred[appliance] = {}
-	appliance_df = create_matrix_all_entries(region, year, appliance)
+	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
 	min_max_scaler = preprocessing.MinMaxScaler()
 	static_cols = ['area', 'total_occupants', 'num_rooms']
 	aggregate_cols = [x for x in appliance_df.columns if "aggregate" in x]

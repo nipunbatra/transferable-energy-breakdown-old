@@ -4,7 +4,7 @@ from create_matrix import *
 
 
 def compute_rmse(appliance, pred_df, region='Austin',year=2014):
-	appliance_df = create_matrix_all_entries(region, year, appliance)
+	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
 
 	if appliance == "hvac":
 		start, stop = 5, 11
@@ -25,7 +25,7 @@ def compute_rmse(appliance, pred_df, region='Austin',year=2014):
 
 
 def compute_rmse_fraction(appliance, pred_df, region='Austin',year=2014):
-	appliance_df = create_matrix_all_entries(region, year, appliance)
+	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
 
 	if appliance == "hvac":
 		start, stop = 5, 11

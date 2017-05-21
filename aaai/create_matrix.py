@@ -19,7 +19,7 @@ def create_matrix_single_region(region, year):
 	return temp_df, temp_dfc
 
 
-def create_matrix_all_entries(region, year, appliance):
+def create_matrix_region_appliance_year(region, year, appliance, all=True):
 	df, dfc = create_matrix_single_region(region, year)
 	if appliance == "hvac":
 		start, stop = 5, 11
@@ -29,7 +29,10 @@ def create_matrix_all_entries(region, year, appliance):
 	aggregate_cols = ['%s_%d' % ("aggregate", month) for month in range(start, stop)]
 	static_cols = ['area', 'total_occupants', 'num_rooms']
 	all_cols = np.concatenate(np.array([appliance_cols, aggregate_cols, static_cols]).flatten())
-	df = df[all_cols].dropna()
+	if all:
+		df = df[all_cols].dropna()
+	else:
+		df = df[all_cols]
 	df = df[df["total_occupants"] > 0]
 	df = df[df["area"] > 100]
 	df = df[~(df[aggregate_cols] < 200).sum(axis=1).astype('bool')]
