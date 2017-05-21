@@ -31,13 +31,14 @@ def create_matrix_region_appliance_year(region, year, appliance, all=True):
 	all_cols = np.concatenate(np.array([appliance_cols, aggregate_cols, static_cols]).flatten())
 	if all:
 		df = df[all_cols].dropna()
+		df = df[df["total_occupants"] > 0]
+		df = df[df["area"] > 100]
+		df = df[~(df[aggregate_cols] < 200).sum(axis=1).astype('bool')]
+		ul_appliance = upper_limit[appliance]
+		df = df[~(df[appliance_cols] < ul_appliance).sum(axis=1).astype('bool')]
 	else:
 		df = df[all_cols]
-	df = df[df["total_occupants"] > 0]
-	df = df[df["area"] > 100]
-	df = df[~(df[aggregate_cols] < 200).sum(axis=1).astype('bool')]
-	ul_appliance = upper_limit[appliance]
-	df = df[~(df[appliance_cols] < ul_appliance).sum(axis=1).astype('bool')]
+
 
 	return df
 
