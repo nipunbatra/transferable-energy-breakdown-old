@@ -52,7 +52,6 @@ from features import *
 import sys
 
 from sklearn.neighbors import KNeighborsRegressor
-from sklearn.cross_validation import ShuffleSplit
 
 NUM_NEIGHBOUR_MAX = 6
 F_MAX = 6
