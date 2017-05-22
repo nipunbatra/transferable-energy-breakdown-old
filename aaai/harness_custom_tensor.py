@@ -14,10 +14,10 @@ for appliance in APPLIANCES[:]:
 		for all_features in ['True','False']:
 
 			for case in range(1, 5):
-				for a in range(1, 8):
+				for a in range(1, 10):
 					OFILE = "%s/%s_%d.out" % (SLURM_OUT, appliance, a)
 					EFILE = "%s/%s_%d.err" % (SLURM_OUT, appliance, a)
-					SLURM_SCRIPT = "%s_%d.pbs" % (appliance, a)
+					SLURM_SCRIPT = "%s_%s_%s_%d_%d.pbs" % (appliance[0], cost[0], all_features[0], case, a)
 					CMD = 'python tensor_fact_custom_harness.py %s %d %d %s %s' % (appliance, case, a, cost, all_features)
 					lines = []
 					lines.append("#!/bin/sh\n")
@@ -32,4 +32,4 @@ for appliance in APPLIANCES[:]:
 					command = ['sbatch', SLURM_SCRIPT]
 					time.sleep(2)
 					Popen(command)
-					print appliance, cost, all_features, a
+					print SLURM_SCRIPT
