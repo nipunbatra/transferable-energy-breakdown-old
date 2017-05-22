@@ -8,13 +8,13 @@ SLURM_OUT = "../../slurm_out"
 import time
 
 
-for appliance in APPLIANCES[:1]:
+for appliance in APPLIANCES[:]:
 	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
 	for cost in ['abs','rel']:
 		for all_features in ['True','False']:
 
-			for case in range(2, 3):
-				for a in range(1, 2):
+			for case in range(1, 5):
+				for a in range(1, 8):
 					OFILE = "%s/%s_%d.out" % (SLURM_OUT, appliance, a)
 					EFILE = "%s/%s_%d.err" % (SLURM_OUT, appliance, a)
 					SLURM_SCRIPT = "%s_%d.pbs" % (appliance, a)
