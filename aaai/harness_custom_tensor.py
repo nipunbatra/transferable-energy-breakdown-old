@@ -11,17 +11,17 @@ import time
 for appliance in APPLIANCES[:]:
 	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
 	for cost in ['abs','rel']:
-		for all_features in ['True','False']:
+		for all_features in ['False']:
 
 			for case in range(1, 5):
 				for a in range(1, 10):
-					OFILE = "%s/%s_%d.out" % (SLURM_OUT, appliance, a)
-					EFILE = "%s/%s_%d.err" % (SLURM_OUT, appliance, a)
+					OFILE = "%s/%s_%s_%s_%d_%d.out" % (SLURM_OUT, appliance[0], cost[0], all_features[0], case, a)
+					EFILE = "%s/%s_%s_%s_%d_%d.err" % (SLURM_OUT, appliance[0], cost[0], all_features[0], case, a)
 					SLURM_SCRIPT = "%s_%s_%s_%d_%d.pbs" % (appliance[0], cost[0], all_features[0], case, a)
 					CMD = 'python tensor_fact_custom_harness.py %s %d %d %s %s' % (appliance, case, a, cost, all_features)
 					lines = []
 					lines.append("#!/bin/sh\n")
-					lines.append('#SBATCH --time=0-01:0:00\n')
+					lines.append('#SBATCH --time=0-16:0:00\n')
 					lines.append('#SBATCH --mem=16\n')
 					lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
 					lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
