@@ -11,7 +11,7 @@ import time
 for appliance in APPLIANCES[:]:
 	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
 	for cost in ['abs','rel']:
-		for all_features in ['False']:
+		for all_features in ['True','False']:
 
 			for case in range(1, 5):
 				for a in range(1, 10):
