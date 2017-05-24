@@ -14,7 +14,7 @@ for appliance in APPLIANCES:
 						SLURM_OUT, appliance[0], cost[0], all_features[0], features[-1], latent_factors)
 					EFILE = "%s/%s_%s_%s_%s_%d.err" % (
 						SLURM_OUT, appliance[0], cost[0], all_features[0], features[-1], latent_factors)
-					SLURM_SCRIPT = "%s_%s_%s_%d_%d.pbs" % (
+					SLURM_SCRIPT = "%s_%s_%s_%s_%d.pbs" % (
 						appliance[0], cost[0], all_features[0], features[-1], latent_factors)
 					CMD = 'python mf_harness.py %s %s %s %s %d' % (
 						appliance, features, cost, all_features, latent_factors)
