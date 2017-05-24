@@ -6,7 +6,6 @@ import sys
 import os
 from create_matrix import *
 from sklearn.model_selection import LeaveOneOut
-from metric_learn import MLKR
 from sklearn.neighbors import KNeighborsRegressor
 import pickle
 
