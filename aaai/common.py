@@ -53,3 +53,22 @@ def compute_rmse_fraction(appliance, pred_df, region='Austin',year=2014):
 
 	rms = np.sqrt(mean_squared_error(gt_fraction_dropna, pred_fraction_dropna))
 	return gt_fraction, pred_fraction, rms, difference_error
+
+import os
+
+def get_directory_structure(rootdir):
+	"""
+	Creates a nested dictionary that represents the folder structure of rootdir
+	"""
+	dir = {}
+	rootdir = rootdir.rstrip(os.sep)
+	start = rootdir.rfind(os.sep) + 1
+	for path, dirs, files in os.walk(rootdir):
+		folders = path[start:].split(os.sep)
+		if len(files):
+			subdir = pd.read_csv(files[0], index_col=0)
+		else:
+			subdir = dict.fromkeys(files)
+		parent = reduce(dict.get, folders[:-1], dir)
+		parent[folders[-1]] = subdir
+	return dir
