@@ -65,6 +65,8 @@ def get_directory_structure(rootdir):
 	start = rootdir.rfind(os.sep) + 1
 	for path, dirs, files in os.walk(rootdir):
 		folders = path[start:].split(os.sep)
+		print path, dirs, files, folders
+
 		if len(files):
 			subdir = pd.read_csv(files[0], index_col=0)
 		else:
