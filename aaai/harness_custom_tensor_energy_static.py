@@ -21,7 +21,7 @@ for appliance in APPLIANCES[:]:
 							appliance, all_features, a, h, t, cost)
 						lines = []
 						lines.append("#!/bin/sh\n")
-						lines.append('#SBATCH --time=0-16:0:00\n')
+						lines.append('#SBATCH --time=0-32:0:00\n')
 						lines.append('#SBATCH --mem=16\n')
 						lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
 						lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
