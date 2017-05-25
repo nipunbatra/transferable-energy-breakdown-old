@@ -7,9 +7,14 @@ from subprocess import Popen
 
 for appliance in APPLIANCES:
 	for features in ['energy', 'energy_static']:
+		if features=="energy":
+			min_f = 1
+		else:
+			# If using static features, should have >3 latent factors
+			min_f = 3
 		for cost in ['absolute', 'relative']:
-			for all_features in ['True', 'False']:
-				for latent_factors in range(1, 10):
+			for all_features in ['False']:
+				for latent_factors in range(min_f, 10):
 					OFILE = "%s/%s_%s_%s_%s_%d.out" % (
 						SLURM_OUT, appliance[0], cost[0], all_features[0], features[-1], latent_factors)
 					EFILE = "%s/%s_%s_%s_%s_%d.err" % (
@@ -20,7 +25,7 @@ for appliance in APPLIANCES:
 						appliance, features, cost, all_features, latent_factors)
 					lines = []
 					lines.append("#!/bin/sh\n")
-					lines.append('#SBATCH --time=0-16:0:00\n')
+					lines.append('#SBATCH --time=0-36:0:00\n')
 					lines.append('#SBATCH --mem=16\n')
 					lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
 					lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
