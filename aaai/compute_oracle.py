@@ -20,7 +20,7 @@ for appliance in APPLIANCES[:]:
 		start, stop = 1, 13
 	appliance_cols = ['%s_%d' %(appliance, month) for month in range(start, stop)]
 	pred[appliance] = {}
-	appliance_df = create_matrix_all_entries(region, year, appliance)
+	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
 
 	for test_home in appliance_df.index[:]:
 		print test_home, appliance

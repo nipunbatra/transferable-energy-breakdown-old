@@ -28,7 +28,7 @@ for appliance in APPLIANCES[:]:
 		start, stop = 1, 13
 	months = stop - start
 	pred[appliance] = {}
-	appliance_df = create_matrix_all_entries(region, year, appliance)
+	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
 	aggregate_cols = [x for x in appliance_df.columns if "aggregate" in x]
 	appliance_cols = [x for x in appliance_df.columns if appliance in x]
 	energy_cols = np.concatenate([aggregate_cols, appliance_cols])

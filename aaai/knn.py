@@ -11,6 +11,9 @@ APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 region = "Austin"
 year = 2014
 
+ALL_HOMES = True
+ALL_FEATURES =  not ALL_HOMES
+
 pred = {}
 for appliance in APPLIANCES:
 	if appliance == "hvac":
@@ -18,7 +21,7 @@ for appliance in APPLIANCES:
 	else:
 		start, stop = 1, 13
 	pred[appliance] = {}
-	appliance_df = create_matrix_all_entries(region, year, appliance)
+	appliance_df = create_matrix_region_appliance_year(region, year, appliance, all_features=ALL_FEATURES)
 	min_max_scaler = preprocessing.MinMaxScaler()
 	static_cols = ['area', 'total_occupants', 'num_rooms']
 	aggregate_cols = [x for x in appliance_df.columns if "aggregate" in x]
@@ -49,4 +52,8 @@ for appliance in APPLIANCES:
 					knn.fit(X_train, Y_train)
 					pred[appliance][features][neighbours][test_home][month] = knn.predict(X_test)[0]
 			pred[appliance][features][neighbours] = pd.DataFrame(pred[appliance][features][neighbours]).T
-pickle.dump(pred, open('predictions/knn.pkl','w'))
+if ALL_HOMES:
+	pickle.dump(pred, open('predictions/knn.pkl','w'))
+else:
+	pickle.dump(pred, open('predictions/knn_all_homes.pkl', 'w'))
+
