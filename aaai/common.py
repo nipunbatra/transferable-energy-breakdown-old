@@ -68,7 +68,7 @@ def get_directory_structure(rootdir):
 		print path, dirs, files, folders
 
 		if len(files):
-			subdir = pd.read_csv(files[0], index_col=0)
+			subdir = pd.read_csv(os.path.join(path, files[0]), index_col=0)
 		else:
 			subdir = dict.fromkeys(files)
 		parent = reduce(dict.get, folders[:-1], dir)
