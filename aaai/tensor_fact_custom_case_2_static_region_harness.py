@@ -1,21 +1,22 @@
 import os
+
 from create_matrix import *
 from degree_days import dds
 from tensor_custom_core import *
 
 
-
 def un_normalize(x, maximum, minimum):
-    return (maximum-minimum)*x + minimum
+	return (maximum - minimum) * x + minimum
 
-region="Austin"
-year=2014
+
+region = "Austin"
+year = 2014
 appliance, ALL_FEATURES, a, h, t, cost = sys.argv[1:]
 a = int(a)
-if ALL_FEATURES=="True":
-	ALL_FEATURES=True
+if ALL_FEATURES == "True":
+	ALL_FEATURES = True
 else:
-	False
+	ALL_FEATURES = False
 
 if appliance == "hvac":
 	start, stop = 5, 11
@@ -32,23 +33,23 @@ dfc = df.copy()
 static_cols = ['area', 'total_occupants', 'num_rooms']
 static_df = df[static_cols]
 static_df = static_df.div(static_df.max())
-weather_values = np.array(dds[2014]['Austin'][start-1:stop-1]).reshape(-1,1)
+weather_values = np.array(dds[2014]['Austin'][start - 1:stop - 1]).reshape(-1, 1)
 
 df = df[energy_cols]
 col_max = df.max().max()
 col_min = df.min().min()
-df = (1.0*(df-col_min))/(col_max-col_min)
+df = (1.0 * (df - col_min)) / (col_max - col_min)
 tensor = df.values.reshape((len(df), 2, months))
 M, N, O = tensor.shape
 mask = np.ones(M).astype('bool')
 
-case=2
+case = 2
 if h == "static":
-	H_known = static_df.values[:,:a]
+	H_known = static_df.values[:, :a]
 else:
 	H_known = None
 
-if t=="weather":
+if t == "weather":
 	T_known = weather_values
 else:
 	T_known = None
@@ -58,9 +59,8 @@ pred = {}
 for i, home in enumerate(df.index[:]):
 	try:
 
-
 		tensor_copy = tensor.copy()
-		tensor_copy[i, 1, :]=np.NaN
+		tensor_copy[i, 1, :] = np.NaN
 		H, A, T = learn_HAT(case, tensor_copy, a, a, num_iter=2000, lr=0.1, dis=False, cost_function=cost,
 		                    H_known=H_known, T_known=T_known)
 		prediction = multiply_case(H, A, T, case)
