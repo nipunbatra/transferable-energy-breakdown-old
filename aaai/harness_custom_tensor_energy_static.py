@@ -18,15 +18,18 @@ if not os.path.exists(SLURM_OUT):
 	os.makedirs(SLURM_OUT)
 
 # Max. num running processes you want. This is to prevent hogging the cluster
-MAX_NUM_MY_JOBS = 80
+MAX_NUM_MY_JOBS = 140
 # Delay between jobs when we exceed the max. number of jobs we want on the cluster
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
 for appliance in APPLIANCES[:]:
 	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
-	for all_features in ['True', 'False']:
-		for cost in ['abs', 'rel']:
+	for all_features in ['False']:
+	#for all_features in ['True', 'False']:
+		#for cost in ['abs', 'rel']:
+		for cost in ['abs']:
+
 
 			for t in ['None', 'weather']:
 				for h in ['None', 'static']:
