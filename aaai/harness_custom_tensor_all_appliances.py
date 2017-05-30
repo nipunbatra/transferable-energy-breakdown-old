@@ -31,7 +31,7 @@ for cost in ['abs','rel']:
 			CMD = 'python tensor_fact_custom_all_appliances_harness.py %d %d %s' % (case, a, cost)
 			lines = []
 			lines.append("#!/bin/sh\n")
-			lines.append('#SBATCH --time=0-16:0:00\n')
+			lines.append('#SBATCH --time=1-16:0:00\n')
 			lines.append('#SBATCH --mem=16\n')
 			lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
 			lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
