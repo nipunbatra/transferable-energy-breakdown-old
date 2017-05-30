@@ -23,6 +23,34 @@ ALL_HOMES = True
 ALL_FEATURES = not ALL_HOMES
 cost = 'abs'
 
+def tf_factorise_all_appliances(case, a, test_home, cost, all_features):
+	df, dfc = create_matrix_single_region(region, year)
+	start, stop=1, 13
+	energy_cols = np.array([['%s_%d' % (appliance, month) for month in range(start, stop)] for appliance in APPLIANCES_ORDER]).flatten()
+
+
+	dfc = df.copy()
+
+	df = dfc[energy_cols]
+	col_max = df.max().max()
+	col_min = df.min().min()
+	df = (1.0 * (df - col_min)) / (col_max - col_min)
+	tensor = df.values.reshape((len(df), 7, stop-start))
+	M, N, O = tensor.shape
+	mask = np.ones(M).astype('bool')
+
+	# Find location of test home in the tensor
+	i = np.where(df.index.values == test_home)[0][0]
+	tensor_copy = tensor.copy()
+	tensor_copy[i, 1:, :] = np.NaN
+
+	H, A, T = learn_HAT(case, tensor_copy, a, a, num_iter=2000, lr=0.1, dis=False, cost_function=cost)
+	prediction = multiply_case(H, A, T, case)
+	# pred_appliance = prediction[i, 1, :]
+
+	pred_appliance = un_normalize(prediction[i, 1, :], col_max, col_min)
+	return pred_appliance
+
 
 def tf_factorise(appliance, case, a, test_home, cost, all_features):
 	if appliance == "hvac":

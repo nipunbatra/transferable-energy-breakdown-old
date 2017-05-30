@@ -4,6 +4,8 @@ import sys
 sys.path.append("../code/")
 from common_functions import create_region_df
 
+APPLIANCES_ORDER = ['aggregate', 'hvac', 'fridge', 'mw', 'dw', 'wm', 'oven']
+
 upper_limit = {
 	'hvac': 40.,
 	'fridge': 10.,
@@ -13,6 +15,21 @@ upper_limit = {
 	'dw':1.
 
 }
+
+def create_matrix_all_appliances(region, year, all_features=False):
+	df, dfc = create_matrix_single_region(region, year)
+	start, stop=1, 13
+	energy_cols = np.array([['%s_%d' % (appliance, month) for month in range(start, stop)] for appliance in APPLIANCES_ORDER]).flatten()
+	static_cols = np.array(['area', 'total_occupants', 'num_rooms'])
+	all_cols = np.concatenate(np.array([energy_cols, static_cols]).flatten())
+	if all_features:
+		df = df[all_cols].dropna()
+
+	else:
+		df = df[all_cols]
+	return df
+
+
 
 def create_matrix_single_region(region, year):
 	temp_df, temp_dfc = create_region_df(region, year)
