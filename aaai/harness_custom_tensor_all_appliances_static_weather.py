@@ -35,7 +35,7 @@ for a in range(1, 13):
 			lines.append('#SBATCH --time=1-16:0:00\n')
 			lines.append('#SBATCH --mem=16\n')
 			lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
-			lines.append('#SBATCH --exclude = Artemis5\n')
+			lines.append('#SBATCH --exclude=artemis5\n')
 
 
 			lines.append(CMD + '\n')
