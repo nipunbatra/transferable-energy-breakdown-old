@@ -59,7 +59,7 @@ else:
 
 pred = {}
 # Find location of test home in the tensor
-for i in range(len(df))[:2]:
+for i in range(len(df))[:]:
 	home_num = df.index.values[i]
 	print home_num, i
 	tensor_copy = tensor.copy()
