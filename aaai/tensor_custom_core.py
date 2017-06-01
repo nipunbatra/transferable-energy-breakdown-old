@@ -21,25 +21,28 @@ def cost_abs(H, A, T, E_np_masked, case):
 	error = (HAT - E_np_masked)[mask].flatten()
 	return np.sqrt((error ** 2).mean())
 
+
 def cost_rel(H, A, T, E_np_masked, case):
 	HAT = multiply_case(H, A, T, case)
 	mask = ~np.isnan(E_np_masked)
-	error = (HAT - E_np_masked)[mask].flatten()/(1+E_np_masked[mask].flatten())
+	error = (HAT - E_np_masked)[mask].flatten() / (1 + E_np_masked[mask].flatten())
 	return np.sqrt((error ** 2).mean())
 
+
 def set_known(A, W):
-    mask = ~np.isnan(W)
-    A[:,:mask.shape[1]][mask] = W[mask]
-    return A
+	mask = ~np.isnan(W)
+	A[:, :mask.shape[1]][mask] = W[mask]
+	return A
 
 
-def learn_HAT(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, cost_function='abs', H_known=None, A_known=None, T_known=None):
-	if cost_function=='abs':
+def learn_HAT(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, cost_function='abs', H_known=None,
+              A_known=None, T_known=None):
+	np.random.seed(0)
+	if cost_function == 'abs':
 		cost = cost_abs
 	else:
 		cost = cost_rel
 	mg = multigrad(cost, argnums=[0, 1, 2])
-
 
 	params = {}
 	params['M'], params['N'], params['O'] = E_np_masked.shape
