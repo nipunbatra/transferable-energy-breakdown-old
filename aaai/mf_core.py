@@ -215,11 +215,8 @@ def preprocess_all_appliances(df, dfc):
 	all_appliances = ['mw', 'oven', 'hvac', 'fridge', 'dw', 'wm']
 	all_appliance_cols = []
 	for appliance in all_appliances:
-		if appliance == "hvac":
-			# start, end=5, 11
-			start, end = 1, 13
-		else:
-			start, end = 1, 13
+
+		start, end = 1, 13
 
 		appliance_cols = ['%s_%d' % (appliance, month) for month in range(start, end)]
 		all_appliance_cols.append(appliance_cols)
@@ -246,8 +243,7 @@ def preprocess_all_appliances(df, dfc):
 	for col in X_matrix.columns:
 		X_normalised[col] = (X_matrix[col] - col_min.min()) / (col_max.max() - col_min.min())
 	df = pd.DataFrame(X_normalised)
-	return X_matrix, X_normalised, col_max, col_min, appliance_cols, aggregate_cols, all_appliance_cols, all_appliance_cols_flat
-
+	return X_matrix, X_normalised, col_max, col_min
 
 def transform_all_appliances(pred_df, all_appliances, col_max, col_min):
 	pred_df_copy = pred_df.copy()
@@ -333,8 +329,27 @@ def create_matrix_factorised(appliance, test_home_list, X_normalised):
 	A = X_home.copy()
 	return A
 
+def create_matrix_factorised_all_appliances(test_home_list, X_normalised):
+	X_home = X_normalised.copy()
+
+	start, end = 1, 13
+	for test_home in test_home_list:
+		for appliance in ['fridge','hvac','wm','mw','dw','oven']:
+			for month in range(start, end):
+				X_home.loc[test_home, '%s_%d' % (appliance, month)] = np.NAN
+	# Ensure repeatably random problem data.
+	A = X_home.copy()
+	return A
+
 
 def create_prediction(test_home, X, Y, X_normalised, appliance, matrix_max, matrix_min, appliance_cols):
+	pred_df = pd.DataFrame(Y * X)
+	pred_df.columns = X_normalised.columns
+	pred_df.index = X_normalised.index
+	pred_df = transform_2(pred_df.ix[test_home], appliance, matrix_max, matrix_min)[appliance_cols]
+	return pred_df
+
+def create_prediction_all_appliances(test_home, X, Y, X_normalised, appliance, matrix_max, matrix_min, appliance_cols):
 	pred_df = pd.DataFrame(Y * X)
 	pred_df.columns = X_normalised.columns
 	pred_df.index = X_normalised.index
