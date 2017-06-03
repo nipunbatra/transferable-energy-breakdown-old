@@ -52,20 +52,23 @@ idx_user, data_user = prepare_known_features(feature_comb, static_features, X_no
 
 loo = LeaveOneOut()
 pred = {a:{} for a in APPLIANCES_ORDER}
-for train_ix, test_ix in loo.split(df[:2]):
+for train_ix, test_ix in loo.split(df[:]):
+	try:
 
-	test_home = df.index.values[test_ix][0]
-	print test_home
-	A = create_matrix_factorised_all_appliances([test_home], X_normalised)
-	X, Y, res = nmf_features(A=A, k=latent_factors, constant=0.01, regularisation=False,
-	                         idx_user=idx_user, data_user=data_user,
-	                         idx_item=None, data_item=None, MAX_ITERS=8, cost=cost)
-	pred_df = {}
-	for appliance in APPLIANCES_ORDER:
-		appliance_cols = ['%s_%d' %(appliance, month) for month in range(1, 13)]
+		test_home = df.index.values[test_ix][0]
+		print test_home
+		A = create_matrix_factorised_all_appliances([test_home], X_normalised)
+		X, Y, res = nmf_features(A=A, k=latent_factors, constant=0.01, regularisation=False,
+		                         idx_user=idx_user, data_user=data_user,
+		                         idx_item=None, data_item=None, MAX_ITERS=8, cost=cost)
+		pred_df = {}
+		for appliance in APPLIANCES_ORDER:
+			appliance_cols = ['%s_%d' %(appliance, month) for month in range(1, 13)]
 
-		pred[appliance][test_home] = create_prediction(test_home, X, Y, X_normalised, appliance,
-	                            col_max, col_min, appliance_cols)
+			pred[appliance][test_home] = create_prediction(test_home, X, Y, X_normalised, appliance,
+		                            col_max, col_min, appliance_cols)
+	except:
+		pass
 
 
 
