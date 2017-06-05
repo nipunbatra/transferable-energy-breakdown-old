@@ -7,11 +7,14 @@ from degree_days import dds
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
-region = "Austin"
+region = "SanDiego"
 year = 2014
 
 import os
-base_path = os.path.expanduser("~/scalable/tf_all_appliances/")
+if region=="Austin":
+	base_path = os.path.expanduser("~/scalable/tf_all_appliances/")
+else:
+	base_path = os.path.expanduser("~/scalable/sd/tf_all_appliances/")
 
 def un_normalize(x, maximum, minimum):
 	return (maximum - minimum) * x + minimum
@@ -25,7 +28,6 @@ case, a, cost = sys.argv[1:]
 case = int(case)
 a = int(a)
 
-region, year = 'Austin', 2014
 df, dfc = create_matrix_single_region(region, year)
 start, stop = 1, 13
 energy_cols = np.array(
@@ -34,7 +36,7 @@ energy_cols = np.array(
 static_cols = ['area', 'total_occupants', 'num_rooms']
 static_df = df[static_cols]
 static_df = static_df.div(static_df.max())
-weather_values = np.array(dds[2014]['Austin'][start - 1:stop - 1]).reshape(-1, 1)
+weather_values = np.array(dds[2014][region][start - 1:stop - 1]).reshape(-1, 1)
 
 dfc = df.copy()
 

@@ -36,7 +36,7 @@ def create_matrix_single_region(region, year):
 	return temp_df, temp_dfc
 
 
-def create_matrix_region_appliance_year(region, year, appliance, all_features=True):
+def create_matrix_region_appliance_year(region, year, appliance, all_features=False):
 	df, dfc = create_matrix_single_region(region, year)
 	if appliance == "hvac":
 		start, stop = 5, 11

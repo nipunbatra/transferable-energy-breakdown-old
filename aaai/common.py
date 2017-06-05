@@ -18,41 +18,45 @@ def compute_rmse(appliance, pred_df, region='Austin',year=2014):
 
 	gt_df = gt_df.unstack().dropna()
 	pred_df = pred_df.unstack().dropna()
-	pred_df = pred_df.ix[gt_df.index]
+	index_intersection = gt_df.index.intersection(pred_df.index)
+	gt_df = gt_df.ix[index_intersection]
+	pred_df = pred_df.ix[index_intersection]
 
 	rms = np.sqrt(mean_squared_error(gt_df, pred_df))
 	return rms
 
 
 def compute_rmse_fraction(appliance, pred_df, region='Austin',year=2014):
-	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
+    appliance_df = create_matrix_region_appliance_year(region, year, appliance)
 
-	if appliance == "hvac":
-		start, stop = 5, 11
-	else:
-		start, stop = 1, 13
-	pred_df = pred_df.copy()
-	pred_df.columns = [['%s_%d' % (appliance, month) for month in range(start, stop)]]
-	gt_df = appliance_df[pred_df.columns].ix[pred_df.index]
+    if appliance == "hvac":
+        start, stop = 5, 11
+    else:
+        start, stop = 1, 13
+    pred_df = pred_df.copy()
+    pred_df.columns = [['%s_%d' % (appliance, month) for month in range(start, stop)]]
+    gt_df = appliance_df[pred_df.columns].ix[pred_df.index]
 
-	aggregate_df = appliance_df.ix[pred_df.index][['aggregate_%d' % month for month in range(start, stop)]]
+    aggregate_df = appliance_df.ix[pred_df.index][['aggregate_%d' % month for month in range(start, stop)]]
 
-	aggregate_df.columns = gt_df.columns
-	rows, cols = np.where((aggregate_df < 100))
-	for r, c in zip(rows, cols):
-		r_i, c_i = aggregate_df.index[r], aggregate_df.columns[c]
-		aggregate_df.loc[r_i, c_i] = np.NaN
+    aggregate_df.columns = gt_df.columns
+    rows, cols = np.where((aggregate_df < 100))
+    for r, c in zip(rows, cols):
+        r_i, c_i = aggregate_df.index[r], aggregate_df.columns[c]
+        aggregate_df.loc[r_i, c_i] = np.NaN
 
-	gt_fraction = gt_df.div(aggregate_df) * 100
-	pred_fraction = pred_df.div(aggregate_df) * 100
+    gt_fraction = gt_df.div(aggregate_df) * 100
+    pred_fraction = pred_df.div(aggregate_df) * 100
 
-	gt_fraction_dropna = gt_fraction.unstack().dropna()
-	pred_fraction_dropna = pred_fraction.unstack().dropna()
-	pred_fraction_dropna = pred_fraction_dropna.ix[gt_fraction_dropna.index]
-	difference_error = (gt_fraction_dropna-pred_fraction_dropna).abs()
+    gt_fraction_dropna = gt_fraction.unstack().dropna()
+    pred_fraction_dropna = pred_fraction.unstack().dropna()
+    index_intersection = gt_fraction_dropna.index.intersection(pred_fraction_dropna.index)
+    gt_fraction_dropna = gt_fraction_dropna.ix[index_intersection]
+    pred_fraction_dropna = pred_fraction_dropna.ix[index_intersection]
+    difference_error = (gt_fraction_dropna-pred_fraction_dropna).abs()
 
-	rms = np.sqrt(mean_squared_error(gt_fraction_dropna, pred_fraction_dropna))
-	return gt_fraction, pred_fraction, rms, difference_error
+    rms = np.sqrt(mean_squared_error(gt_fraction_dropna, pred_fraction_dropna))
+    return gt_fraction_dropna, pred_fraction_dropna, rms, difference_error
 
 import os
 
