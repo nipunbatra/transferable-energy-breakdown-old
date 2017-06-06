@@ -9,7 +9,7 @@ def un_normalize(x, maximum, minimum):
 	return (maximum - minimum) * x + minimum
 
 
-region = "Austin"
+region = "SanDiego"
 year = 2014
 appliance, ALL_FEATURES, a, h, t, cost = sys.argv[1:]
 a = int(a)
@@ -72,7 +72,11 @@ for i, home in enumerate(df.index[:]):
 
 out_df = pd.DataFrame(pred).T
 
-base_path = os.path.expanduser("~/scalable/tf_energy_static/")
+if region=="Austin":
+	base_path = os.path.expanduser("~/scalable/tf_energy_static/")
+else:
+	base_path = os.path.expanduser("~/scalable/sd/tf_energy_static/")
+
 if not os.path.exists(base_path):
 	os.makedirs(base_path)
 out = pd.DataFrame(pred).T
