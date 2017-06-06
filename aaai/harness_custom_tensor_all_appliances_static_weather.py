@@ -1,8 +1,6 @@
 from create_matrix import create_matrix_region_appliance_year
 from subprocess import Popen
 import os
-region = "Austin"
-year = 2014
 import delegator
 
 # Enter your username on the cluster
