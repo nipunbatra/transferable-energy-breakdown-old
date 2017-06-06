@@ -22,7 +22,7 @@ DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
 
-for cost in ['abs','rel']:
+for cost in ['abs']:
 	for case in range(1, 5):
 		for a in range(1, 11):
 			OFILE = "%s/%s_%d_%d.out" % (SLURM_OUT,  cost[0],  case, a)

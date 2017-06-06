@@ -8,7 +8,7 @@ from sklearn.neighbors import KNeighborsRegressor
 import pickle
 
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
-region = "Austin"
+region = "SanDiego"
 year = 2014
 
 ALL_HOMES = True
@@ -59,9 +59,11 @@ for appliance in APPLIANCES[:]:
 						pred[appliance][features][neighbours][test_home][month] = appliance_df[appliance_cols].ix[best_nghbrs][appliance+"_"+str(month)].mean()
 
 					except:
-						print test_home
+						pass
 #if ALL_HOMES:
 #	pickle.dump(pred, open('predictions/knn.pkl','w'))
 #else:
 #	pickle.dump(pred, open('predictions/knn_all_homes.pkl', 'w'))
+
+pickle.dump(pred, open('predictions/sd_knn_all_homes.pkl', 'w'))
 
