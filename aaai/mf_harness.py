@@ -9,7 +9,7 @@ from sklearn.model_selection import LeaveOneOut
 from sklearn.neighbors import KNeighborsRegressor
 import pickle
 
-region = "Austin"
+region = "SanDiego"
 year = 2014
 
 import sys
@@ -67,7 +67,7 @@ for train_ix, test_ix in loo.split(appliance_df):
 	                            col_max, col_min, appliance_cols)
 	pred[test_home] = pred_df
 
-base_path = os.path.expanduser("~/scalable/mf/")
+base_path = os.path.expanduser("~/scalable/sd/mf/")
 
 out = pd.DataFrame(pred).T
 store_path = "/".join([str(x) for x in [appliance, features, cost, all_features, latent_factors]])
