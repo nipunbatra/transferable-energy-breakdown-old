@@ -3,11 +3,16 @@ from create_matrix import *
 from tensor_custom_core import *
 
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
-region = "Austin"
+region = "SanDiego"
 year = 2014
 
 import os
-base_path = os.path.expanduser("~/scalable/tf/")
+if region=="Austin":
+	base_path = os.path.expanduser("~/scalable/tf/")
+else:
+	base_path = os.path.expanduser("~/scalable/sd/tf/")
+
+
 
 def un_normalize(x, maximum, minimum):
 	return (maximum - minimum) * x + minimum

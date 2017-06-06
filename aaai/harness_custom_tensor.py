@@ -1,7 +1,7 @@
 from create_matrix import create_matrix_region_appliance_year
 from subprocess import Popen
 
-region = "Austin"
+region = "SanDiego"
 year = 2014
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 SLURM_OUT = "../../slurm_out"
@@ -10,7 +10,7 @@ import time
 
 for appliance in APPLIANCES[:]:
 	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
-	for cost in ['abs','rel']:
+	for cost in ['abs']:
 		for all_features in ['True','False']:
 
 			for case in range(1, 5):
@@ -30,6 +30,6 @@ for appliance in APPLIANCES[:]:
 					with open(SLURM_SCRIPT, 'w') as f:
 						f.writelines(lines)
 					command = ['sbatch', SLURM_SCRIPT]
-					time.sleep(2)
+					#time.sleep(2)
 					Popen(command)
 					print SLURM_SCRIPT
