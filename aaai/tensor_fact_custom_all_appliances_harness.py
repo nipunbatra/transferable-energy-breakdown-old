@@ -12,7 +12,7 @@ year = 2014
 
 import os
 if region=="Austin":
-	base_path = os.path.expanduser("~/scalable/tf_all_appliances/")
+	base_path = os.path.expanduser("~/scalable/filtered_tf_all_appliances/")
 else:
 	base_path = os.path.expanduser("~/scalable/sd/tf_all_appliances/")
 
