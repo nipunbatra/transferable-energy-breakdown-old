@@ -7,7 +7,7 @@ from degree_days import dds
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
-region = "SanDiego"
+region = "Austin"
 year = 2014
 
 import os

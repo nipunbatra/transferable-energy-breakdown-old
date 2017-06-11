@@ -14,7 +14,7 @@ upper_limit = {
 }
 
 ### FIX This
-data_path = os.path.expanduser("~/git/scalable-nilm/create_dataset/metadata/all_regions_years.pkl")
+data_path = os.path.expanduser("~/git/scalable-nilm/create_dataset/metadata/all_regions_years_austin_cleaned.pkl")
 
 out_overall = pickle.load(open(data_path, 'r'))
 

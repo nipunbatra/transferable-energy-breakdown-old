@@ -24,7 +24,6 @@ DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
 for appliance in APPLIANCES[:]:
-	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
 	for all_features in ['False']:
 	#for all_features in ['True', 'False']:
 		#for cost in ['abs', 'rel']:

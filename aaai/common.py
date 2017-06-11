@@ -23,7 +23,7 @@ def compute_rmse(appliance, pred_df, region='Austin',year=2014):
 	pred_df = pred_df.ix[index_intersection]
 
 	rms = np.sqrt(mean_squared_error(gt_df, pred_df))
-	return rms
+	return gt_df, pred_df, rms, (gt_df-pred_df).abs()
 
 
 def compute_rmse_fraction(appliance, pred_df, region='Austin',year=2014):
