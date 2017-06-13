@@ -23,7 +23,7 @@ import time
 
 
 for cost in ['abs']:
-	for case in range(1, 5):
+	for case in range(2, 3):
 		for a in range(1, 11):
 			OFILE = "%s/%s_%d_%d.out" % (SLURM_OUT,  cost[0],  case, a)
 			EFILE = "%s/%s_%d_%d.err" % (SLURM_OUT, cost[0], case, a)

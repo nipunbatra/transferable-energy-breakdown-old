@@ -38,7 +38,7 @@ energy_cols = np.array(
 static_cols = ['area', 'total_occupants', 'num_rooms']
 static_df = df[static_cols]
 static_df = static_df.div(static_df.max())
-weather_values = np.array(dds[2014]['Austin'][start - 1:stop - 1]).reshape(-1, 1)
+weather_values = np.array(dds[2014][region][start - 1:stop - 1]).reshape(-1, 1)
 
 dfc = df.copy()
 
