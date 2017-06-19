@@ -72,7 +72,7 @@ for train_ix, test_ix in loo.split(df[:]):
 
 
 if region=="Austin":
-	base_path = os.path.expanduser("~/scalable/mf_all_appliances/")
+	base_path = os.path.expanduser("~/scalable/wo_norm_mf_all_appliances/")
 else:
 	base_path = os.path.expanduser("~/scalable/sd/mf_all_appliances/")
 if not os.path.exists(base_path):

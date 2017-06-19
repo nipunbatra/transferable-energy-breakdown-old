@@ -1,6 +1,5 @@
 region = "Austin"
 year = 2014
-APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 SLURM_OUT = "../../slurm_out"
 import time
 from subprocess import Popen
