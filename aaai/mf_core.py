@@ -2,6 +2,7 @@ import numpy as np
 import cvxpy as cvx
 from copy import deepcopy
 import pandas as pd
+from common import APPLIANCES_ORDER
 
 
 def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_user=None,
@@ -212,7 +213,7 @@ def get_static_features_region_level(dfc, X_normalised):
 
 
 def preprocess_all_appliances(df, dfc):
-	all_appliances = ['mw', 'oven', 'hvac', 'fridge', 'dw', 'wm']
+	all_appliances = APPLIANCES_ORDER[1:]
 	all_appliance_cols = []
 	for appliance in all_appliances:
 
@@ -227,8 +228,8 @@ def preprocess_all_appliances(df, dfc):
 	for y in all_appliance_cols:
 		for x in y:
 			all_appliance_cols_flat.append(x)
-	all_cols = deepcopy(all_appliance_cols_flat)
-	all_cols.extend(aggregate_cols)
+	all_cols = deepcopy(aggregate_cols)
+	all_cols.extend(all_appliance_cols_flat)
 	X_matrix = dfc[all_cols]
 
 	columns_max = {}
@@ -240,8 +241,11 @@ def preprocess_all_appliances(df, dfc):
 	X_normalised = X_matrix.copy()
 	# for col in X_matrix.columns:
 	#    X_normalised[col] = (X_matrix[col]-col_min[col])/(col_max[col]-col_min[col])
+	"""
 	for col in X_matrix.columns:
 		X_normalised[col] = (X_matrix[col] - col_min.min()) / (col_max.max() - col_min.min())
+	
+	"""
 	df = pd.DataFrame(X_normalised)
 	return X_matrix, X_normalised, col_max, col_min
 

@@ -25,7 +25,7 @@ else:
 	all_features = False
 
 
-region, year = 'SanDiego', 2014
+region, year = 'Austin', 2014
 df, dfc = create_matrix_single_region(region, year)
 start, stop = 1, 13
 energy_cols = np.array(
@@ -72,7 +72,7 @@ for train_ix, test_ix in loo.split(df[:]):
 
 
 if region=="Austin":
-	base_path = os.path.expanduser("~/scalable/mf_all_appliances/")
+	base_path = os.path.expanduser("~/scalable/wo_norm_mf_all_appliances/")
 else:
 	base_path = os.path.expanduser("~/scalable/sd/mf_all_appliances/")
 if not os.path.exists(base_path):
