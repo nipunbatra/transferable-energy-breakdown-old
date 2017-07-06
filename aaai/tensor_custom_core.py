@@ -36,8 +36,8 @@ def set_known(A, W):
 
 
 def learn_HAT(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, cost_function='abs', H_known=None,
-              A_known=None, T_known=None):
-	np.random.seed(0)
+              A_known=None, T_known=None, random_seed=0):
+	np.random.seed(random_seed)
 	if cost_function == 'abs':
 		cost = cost_abs
 	else:
