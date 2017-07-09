@@ -36,7 +36,8 @@ def set_known(A, W):
 
 
 def learn_HAT(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, cost_function='abs', H_known=None,
-              A_known=None, T_known=None, random_seed=0):
+              A_known=None, T_known=None, random_seed=0, random_mul_constant=1,
+              random_add_constant=0):
 	np.random.seed(random_seed)
 	if cost_function == 'abs':
 		cost = cost_abs
@@ -54,10 +55,10 @@ def learn_HAT(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, cost_fu
 	A_dim = tuple(params[x] for x in A_dim_chars)
 	T_dim_chars = list(cases[case]['HAT'].split(",")[1].split("-")[0].strip())
 	T_dim = tuple(params[x] for x in T_dim_chars)
-	H = np.random.rand(*H_dim)
+	H = np.random.rand(*H_dim)*random_mul_constant+random_add_constant
 
-	A = np.random.rand(*A_dim)
-	T = np.random.rand(*T_dim)
+	A = np.random.rand(*A_dim)*random_mul_constant+random_add_constant
+	T = np.random.rand(*T_dim)*random_mul_constant+random_add_constant
 
 	# GD procedure
 	for i in range(num_iter):
@@ -80,3 +81,61 @@ def learn_HAT(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, cost_fu
 			if dis:
 				print(cost(H, A, T, E_np_masked, case))
 	return H, A, T
+
+def learn_HAT_random_normal(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, cost_function='abs', H_known=None,
+              A_known=None, T_known=None, random_seed=0, random_mul_constant=1,
+              random_add_constant=0, scale_random=20):
+	np.random.seed(random_seed)
+	if cost_function == 'abs':
+		cost = cost_abs
+	else:
+		cost = cost_rel
+	mg = multigrad(cost, argnums=[0, 1, 2])
+
+	params = {}
+	params['M'], params['N'], params['O'] = E_np_masked.shape
+	params['a'] = a
+	params['b'] = b
+	H_dim_chars = list(cases[case]['HA'].split(",")[0].strip())
+	H_dim = tuple(params[x] for x in H_dim_chars)
+	A_dim_chars = list(cases[case]['HA'].split(",")[1].split("-")[0].strip())
+	A_dim = tuple(params[x] for x in A_dim_chars)
+	T_dim_chars = list(cases[case]['HAT'].split(",")[1].split("-")[0].strip())
+	T_dim = tuple(params[x] for x in T_dim_chars)
+	H = np.abs(np.random.normal(loc=0.0, scale=scale_random, size=H_dim))
+
+	A = np.abs(np.random.normal(loc=0.0, scale=scale_random, size=A_dim))
+	T = np.abs(np.random.normal(loc=0.0, scale=scale_random,size=T_dim))
+
+	Hs =[H]
+	As= [A]
+	Ts = [T]
+	costs = [cost_abs(H, A, T, E_np_masked, 2)]
+	HATs =[multiply_case(H, A, T, 2)]
+	# GD procedure
+	for i in range(num_iter):
+		del_h, del_a, del_t = mg(H, A, T, E_np_masked, case)
+		H -= lr * del_h
+		A -= lr * del_a
+		T -= lr * del_t
+		# Projection to known values
+		if H_known is not None:
+			H = set_known(H, H_known)
+		if A_known is not None:
+			A = set_known(A, A_known)
+		if T_known is not None:
+			T = set_known(T, T_known)
+		# Projection to non-negative space
+		H[H < 0] = 0
+		A[A < 0] = 0
+		T[T < 0] = 0
+		As.append(A)
+		Ts.append(T)
+		Hs.append(H)
+		costs.append(cost_abs(H, A, T, E_np_masked, 2))
+		HATs.append(multiply_case(H, A, T, 2))
+		if i % 500 == 0:
+			if dis:
+				print(cost(H, A, T, E_np_masked, case))
+	return H, A, T, Hs, As, Ts, HATs, costs
+
