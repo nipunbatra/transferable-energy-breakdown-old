@@ -45,7 +45,9 @@ def load_obj(name ):
         return pickle.load(f)
 
 
-print "Here"
+method, cost, iterations = sys.argv[1:]
+iterations = int(iterations)
+
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
@@ -63,76 +65,136 @@ case = 2
 a = 2
 b = 3
 num_seed = 10
-iters = [2000, 10000]
+# iters = [2000, 10000]
 #cost = 'abs'
 
-for method in ['normal', 'transfer']:
-    pred[method] = {}
-    for cost in ['abs', 'rel']:
-        pred[method][cost] = {}
-        for iterations in iters:
-            pred[method][cost][iterations] = {}
-            for random_seed in range(num_seed):
-                pred[method][cost][iterations][random_seed] = {}
-                for appliance in APPLIANCES_ORDER:
-                    pred[method][cost][iterations][random_seed][appliance] = {f:[] for f in range(10, 110, 10)}
-                
+
+
+for random_seed in range(num_seed):
+    pred[random_seed] = {}
+    for appliance in APPLIANCES_ORDER:
+        pred[random_seed][appliance] = {f:[] for f in range(10, 110, 10)}
+
+
 kf = KFold(n_splits = n_splits)
-for method in ['normal', 'transfer']:
-    print "method: ", method
-    
-    for cost in ['abs', 'rel']:
-        print "cost: ", cost
+for random_seed in range(num_seed):
+    print "random seed: ", random_seed
 
-        for iterations in iters:
-            print "iterations: ", iterations
+    for train_percentage in range(10, 110, 10):
+        print "training percentage: ", train_percentage
+        rd = 0
 
-            for random_seed in range(num_seed):
-                print "random seed: ", random_seed
+        for train_max, test in kf.split(sd_df):
+            print "round: ", rd
+            rd += 1
 
-                for train_percentage in range(10, 110, 10):
-                    print "training percentage: ", train_percentage
-                    rd = 0
+            num_train = int((train_percentage*len(train_max)/100)+0.5)
+            num_test = len(test)
 
-                    for train_max, test in kf.split(sd_df):
-                        print "round: ", rd
-                        rd += 1
+            # get the random training data from train_max based on then random seed
+            if train_percentage==100:
+                train = train_max
+            else:
+                train, _ = train_test_split(train_max, train_size = train_percentage/100.0, random_state=random_seed)
 
-                        num_train = int((train_percentage*len(train_max)/100)+0.5)
-                        num_test = len(test)
+            # get the index of training and testing data
+            train_ix = sd_df.index[train]
+            test_ix = sd_df.index[test]
 
-                        # get the random training data from train_max based on then random seed
-                        if train_percentage==100:
-                            train = train_max
-                        else:
-                            train, _ = train_test_split(train_max, train_size = train_percentage/100.0, random_state=random_seed)
+            # create the tensor
+            train_test_ix = np.concatenate([test_ix, train_ix])
+            df_t, dfc_t = sd_df.ix[train_test_ix], sd_dfc.ix[train_test_ix]
+            tensor = get_tensor(df_t, dfc_t)
+            tensor_copy = tensor.copy()
+            # set the appliance consumption to be missing for testing data
+            tensor_copy[:num_test, 1:, :] = np.NaN
+            
+            if method == "transfer":
+                # transfer learning
+                H_a, A_a, T_a = learn_HAT(case, au_tensor, a, b, num_iter=iterations, lr=0.1, dis=False, 
+                                          cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
+                H, A, T = learn_HAT(case, tensor_copy, a, b, num_iter=iterations, lr=0.1, dis=False, 
+                                    cost_function=cost, A_known = A_a, T_known=np.ones(12).reshape(-1, 1))
+            else:
+                # normal learning
+                H, A, T = learn_HAT(case, tensor_copy, a, b, num_iter=iterations, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
 
-                        # get the index of training and testing data
-                        train_ix = sd_df.index[train]
-                        test_ix = sd_df.index[test]
-
-                        # create the tensor
-                        train_test_ix = np.concatenate([test_ix, train_ix])
-                        df_t, dfc_t = sd_df.ix[train_test_ix], sd_dfc.ix[train_test_ix]
-                        tensor = get_tensor(df_t, dfc_t)
-                        tensor_copy = tensor.copy()
-                        # set the appliance consumption to be missing for testing data
-                        tensor_copy[:num_test, 1:, :] = np.NaN
-                        
-                        if method == "transfer":
-                            # transfer learning
-                            H_a, A_a, T_a = learn_HAT(case, au_tensor, a, b, num_iter=iterations, lr=0.1, dis=False, 
-                                                      cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
-                            H, A, T = learn_HAT(case, tensor_copy, a, b, num_iter=iterations, lr=0.1, dis=False, 
-                                                cost_function=cost, A_known = A_a, T_known=np.ones(12).reshape(-1, 1))
-                        else:
-                            # normal learning
-                            H, A, T = learn_HAT(case, tensor_copy, a, b, num_iter=iterations, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
-
-                        # get the prediction
-                        HAT = multiply_case(H, A, T, case)
-                        for appliance in APPLIANCES_ORDER:
-                            pred[method][cost][iterations][random_seed][appliance][train_percentage].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
+            # get the prediction
+            HAT = multiply_case(H, A, T, case)
+            for appliance in APPLIANCES_ORDER:
+                pred[random_seed][appliance][train_percentage].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
 
 # pred.to_pickle("~/git/pred.pkl") 
-save_obj(pred, "pred")         
+save_obj(pred, "pred_" + method + "_" + cost + "_" + str(iterations))         
+
+
+# for method in ['normal', 'transfer']:
+#     pred[method] = {}
+#     for cost in ['abs', 'rel']:
+#         pred[method][cost] = {}
+#         for iterations in iters:
+#             pred[method][cost][iterations] = {}
+#             for random_seed in range(num_seed):
+#                 pred[method][cost][iterations][random_seed] = {}
+#                 for appliance in APPLIANCES_ORDER:
+#                     pred[method][cost][iterations][random_seed][appliance] = {f:[] for f in range(10, 110, 10)}
+                
+# kf = KFold(n_splits = n_splits)
+# for method in ['normal', 'transfer']:
+#     print "method: ", method
+    
+#     for cost in ['abs', 'rel']:
+#         print "cost: ", cost
+
+#         for iterations in iters:
+#             print "iterations: ", iterations
+
+#             for random_seed in range(num_seed):
+#                 print "random seed: ", random_seed
+
+#                 for train_percentage in range(10, 110, 10):
+#                     print "training percentage: ", train_percentage
+#                     rd = 0
+
+#                     for train_max, test in kf.split(sd_df):
+#                         print "round: ", rd
+#                         rd += 1
+
+#                         num_train = int((train_percentage*len(train_max)/100)+0.5)
+#                         num_test = len(test)
+
+#                         # get the random training data from train_max based on then random seed
+#                         if train_percentage==100:
+#                             train = train_max
+#                         else:
+#                             train, _ = train_test_split(train_max, train_size = train_percentage/100.0, random_state=random_seed)
+
+#                         # get the index of training and testing data
+#                         train_ix = sd_df.index[train]
+#                         test_ix = sd_df.index[test]
+
+#                         # create the tensor
+#                         train_test_ix = np.concatenate([test_ix, train_ix])
+#                         df_t, dfc_t = sd_df.ix[train_test_ix], sd_dfc.ix[train_test_ix]
+#                         tensor = get_tensor(df_t, dfc_t)
+#                         tensor_copy = tensor.copy()
+#                         # set the appliance consumption to be missing for testing data
+#                         tensor_copy[:num_test, 1:, :] = np.NaN
+                        
+#                         if method == "transfer":
+#                             # transfer learning
+#                             H_a, A_a, T_a = learn_HAT(case, au_tensor, a, b, num_iter=iterations, lr=0.1, dis=False, 
+#                                                       cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
+#                             H, A, T = learn_HAT(case, tensor_copy, a, b, num_iter=iterations, lr=0.1, dis=False, 
+#                                                 cost_function=cost, A_known = A_a, T_known=np.ones(12).reshape(-1, 1))
+#                         else:
+#                             # normal learning
+#                             H, A, T = learn_HAT(case, tensor_copy, a, b, num_iter=iterations, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
+
+#                         # get the prediction
+#                         HAT = multiply_case(H, A, T, case)
+#                         for appliance in APPLIANCES_ORDER:
+#                             pred[method][cost][iterations][random_seed][appliance][train_percentage].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
+
+# # pred.to_pickle("~/git/pred.pkl") 
+# save_obj(pred, "pred")         
