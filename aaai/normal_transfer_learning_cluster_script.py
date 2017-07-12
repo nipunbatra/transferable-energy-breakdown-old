@@ -9,7 +9,7 @@ import delegator
 username = 'yj9xs'
 
 # Location of .out and .err files
-SLURM_OUT = "~/slurm_out"
+SLURM_OUT = "~/git/slurm_out/"
 
 # Create the SLURM out directory if it does not exist
 if not os.path.exists(SLURM_OUT):
@@ -22,8 +22,49 @@ DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
 
-
+SLURM_SCRIPT = "normal_transfer_teset.pbs"
 CMD = 'python normal_transfer_cluster.py'
+lines = []
+lines.append("#!/bin/sh\n")
+lines.append('#SBATCH --time=1-16:0:00\n')
+lines.append('#SBATCH --mem=16\n')
+lines.append('#SBATCH -o ~/git/slurm_out/test.out\n')
+lines.append('#SBATCH -0exclude=artemis5 \n')
+lines.append(CMD + '\n')
+
+with open(SLURM_SCRIPT, 'w') as f:
+	f.writelines(lines)
+command = ['sbatch', SLURM_SCRIPT]
+while len(delegator.run('squeue -u %s' % username).out.split("\n")) > MAX_NUM_MY_JOBS + 2:
+	time.sleep(DELAY_NUM_JOBS_EXCEEDED)
+
+delegator.run(command, block=False)
+print SLURM_SCRIPT
+
+
+
+print "Done"
+
+for method in ['normal', 'transfer']:
+	for cost in ['abs', 'rel']:
+		for iterations in [2000, 10000]:
+			OFILE = "%s/%s_%s_%d.out" % (SLURM_OUT, method, cost, iterations)
+			EFILE = "%s/%s_%s_%d.err" % (SLURM_OUT, method, cost, iterations)
+			SLURM_SCRIPT = "%s_%s_%d.pbs" % (method, cost, iterations)
+			CMD = 'python normal_transfer_cluster_apart.py'
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
