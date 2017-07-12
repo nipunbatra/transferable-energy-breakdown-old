@@ -9,7 +9,7 @@ import delegator
 username = 'yj9xs'
 
 # Location of .out and .err files
-SLURM_OUT = "~/git/slurm_out/"
+SLURM_OUT = "../../slurm_out"
 
 # Create the SLURM out directory if it does not exist
 if not os.path.exists(SLURM_OUT):
@@ -28,7 +28,7 @@ for method in ['normal', 'transfer']:
 			OFILE = "%s/%s_%s_%d.out" % (SLURM_OUT, method, cost, iterations)
 			EFILE = "%s/%s_%s_%d.err" % (SLURM_OUT, method, cost, iterations)
 			SLURM_SCRIPT = "%s_%s_%d.pbs" % (method, cost, iterations)
-			CMD = 'python normal_transfer_cluster_apart.py'
+			CMD = 'python normal_transfer_cluster_apart.py %s %s %d' % (method, cost, iterations)
 			lines = []
 			lines.append("#!/bin/sh\n")
 			lines.append('#SBATCH --time=1-16:0:00\n')
