@@ -24,7 +24,7 @@ import time
 
 for method in ['transfer']:
 	for cost in ['abs', 'rel']:
-		for iterations in [10000]:
+		for iterations in [20000]:
 			OFILE = "%s/%s_%s_%d.out" % (SLURM_OUT, method, cost, iterations)
 			EFILE = "%s/%s_%s_%d.err" % (SLURM_OUT, method, cost, iterations)
 			SLURM_SCRIPT = "%s_%s_%d.pbs" % (method, cost, iterations)
