@@ -70,7 +70,7 @@ num_seed = 10
 
 if method == "transfer":
 	H_a, A_a, T_a = learn_HAT(case, au_tensor, a, b, num_iter = iterations, lr = 0.1, dis = False,
-				cost_functions = cost, A_known = A_a, T_known = np.ones(12).reshape(-1, 1))
+				cost_function = cost, T_known = np.ones(12).reshape(-1, 1))
 
 for random_seed in range(num_seed):
     pred[random_seed] = {}
