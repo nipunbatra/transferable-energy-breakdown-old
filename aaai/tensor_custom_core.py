@@ -165,9 +165,9 @@ def learn_HAT_random_normal(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=
 	A = np.abs(np.random.normal(loc=0.0, scale=scale_random, size=A_dim))
 	T = np.abs(np.random.normal(loc=0.0, scale=scale_random,size=T_dim))
 
-	Hs =[H]
-	As= [A]
-	Ts = [T]
+	Hs =[H.copy()]
+	As= [A.copy()]
+	Ts = [T.copy()]
 	costs = [cost_abs(H, A, T, E_np_masked, 2)]
 	HATs =[multiply_case(H, A, T, 2)]
 	# GD procedure
@@ -187,9 +187,9 @@ def learn_HAT_random_normal(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=
 		H[H < 0] = 0
 		A[A < 0] = 0
 		T[T < 0] = 0
-		As.append(A)
-		Ts.append(T)
-		Hs.append(H)
+		As.append(A.copy())
+		Ts.append(T.copy())
+		Hs.append(H.copy())
 		costs.append(cost_abs(H, A, T, E_np_masked, 2))
 		HATs.append(multiply_case(H, A, T, 2))
 		if i % 500 == 0:

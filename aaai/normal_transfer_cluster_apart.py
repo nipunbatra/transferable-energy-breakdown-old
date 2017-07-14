@@ -68,7 +68,9 @@ num_seed = 10
 # iters = [2000, 10000]
 #cost = 'abs'
 
-
+if method == "transfer":
+	H_a, A_a, T_a = learn_HAT(case, au_tensor, a, b, num_iter = iterations, lr = 0.1, dis = False,
+				cost_function = cost, T_known = np.ones(12).reshape(-1, 1))
 
 for random_seed in range(num_seed):
     pred[random_seed] = {}
@@ -111,8 +113,8 @@ for random_seed in range(num_seed):
             
             if method == "transfer":
                 # transfer learning
-                H_a, A_a, T_a = learn_HAT(case, au_tensor, a, b, num_iter=iterations, lr=0.1, dis=False, 
-                                          cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
+#                H_a, A_a, T_a = learn_HAT(case, au_tensor, a, b, num_iter=iterations, lr=0.1, dis=False, 
+#                                         cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
                 H, A, T = learn_HAT(case, tensor_copy, a, b, num_iter=iterations, lr=0.1, dis=False, 
                                     cost_function=cost, A_known = A_a, T_known=np.ones(12).reshape(-1, 1))
             else:
