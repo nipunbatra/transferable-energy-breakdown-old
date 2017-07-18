@@ -25,9 +25,9 @@ import time
 for method in ['transfer', 'normal']:
 	for cost in ['abs', 'rel']:
 		for iterations in [2000, 10000, 20000]:
-			OFILE = "%s/%s_%s_%d.out" % (SLURM_OUT, method, cost, iterations)
-			EFILE = "%s/%s_%s_%d.err" % (SLURM_OUT, method, cost, iterations)
-			SLURM_SCRIPT = "%s_%s_%d.pbs" % (method, cost, iterations)
+			OFILE = "%s/%s_%s_%d_0.1.out" % (SLURM_OUT, method, cost, iterations)
+			EFILE = "%s/%s_%s_%d_0.1.err" % (SLURM_OUT, method, cost, iterations)
+			SLURM_SCRIPT = "%s_%s_%d_0.1.pbs" % (method, cost, iterations)
 			CMD = 'python normal_transfer_cluster_apart.py %s %s %d' % (method, cost, iterations)
 			lines = []
 			lines.append("#!/bin/sh\n")
