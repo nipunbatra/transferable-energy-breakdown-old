@@ -24,10 +24,10 @@ import time
 
 for re in ['Austin', 'SanDiego']:
 	for iterations in [500000]:
-		OFILE = "%s/%s_%d.out" % (SLURM_OUT, method, cost, iterations)
-		EFILE = "%s/%s_%d.err" % (SLURM_OUT, method, cost, iterations)
-		SLURM_SCRIPT = "%s_%d.pbs" % (method, cost, iterations)
-		CMD = 'python normal_learning_converge_check_script.py %s %s %d' % (re, iterations)
+		OFILE = "%s/%s_%d.out" % (SLURM_OUT, re, iterations)
+		EFILE = "%s/%s_%d.err" % (SLURM_OUT, re, iterations)
+		SLURM_SCRIPT = "%s_%d.pbs" % (re, iterations)
+		CMD = 'python normal_learning_converge_check_script.py %s %d' % (re, iterations)
 		lines = []
 		lines.append("#!/bin/sh\n")
 		lines.append('#SBATCH --time=1-16:0:00\n')
