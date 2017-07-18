@@ -116,7 +116,7 @@ for random_seed in range(num_seed):
 #                H_a, A_a, T_a = learn_HAT(case, au_tensor, a, b, num_iter=iterations, lr=0.1, dis=False, 
 #                                         cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
                 H, A, T = learn_HAT(case, tensor_copy, a, b, num_iter=iterations, lr=0.1, dis=False, 
-                                    cost_function=cost, A_known = A_a, T_known=np.ones(12).reshape(-1, 1))
+                                    cost_function=cost, A_known = A_a, T_known=0.1*np.ones(12).reshape(-1, 1))
             else:
                 # normal learning
                 H, A, T = learn_HAT(case, tensor_copy, a, b, num_iter=iterations, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
@@ -127,6 +127,6 @@ for random_seed in range(num_seed):
                 pred[random_seed][appliance][train_percentage].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
 
 # pred.to_pickle("~/git/pred.pkl") 
-save_obj(pred, "pred_" + method + "_" + cost + "_" + str(iterations))         
+save_obj(pred, "pred_" + method + "_" + cost + "_0.1_" + str(iterations))         
 
 
