@@ -21,10 +21,10 @@ MAX_NUM_MY_JOBS = 140
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-for method  in ['normal']:
-	for algo in ['adagrad', 'gd']:
-		for cost in ['rel']:
-			for a in range(2, 3):
+for method  in ['normal', 'transfer']:
+	for algo in ['adagrad', 'gd', 'gd_decay']:
+		for cost in ['abs', 'rel']:
+			for a in [3]:
 				for lr in [0.01, 0.1, 1, 10, 100]:
 					for random_seed in range(10):
 						OFILE = "%s/%s_%s_%s_%d_%f_%d.out" % (SLURM_OUT, method, algo, cost, a, lr, random_seed)
