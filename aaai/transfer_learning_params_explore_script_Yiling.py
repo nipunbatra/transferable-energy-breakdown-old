@@ -21,16 +21,16 @@ MAX_NUM_MY_JOBS = 140
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-for method  in ['transfer', 'normal']
-	for algo in ['adagrad', 'gd', 'gd_decay']:
-		for cost in ['abs', 'rel']:
+for method  in ['normal']:
+	for algo in ['adagrad', 'gd']:
+		for cost in ['rel']:
 			for a in range(2, 3):
 				for lr in [0.01, 0.1, 1, 10, 100]:
 					for random_seed in range(10):
-						OFILE = "%s/%s_%s_%s_%d_%d_%d.out" % (SLURM_OUT, method, algo, cost, a, lr, random_seed)
-						EFILE = "%s/%s_%s_%s_%d_%d_%d.err" % (SLURM_OUT, method, algo, cost, a, lr, random_seed)
-						SLURM_SCRIPT = "%s_%s_%d_%d_%d.pbs" % (algo, cost, a, lr, random_seed)
-						CMD = 'python transfer_learning_params_explore_Yiling.py %s %s %s %d %d %d' % (method, algo, cost, a, lr, random_seed)
+						OFILE = "%s/%s_%s_%s_%d_%f_%d.out" % (SLURM_OUT, method, algo, cost, a, lr, random_seed)
+						EFILE = "%s/%s_%s_%s_%d_%f_%d.err" % (SLURM_OUT, method, algo, cost, a, lr, random_seed)
+						SLURM_SCRIPT = "%s/%s_%s_%s_%d_%f_%d.pbs" % ("./pbs_file", method, algo, cost, a, lr, random_seed)
+						CMD = 'python transfer_learning_params_explore_Yiling.py %s %s %s %d %f %d' % (method, algo, cost, a, lr, random_seed)
 						lines = []
 						lines.append("#!/bin/sh\n")
 						lines.append('#SBATCH --time=1-16:0:00\n')

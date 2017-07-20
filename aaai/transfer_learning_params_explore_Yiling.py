@@ -50,6 +50,7 @@ a = int(a)
 random_seed = int(random_seed)
 lr = float(lr)
 
+print a, random_seed, str(lr)
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
@@ -83,6 +84,7 @@ for appliance in APPLIANCES_ORDER:
     pred[appliance] = {f:[] for f in range(10, 110, 10)}
 
 print method, algo, cost, a, lr, random_seed
+print "pred_" + method + "_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr) + "_" + str(random_seed)
 
 kf = KFold(n_splits=n_splits)
 for train_percentage in range(10, 110, 10):
