@@ -96,11 +96,12 @@ def learn_HAT_series(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, 
 		A[A < 0] = 0
 		T[T < 0] = 0
 
-		if i%500 == 0:
+		if i%250 == 0:
 			print i
 			Hs.append(H.copy())
 			As.append(A.copy())
 			Ts.append(T.copy())
+
 			costs.append(cost(H, A, T, E_np_masked, 2))
 			HATs.append(multiply_case(H, A, T, 2))
 
@@ -175,7 +176,7 @@ def learn_HAT_adagrad_series(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis
 		A[A < 0] = 0
 		T[T < 0] = 0
 
-		if i%500 == 0:
+		if i%250 == 0:
 			print i
 			Hs.append(H.copy())
 			As.append(A.copy())
@@ -214,29 +215,30 @@ elif region == 'SanDiego':
 
 print region, algo, cost, a, lr
 
+iterations = 30000
 
 if algo == 'gd':
-	H, A, T, Hs, As, Ts, costs, HATs = learn_HAT_series(case, tensor, a, a, num_iter=10000, lr=lr, dis=False, cost_function=cost)
+	H, A, T, Hs, As, Ts, costs, HATs = learn_HAT_series(case, tensor, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost)
 elif algo == 'gd_decay':
-	H, A, T, Hs, As, Ts, costs, HATs = learn_HAT_series(case, tensor, a, a, num_iter=10000, lr=lr, dis=False, cost_function=cost, decay_mul=0.995)
+	H, A, T, Hs, As, Ts, costs, HATs = learn_HAT_series(case, tensor, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost, decay_mul=0.995)
 else:
-	H, A, T, Hs, As, Ts, costs, HATs = learn_HAT_adagrad_series(case, tensor, a, a, num_iter=10000, lr=lr, dis=False, cost_function=cost)
+	H, A, T, Hs, As, Ts, costs, HATs = learn_HAT_adagrad_series(case, tensor, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost)
 
 
-save_obj(Hs, "Hs_normal" + region + "_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr))
-save_obj(As, "As_normal" + region + "_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr))
-save_obj(Ts, "Ts_normal" + region + "_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr))
-save_obj(costs, "costs_normal" + region + "_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr))
-save_obj(HATs, "HATs_normal" + region + "_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr))
+save_obj(Hs, "Hs_normal_" + region + "_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr))
+save_obj(As, "As_normal_" + region + "_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr))
+save_obj(Ts, "Ts_normal_" + region + "_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr))
+save_obj(costs, "costs_normal_" + region + "_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr))
+save_obj(HATs, "HATs_normal_" + region + "_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr))
 
 
 if region == 'Austin':
 	if algo == 'gd':
-		H, A, T, Hs, As, Ts, costs, HATs = learn_HAT_series(case, sd_tensor, a, a, num_iter=10000, lr=lr, dis=False, cost_function=cost, A_known = A)
+		H, A, T, Hs, As, Ts, costs, HATs = learn_HAT_series(case, sd_tensor, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost, A_known = A)
 	elif algo == 'gd_decay':
-		H, A, T, Hs, As, Ts, costs, HATs = learn_HAT_series(case, sd_tensor, a, a, num_iter=10000, lr=lr, dis=False, cost_function=cost, A_known = A, decay_mul=0.995)
+		H, A, T, Hs, As, Ts, costs, HATs = learn_HAT_series(case, sd_tensor, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost, A_known = A, decay_mul=0.995)
 	else:
-		H, A, T, Hs, As, Ts, costs, HATs = learn_HAT_adagrad_series(case, sd_tensor, a, a, num_iter=10000, lr=lr, dis=False, cost_function=cost, A_known = A)
+		H, A, T, Hs, As, Ts, costs, HATs = learn_HAT_adagrad_series(case, sd_tensor, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost, A_known = A)
 
 	save_obj(Hs, "Hs_transfer_SanDiego_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr))
 	save_obj(As, "As_transfer_SanDiego_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr))
