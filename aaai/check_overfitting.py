@@ -45,12 +45,12 @@ def load_obj(name ):
         return pickle.load(f)
 
 
-method, algo, cost, a, lr, random_seed = sys.argv[1:]
-a = int(a)
+iter_train, random_seed= sys.argv[1:]
+iter_train = int(iter_train)
 random_seed = int(random_seed)
-lr = float(lr)
 
-print a, random_seed, str(lr)
+print iter_train, random_seed
+
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
@@ -65,26 +65,20 @@ au_tensor = get_tensor(au_df, au_dfc)
 pred = {}
 n_splits = 10
 case = 2
-iterations = 10000
+iter_adapt = 4000
+a = 3
+cost = 'abs'
 
-# iters = [2000, 10000]
-#cost = 'abs'
 
-if method == "transfer":
-    if algo == "adagrad":
-        H_au, A_au, T_au = learn_HAT_adagrad(case, au_tensor, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost)
-    elif algo == "gd":
-        H_au, A_au, T_au = learn_HAT(case, au_tensor, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost)
-    else:
-        H_au, A_au, T_au = learn_HAT(case, au_tensor, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost, decay_mul=0.995)
+H_au, A_au, T_au = learn_HAT(case, au_tensor, a, a, num_iter=iter_train, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
 
 
 
 for appliance in APPLIANCES_ORDER:
     pred[appliance] = {f:[] for f in range(10, 110, 10)}
 
-print method, algo, cost, a, lr, random_seed
-print "pred_" + method + "_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr) + "_" + str(random_seed)
+# print method, algo, cost, a, lr, random_seed
+print "pred_" + str(iter_train)
 
 kf = KFold(n_splits=n_splits)
 for train_percentage in range(10, 110, 10):
@@ -110,23 +104,10 @@ for train_percentage in range(10, 110, 10):
         # First n
         tensor_copy[:num_test, 1:, :] = np.NaN
         
-        if method == "transfer":
-            if algo=="adagrad":
-                H, A, T = learn_HAT_adagrad(case, tensor_copy, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost, A_known=A_au)
-            elif algo=='gd':
-                H, A, T = learn_HAT(case, tensor_copy, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost, A_known=A_au)
-            else:
-                H, A, T = learn_HAT(case, tensor_copy, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost, A_known=A_au, decay_mul=0.995)
-        else:
-            if algo=="adagrad":
-                H, A, T = learn_HAT_adagrad(case, tensor_copy, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost)
-            elif algo=='gd':
-                H, A, T = learn_HAT(case, tensor_copy, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost)
-            else:
-                H, A, T = learn_HAT(case, tensor_copy, a, a, num_iter=iterations, lr=lr, dis=False, cost_function=cost, decay_mul=0.995)
+        H, A, T = learn_HAT(case, tensor_copy, a, a, num_iter=iter_adapt, lr=0.1, dis=False, cost_function=cost, A_known=A_au, T_known=np.ones(12).reshape(-1, 1))
 
         HAT = multiply_case(H, A, T, case)
         for appliance in APPLIANCES_ORDER:
             pred[appliance][train_percentage].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
 
-save_obj(pred, "pred_" + method + "_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr) + "_" + str(random_seed))
+save_obj(pred, "pred_" + str(iter_train) + "_" + str(random_seed))
