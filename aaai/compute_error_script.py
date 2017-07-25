@@ -21,11 +21,11 @@ MAX_NUM_MY_JOBS = 140
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-for method  in ['normal', 'transfer']:
-	for algo in ['adagrad', 'gd', 'gd_decay']:
-		for cost in ['abs', 'rel']:
-			for a in [2, 3]:
-				for lr in [0.01, 0.1, 1, 10, 100]:
+for method  in ['normal']:
+	for algo in ['gd_decay']:
+		for cost in ['rel']:
+			for a in [2]:
+				for lr in [10, 100]:
 					OFILE = "%s/out_%s_%s_%s_%d_%f.out" % (SLURM_OUT, method, algo, cost, a, lr)
 					EFILE = "%s/out_%s_%s_%s_%d_%f.err" % (SLURM_OUT, method, algo, cost, a, lr)
 					SLURM_SCRIPT = "%s/out_%s_%s_%s_%d_%f.pbs" % ("./pbs_file", method, algo, cost, a, lr)

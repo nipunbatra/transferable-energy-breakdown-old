@@ -51,7 +51,7 @@ au_df, au_dfc = create_matrix_single_region("Austin", year)
 au_tensor = get_tensor(au_df, au_dfc)
 
 def load_obj(name):
-	with open(os.path.expanduser('~/git/data/' + name + '.pkl'), 'rb') as f:
+	with open(os.path.expanduser('~/git/data/pred/' + name + '.pkl'), 'rb') as f:
 		return pickle.load(f)
 def save_obj(obj, name ):
 	with open(os.path.expanduser('~/git/'+ name + '.pkl'), 'wb') as f:
