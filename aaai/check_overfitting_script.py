@@ -21,12 +21,12 @@ MAX_NUM_MY_JOBS = 140
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-for iter_train  in [2000, 4000, 6000, 8000, 10000]:
-	for random_seed in range(10):
+for iter_train  in [500]:
+	for random_seed in range(7):
 		OFILE = "%s/out_%d_%d.out" % (SLURM_OUT, iter_train, random_seed)
 		EFILE = "%s/out_%d_%d.err" % (SLURM_OUT, iter_train, random_seed)
 		SLURM_SCRIPT = "%s/out_%d_%d.pbs" % ("./pbs_file", iter_train, random_seed)
-		CMD = 'python compute_error.py _%d_%d' % ( iter_train, random_seed)
+		CMD = 'python check_overfitting.py %d %d' % ( iter_train, random_seed)
 		lines = []
 		lines.append("#!/bin/sh\n")
 		lines.append('#SBATCH --time=1-16:0:00\n')

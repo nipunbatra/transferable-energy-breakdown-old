@@ -65,12 +65,12 @@ au_tensor = get_tensor(au_df, au_dfc)
 pred = {}
 n_splits = 10
 case = 2
-iter_adapt = 4000
+iter_adapt = 3000
 a = 3
 cost = 'abs'
 
 
-H_au, A_au, T_au = learn_HAT(case, au_tensor, a, a, num_iter=iter_train, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
+H_au, A_au, T_au = learn_HAT_adagrad(case, au_tensor, a, a, num_iter=iter_train, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
 
 
 
@@ -104,7 +104,7 @@ for train_percentage in range(10, 110, 10):
         # First n
         tensor_copy[:num_test, 1:, :] = np.NaN
         
-        H, A, T = learn_HAT(case, tensor_copy, a, a, num_iter=iter_adapt, lr=0.1, dis=False, cost_function=cost, A_known=A_au, T_known=np.ones(12).reshape(-1, 1))
+        H, A, T = learn_HAT_adagrad(case, tensor_copy, a, a, num_iter=iter_adapt, lr=0.1, dis=False, cost_function=cost, A_known=A_au, T_known=np.ones(12).reshape(-1, 1))
 
         HAT = multiply_case(H, A, T, case)
         for appliance in APPLIANCES_ORDER:
