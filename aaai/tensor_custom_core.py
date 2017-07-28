@@ -56,7 +56,37 @@ def set_known(A, W):
 
 
 def learn_HAT_adagrad(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, cost_function='abs', H_known=None,
-                      A_known=None, T_known=None, random_seed=0, eps=1e-8):
+                      A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0):
+
+	def cost_l21(H, A, T, E_np_masked, case, lam=0.1):
+		HAT = multiply_case(H, A, T, case)
+		mask = ~np.isnan(E_np_masked)
+		error = (HAT - E_np_masked)[mask].flatten()
+		# return np.sqrt((error ** 2).mean()) + lam*np.sum(A[A!=0])
+		return np.sqrt((error ** 2).mean()) + lam * np.sum(np.square(A))
+
+	def cost_abs_penalty_sum_squares(H, A, T, E_np_masked, case, lam=0.1):
+		HAT = multiply_case(H, A, T, case)
+		mask = ~np.isnan(E_np_masked)
+		error = (HAT - E_np_masked)[mask].flatten()
+		# return np.sqrt((error ** 2).mean()) + lam*np.sum(A[A!=0])
+		return np.sqrt((error ** 2).mean()) + lam * np.sum(np.square(A))
+
+	def cost_abs_penalty_sum_abs(H, A, T, E_np_masked, case, lam=0.1):
+		HAT = multiply_case(H, A, T, case)
+		mask = ~np.isnan(E_np_masked)
+		error = (HAT - E_np_masked)[mask].flatten()
+		# return np.sqrt((error ** 2).mean()) + lam*np.sum(A[A!=0])
+		return np.sqrt((error ** 2).mean()) + lam * np.sum(np.abs(A))
+
+	def cost_abs_penalty_count_non_zero(H, A, T, E_np_masked, case, lam=0.1):
+		HAT = multiply_case(H, A, T, case)
+		mask = ~np.isnan(E_np_masked)
+		error = (HAT - E_np_masked)[mask].flatten()
+		# return np.sqrt((error ** 2).mean()) + lam*np.sum(A[A!=0])
+		return np.sqrt((error ** 2).mean()) + lam * np.count_nonzero(A)
+
+
 	np.random.seed(random_seed)
 	if cost_function == 'abs':
 		cost = cost_abs
@@ -64,6 +94,13 @@ def learn_HAT_adagrad(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False,
 		cost = cost_rel
 	elif cost_function =='fraction':
 		cost = cost_fraction
+	elif cost_function =='penalty-sum-squares':
+		cost = cost_abs_penalty_sum_squares
+	elif cost_function =='penalty-sum-abs':
+		cost = cost_abs_penalty_sum_abs
+	elif cost_function == 'penalty-count-nonzero':
+		cost = cost_abs_penalty_count_non_zero
+
 	mg = multigrad(cost, argnums=[0, 1, 2])
 
 	params = {}
@@ -85,9 +122,18 @@ def learn_HAT_adagrad(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False,
 	sum_square_gradients_A = np.zeros_like(A)
 	sum_square_gradients_T = np.zeros_like(T)
 
+	Hs = [H.copy()]
+	As = [A.copy()]
+	Ts = [T.copy()]
+	if 'penalty' not in cost_function:
+		costs = [cost(H, A, T, E_np_masked, 2)]
+	else:
+		costs = [cost(H, A, T, E_np_masked, 2, penalty_coeff)]
+	HATs = [multiply_case(H, A, T, 2)]
+
 	# GD procedure
 	for i in range(num_iter):
-		del_h, del_a, del_t = mg(H, A, T, E_np_masked, case)
+		del_h, del_a, del_t = mg(H, A, T, E_np_masked, case, penalty_coeff)
 		sum_square_gradients_H += eps + np.square(del_h)
 		sum_square_gradients_A += eps + np.square(del_a)
 		sum_square_gradients_T += eps + np.square(del_t)
@@ -110,10 +156,19 @@ def learn_HAT_adagrad(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False,
 		H[H < 0] = 0
 		A[A < 0] = 0
 		T[T < 0] = 0
+
+		As.append(A.copy())
+		Ts.append(T.copy())
+		Hs.append(H.copy())
+		if 'penalty' not in cost_function:
+			costs.append(cost(H, A, T, E_np_masked, 2))
+		else:
+			costs.append(cost(H, A, T, E_np_masked, 2, penalty_coeff))
+		HATs.append(multiply_case(H, A, T, 2))
 		if i % 500 == 0:
 			if dis:
-				print(cost(H, A, T, E_np_masked, case))
-	return H, A, T
+				print(cost(H, A, T, E_np_masked, case, penalty_coeff))
+	return H, A, T, Hs, As, Ts, HATs, costs
 
 def learn_HAT(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, cost_function='abs', H_known=None,
               A_known=None, T_known=None, random_seed=0, decay_mul=1, batchsize=None, aggregate_constraint=False):
@@ -171,6 +226,8 @@ def learn_HAT(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, cost_fu
 		H[H < 0] = 0
 		A[A < 0] = 0
 		T[T < 0] = 0
+
+
 
 		if aggregate_constraint:
 			# Projection to ensure A[aggregate] >=sum(A[appliances]
