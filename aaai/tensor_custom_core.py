@@ -58,12 +58,32 @@ def set_known(A, W):
 def learn_HAT_adagrad(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, cost_function='abs', H_known=None,
                       A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0):
 
+
 	def cost_l21(H, A, T, E_np_masked, case, lam=0.1):
 		HAT = multiply_case(H, A, T, case)
 		mask = ~np.isnan(E_np_masked)
 		error = (HAT - E_np_masked)[mask].flatten()
+		A_shape = A.shape
+		A_flat = A.reshape(A_shape[0], A_shape[1]*A_shape[2])
+		l1 = 0.
+		for j in range(A_shape[0]):
+			l1 = l1 + np.sqrt(np.square(A_flat[j,:]).sum())
+			#print(j, l1)
 		# return np.sqrt((error ** 2).mean()) + lam*np.sum(A[A!=0])
-		return np.sqrt((error ** 2).mean()) + lam * np.sum(np.square(A))
+		return np.sqrt((error ** 2).mean()) + lam * l1
+
+
+	def cost_l12(H, A, T, E_np_masked, case, lam=0.1):
+		HAT = multiply_case(H, A, T, case)
+		mask = ~np.isnan(E_np_masked)
+		error = (HAT - E_np_masked)[mask].flatten()
+		A_shape = A.shape
+		A_flat = A.reshape(A_shape[0], A_shape[1]*A_shape[2])
+		l1 = 0.
+		for j in range(A_shape[1]*A_shape[2]):
+			l1 = l1 + np.sqrt(np.square(A_flat[:, j]).sum())
+		# return np.sqrt((error ** 2).mean()) + lam*np.sum(A[A!=0])
+		return np.sqrt((error ** 2).mean()) + lam * l1
 
 	def cost_abs_penalty_sum_squares(H, A, T, E_np_masked, case, lam=0.1):
 		HAT = multiply_case(H, A, T, case)
@@ -100,6 +120,10 @@ def learn_HAT_adagrad(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False,
 		cost = cost_abs_penalty_sum_abs
 	elif cost_function == 'penalty-count-nonzero':
 		cost = cost_abs_penalty_count_non_zero
+	elif cost_function == 'l21':
+		cost = cost_l21
+	elif cost_function == 'l12':
+		cost = cost_l12
 
 	mg = multigrad(cost, argnums=[0, 1, 2])
 
@@ -153,9 +177,9 @@ def learn_HAT_adagrad(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False,
 		if T_known is not None:
 			T = set_known(T, T_known)
 		# Projection to non-negative space
-		H[H < 0] = 0
-		A[A < 0] = 0
-		T[T < 0] = 0
+		H[H < 0] = 1e-8
+		A[A < 0] = 1e-8
+		T[T < 0] = 1e-8
 
 		As.append(A.copy())
 		Ts.append(T.copy())
