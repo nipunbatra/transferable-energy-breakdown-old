@@ -77,6 +77,11 @@ a = 3
 cost = 'l21'
 algo = 'adagrad'
 
+if static_fac is None:
+	H_known_Sd = None
+else:
+	H_known_Sd = static_sd
+
 for appliance in APPLIANCES_ORDER:
     pred[appliance] = {f:[] for f in range(10, 110, 10)}
 
@@ -84,9 +89,12 @@ for appliance in APPLIANCES_ORDER:
 kf = KFold(n_splits=n_splits)
 
 for train_percentage in TRAIN_SPLITS:
-    print(lam, static_fac, random_seed, train_percentage)
+#    print(lam, static_fac, random_seed, train_percentage)
+    rd = 0
     for train_max, test in kf.split(df):
-
+	print (static_fac, lam, random_seed, train_percentage, rd)
+	rd += 1
+	
         num_train = int((train_percentage*len(train_max)/100)+0.5)
         if train_percentage==100:
             train = train_max
