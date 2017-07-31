@@ -29,8 +29,8 @@ for static_fac in ['None','static']:
 					for train_percentage in range(10, 110, 10):
 
 
-						OFILE = "%s/{}-{}-{}-{}-{}-{}.out".format(SLURM_OUT, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage )
-						EFILE = "%s/{}-{}-{}-{}-{}-{}.err".format(SLURM_OUT, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage )
+						OFILE = "{}/{}-{}-{}-{}-{}-{}.out".format(SLURM_OUT, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage )
+						EFILE = "{}/{}-{}-{}-{}-{}-{}.err".format(SLURM_OUT, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage )
 						SLURM_SCRIPT = "{}-{}-{}-{}-{}-{}.pbs".format(static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage)
 						CMD = 'python sparse-transfer.py {} {} {} {} {} {}'.format(static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage)
 						lines = []
