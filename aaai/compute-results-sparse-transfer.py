@@ -20,8 +20,8 @@ for static_fac in ['None','static']:
 			out[static_fac][lam][num_home_factors] = {}
 			for num_season_factors in range(1, 9):
 				out[static_fac][lam][num_home_factors][num_season_factors] = {}
-				for train_percentage in range(10, 110, 10):
-					out[static_fac][lam][num_home_factors][num_season_factors][train_percentage] = {}
+				for train_percentage in [x*1. for x in range(10, 110, 10)]:
+					out[static_fac][lam][num_home_factors][num_season_factors][int(train_percentage)] = {}
 					for random_seed in range(5):
 						name = "{}-{}-{}-{}-{}-{}".format(static_fac, lam, num_home_factors, num_season_factors,
 						                                  random_seed, train_percentage)
@@ -33,7 +33,7 @@ for static_fac in ['None','static']:
 								o[appliance] = compute_rmse_fraction(appliance, pr[appliance][range(4, 10)], 'SanDiego')[2]
 							else:
 								o[appliance] = compute_rmse_fraction(appliance, pr[appliance], 'SanDiego')[2]
-						out[static_fac][lam][num_home_factors][num_season_factors][train_percentage][random_seed] = o
+						out[static_fac][lam][num_home_factors][num_season_factors][int(train_percentage)][random_seed] = o
 
 
 
