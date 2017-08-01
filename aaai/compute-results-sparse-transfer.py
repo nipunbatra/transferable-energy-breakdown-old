@@ -26,7 +26,7 @@ for static_fac in ['None','static']:
 						name = "{}-{}-{}-{}-{}-{}".format(static_fac, lam, num_home_factors, num_season_factors,
 						                                  random_seed, train_percentage)
 						print(name)
-						pr = open(os.path.expanduser('~/aaai2017/transfer/' + name + '.pkl'), 'r')
+						pr = pickle.load(open(os.path.expanduser('~/aaai2017/transfer/' + name + '.pkl'), 'r'))
 						o = {}
 						for appliance in APPLIANCES_ORDER:
 							if appliance=="hvac":
