@@ -14,7 +14,7 @@ import pickle
 out = {}
 for static_fac in ['None','static']:
 	out[static_fac] = {}
-	for lam in [0.001, 0.01, 0.1, 1]:
+	for lam in [0.001, 0.01, 0.1, 1.]:
 		out[static_fac][lam] = {}
 		for num_home_factors in range(3, 9):
 			out[static_fac][lam][num_home_factors] = {}
