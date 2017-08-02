@@ -79,9 +79,9 @@ else:
     H_known_Sd = static_sd
 
 b = 3
-if algo = 'adagrad':
+if algo == 'adagrad':
 	cost = 'l21'
-	if static_fac = 'static':
+	if static_fac == 'static':
 		a = 5
 		H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Au, T_known=np.ones(12).reshape(-1, 1))
 	else:
@@ -89,7 +89,7 @@ if algo = 'adagrad':
 		H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
 else:
 	cost = 'abs'
-	if static_fac = 'static':
+	if static_fac == 'static':
 		a = 5
 		H_au, A_au, T_au = learn_HAT(case, au_tensor, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Au, T_known=np.ones(12).reshape(-1, 1))
 	else:
@@ -107,7 +107,12 @@ for i in range(m):
         tensor_copy = sd_tensor.copy()
         tensor_copy[i, j, k] = np.NaN
         
-        H, A, T = learn_HAT(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, A_known = A_a, T_known=np.ones(12).reshape(-1, 1))
+	
+	if algo == 'adagrad':
+		cost = 'l21'
+		if static_fac == 'static':
+			
+        H, A, T = learn_HAT(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
         prediction = multiply_case(H, A, T, case)
         
         pred_cell[i][j] = prediction[i][j]
