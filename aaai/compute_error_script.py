@@ -23,13 +23,13 @@ import time
 
 for method  in ['normal']:
 	for algo in ['gd_decay']:
-		for cost in ['rel']:
-			for a in [2]:
-				for lr in [10, 100]:
-					OFILE = "%s/out_%s_%s_%s_%d_%f.out" % (SLURM_OUT, method, algo, cost, a, lr)
-					EFILE = "%s/out_%s_%s_%s_%d_%f.err" % (SLURM_OUT, method, algo, cost, a, lr)
-					SLURM_SCRIPT = "%s/out_%s_%s_%s_%d_%f.pbs" % ("./pbs_file", method, algo, cost, a, lr)
-					CMD = 'python compute_error.py %s %s %s %d %f' % (method, algo, cost, a, lr)
+		for iters in [100]:
+			for static in ['static', 'None']:
+				for lam in [0.001,0.01, 0.1, 0, 1]:
+					OFILE = "%s/out_%s_%f.out" % (SLURM_OUT, static, lam)
+					EFILE = "%s/out_%s_%f.err" % (SLURM_OUT, static, lam)
+					SLURM_SCRIPT = "%s/out_%s_%f.pbs" % ("./pbs_file", static, lam)
+					CMD = 'python compute_error.py %s %f' % (static, lam)
 					lines = []
 					lines.append("#!/bin/sh\n")
 					lines.append('#SBATCH --time=1-16:0:00\n')

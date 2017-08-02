@@ -7,7 +7,7 @@ from degree_days import dds
 import os
 from sklearn.model_selection import train_test_split, KFold
 import sys
-
+import pickle
 
 def un_normalize(x, maximum, minimum):
     return (maximum - minimum) * x + minimum
@@ -77,9 +77,11 @@ a = 3
 cost = 'l21'
 algo = 'adagrad'
 
-if static_fac is None:
+if static_fac == 'None':
+	print 'None'
 	H_known_Sd = None
 else:
+	print 'static'
 	H_known_Sd = static_sd
 
 for appliance in APPLIANCES_ORDER:
@@ -111,7 +113,7 @@ for train_percentage in TRAIN_SPLITS:
         # First n
         tensor_copy[:num_test, 1:, :] = np.NaN
 
-        if static_fac is not None:
+        if static_fac == 'static':
             H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, num_home, a, num_iter=n_iter, lr=1, dis=False, cost_function=cost, H_known=H_known_Sd[np.concatenate([test, train])], T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
         else:
             H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, num_home, a, num_iter=n_iter, lr=1, dis=False, cost_function=cost, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
