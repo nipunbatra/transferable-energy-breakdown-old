@@ -78,7 +78,8 @@ cost = 'l21'
 algo = 'adagrad'
 
 if static_fac is None:
-	H_known_Sd = None
+    print ('here')
+    H_known_Sd = None
 else:
 	H_known_Sd = static_sd
 

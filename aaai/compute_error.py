@@ -51,23 +51,21 @@ au_df, au_dfc = create_matrix_single_region("Austin", year)
 au_tensor = get_tensor(au_df, au_dfc)
 
 def load_obj(name):
-	with open(os.path.expanduser('~/git/data/pred/' + name + '.pkl'), 'rb') as f:
+	with open(os.path.expanduser('~/git/pred_adagrad/' + name + '.pkl'), 'rb') as f:
 		return pickle.load(f)
 def save_obj(obj, name ):
 	with open(os.path.expanduser('~/git/'+ name + '.pkl'), 'wb') as f:
 		pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 
-method, algo, cost, a, lr = sys.argv[1:]
-lr = float(lr)
-
+iters, static_fac, lam = sys.argv[1:]
+iters = int(iters)
+lam = float(lam)
 
 import pickle
 pred = {}
 for random_seed in range(10):
-	pred[random_seed] = load_obj('pred_' + method + '_' + algo + '_'
-														   + cost + '_' + str(a) + '_' + str(lr)
-															+ '_' + str(random_seed))
+	pred[random_seed] = load_obj('pred_transfer_' + str(iters) + '_' + static_fac + '_' + str(lam) + '_' + str(random_seed) + '_const')
 
 
 out = {}
@@ -83,4 +81,4 @@ for random_seed in range(10):
 			else:   
 				out[random_seed][appliance][f] = compute_rmse_fraction(appliance, s,'SanDiego')[2]
 
-save_obj(out, "out_" + method + "_" + algo + "_" + cost + "_" + str(a) + "_"  + str(lr))
+save_obj(out, "out_transfer_" + str(iters) + '_' + static_fac + '_' + str(lam) + '_' + str(random_seed) + '_const')
