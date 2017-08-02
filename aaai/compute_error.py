@@ -58,15 +58,26 @@ def save_obj(obj, name ):
 		pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 
+<<<<<<< HEAD
 iters, static_fac, lam = sys.argv[1:]
 iters = int(iters)
 lam = float(lam)
+=======
+static_fac, lam = sys.argv[1:]
+#iters = int(iters)
+lam = float(lam)
+
+>>>>>>> 0bc20a60ba19c03ee238aec36ca46544b32e13a3
 
 import pickle
 pred = {}
 for random_seed in range(10):
+<<<<<<< HEAD
 	pred[random_seed] = load_obj('pred_transfer_' + str(iters) + '_' + static_fac + '_' + str(lam) + '_' + str(random_seed) + '_const')
 
+=======
+	pred[random_seed] = load_obj('pred_normal_' + static_fac + '_' + str(lam) + '_' + str(random_seed) + '_const')
+>>>>>>> 0bc20a60ba19c03ee238aec36ca46544b32e13a3
 
 out = {}
 for random_seed in range(10):
@@ -81,4 +92,8 @@ for random_seed in range(10):
 			else:   
 				out[random_seed][appliance][f] = compute_rmse_fraction(appliance, s,'SanDiego')[2]
 
+<<<<<<< HEAD
 save_obj(out, "out_transfer_" + str(iters) + '_' + static_fac + '_' + str(lam) + '_' + str(random_seed) + '_const')
+=======
+save_obj(out, "out_normal_" + static_fac + '_' + str(lam) + '_const')
+>>>>>>> 0bc20a60ba19c03ee238aec36ca46544b32e13a3

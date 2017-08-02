@@ -7,7 +7,7 @@ from degree_days import dds
 import os
 from sklearn.model_selection import train_test_split, KFold
 import sys
-
+import pickle
 
 def un_normalize(x, maximum, minimum):
     return (maximum - minimum) * x + minimum
@@ -59,7 +59,6 @@ static_sd['total_occupants'] = static_sd['total_occupants'].div(8)
 static_sd['num_rooms'] = static_sd['num_rooms'].div(8)
 static_sd = static_sd.values
 
-
 train_iter, static_fac, lam, random_seed = sys.argv[1:]
 train_iter = int(train_iter)
 lam = float(lam)
@@ -78,14 +77,15 @@ a = 3
 cost = 'l21'
 algo = 'adagrad'
 
-for static_fac in ['static',None]:
-    if static_fac is None:
-        H_known_Au = None
-        H_known_Sd = None
-    else:
-        H_known_Au = static_au
-        H_known_Sd = static_sd
+kf = KFold(n_splits=n_splits)
+if static_fac is None:
+    H_known_Au = None
+    H_known_Sd = None
+else:
+    H_known_Au = static_au
+    H_known_Sd = static_sd
 
+print ("pred_transfer_" + str(train_iter) + "_" + str(static_fac) + "_" + str(lam) + "_" + str(random_seed) + "_const")
 for appliance in APPLIANCES_ORDER:
     pred[appliance] = {f:[] for f in range(10, 110, 10)}
 
@@ -126,5 +126,5 @@ for train_percentage in TRAIN_SPLITS:
         for appliance in APPLIANCES_ORDER:
             pred[appliance][train_percentage].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
 
-save_obj(pred, "pred_transfer_" + train_iter + "_" + static_fac + "_" + str(lam) + "_" + str(random_seed) + "_const")
+save_obj(pred, "pred_transfer_" + str(train_iter) + "_" + str(static_fac) + "_" + str(lam) + "_" + str(random_seed) + "_const")
 

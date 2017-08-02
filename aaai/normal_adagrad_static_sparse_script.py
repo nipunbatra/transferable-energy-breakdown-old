@@ -21,13 +21,13 @@ MAX_NUM_MY_JOBS = 140
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-for static_fac in ['static', None]:
+for static_fac in ['None']:
 	for lam in [1e-3, 1e-2, 1e-1, 0, 1]:
 		for random_seed in range(10):
 			OFILE = "%s/out_%s_%f_%d.out" % (SLURM_OUT, static_fac, lam, random_seed)
 			EFILE = "%s/out_%s_%f_%d.err" % (SLURM_OUT, static_fac, lam, random_seed)
 			SLURM_SCRIPT = "%s/out_%s_%f_%d.pbs" % ("./pbs_file", static_fac, lam, random_seed)
-			CMD = 'python check_overfitting.py %s %f %d' % (static_fac, lam, random_seed)
+			CMD = 'python normal_adagrad_static_sparse.py %s %f %d' % (static_fac, lam, random_seed)
 			lines = []
 			lines.append("#!/bin/sh\n")
 			lines.append('#SBATCH --time=1-16:0:00\n')
