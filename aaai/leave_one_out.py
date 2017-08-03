@@ -78,6 +78,8 @@ else:
 	H_known_Au = static_au
 	H_known_Sd = static_sd
 
+print "Home_sd shape: ", H_known_Sd.shape
+
 b = 3
 if algo == 'adagrad':
 	cost = 'l21'
@@ -174,12 +176,13 @@ for train_percentage in range(10, 110, 10):
 					print i, j				
 					tensor_copy = tensor.copy()
 					tensor_copy[:num_test, i, j] = np.NaN
+					print "tensor shape: ", tensor_copy.shape
 
 					if algo == 'adagrad':
 						cost = 'l21'
 						if static_fac == 'static':
 							a = 5
-							H_sd, A_sd, T_sd, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
+							H_sd, A_sd, T_sd, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])], A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
 						else:
 							a = 2
 							H_sd, A_sd, T_sd, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
@@ -187,7 +190,7 @@ for train_percentage in range(10, 110, 10):
 						cost = 'abs'
 						if static_fac == 'static':
 							a = 5
-							H_sd, A_sd, T_sd = learn_HAT(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
+							H_sd, A_sd, T_sd = learn_HAT(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])], A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
 						else:
 							a = 2
 							H_sd, A_sd, T_sd = learn_HAT(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
