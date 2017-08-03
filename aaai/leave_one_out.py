@@ -151,7 +151,7 @@ for train_percentage in range(10, 110, 10):
 			if train_percentage==100:
 				train = train_max
 			else:
-				train, _ = train_test_split(train_max, train_size = train_percentage/100.0, random_state=random_seed)
+				train, _ = train_test_split(train_max, train_size = train_percentage/100.0, random_state=k)
 
 			# get the index of training and testing data
 			train_ix = sd_df.index[train]
@@ -171,7 +171,7 @@ for train_percentage in range(10, 110, 10):
 			
 			for i in range(1, 7):
 				for j in range(12):
-				
+					print i, j				
 					tensor_copy = tensor.copy()
 					tensor_copy[:num_test, i, j] = np.NaN
 
@@ -201,4 +201,4 @@ for train_percentage in range(10, 110, 10):
 				pred_cv[appliance][train_percentage].append(pd.DataFrame(pred[:, appliance_index[appliance], :], index=test_ix))
 
 			rd += 1
-save_obj(pred_cv, "pred__month_" + static_fac + "_" + algo + "_" + str(k))
+save_obj(pred_cv, "pred_month_" + static_fac + "_" + algo + "_" + str(k))
