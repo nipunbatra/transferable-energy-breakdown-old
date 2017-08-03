@@ -21,13 +21,14 @@ MAX_NUM_MY_JOBS = 140
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-for static_fac in ['None']:
-	for lam in [1e-3, 1e-2, 1e-1, 0, 1]:
-		for random_seed in range(10):
-			OFILE = "%s/out_%s_%f_%d.out" % (SLURM_OUT, static_fac, lam, random_seed)
-			EFILE = "%s/out_%s_%f_%d.err" % (SLURM_OUT, static_fac, lam, random_seed)
-			SLURM_SCRIPT = "%s/out_%s_%f_%d.pbs" % ("./pbs_file", static_fac, lam, random_seed)
-			CMD = 'python normal_adagrad_static_sparse.py %s %f %d' % (static_fac, lam, random_seed)
+
+for static in ['static', 'None']:
+	for algo in ['adagrad', 'gd']:
+		for k in range(12):
+			OFILE = "%s/out_%s_%s_%d.out" % (SLURM_OUT, static, algo, k)
+			EFILE = "%s/out_%s_%s_%d.err" % (SLURM_OUT, static, algo, k)
+			SLURM_SCRIPT = "%s/out_%s_%s_%d.pbs" % ("./pbs_file", static, algo, k)
+			CMD = 'python compute_error.py %s %s %d' % (static, algo, k)
 			lines = []
 			lines.append("#!/bin/sh\n")
 			lines.append('#SBATCH --time=1-16:0:00\n')
