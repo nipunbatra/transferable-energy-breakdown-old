@@ -24,7 +24,7 @@ import time
 source = 'SanDiego'
 target = 'Austin'
 for static_fac in ['None','static']:
-	for lam in [0.001, 0.01, 0.1, 1]:
+	for lam in [0, 0.001, 0.01, 0.1, 1]:
 		for num_home_factors in range(3, 9):
 			for num_season_factors in range(1, 9):
 				for random_seed in range(5):
