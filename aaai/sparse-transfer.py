@@ -138,5 +138,5 @@ import pickle
 
 name = "{}-{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage)
 
-with open(os.path.expanduser('~/aaai2017/transfer/' + name + '.pkl'), 'wb') as f:
+with open(os.path.expanduser('~/aaai2017/transfer_{}_{}/'.format(source, target) + name + '.pkl'), 'wb') as f:
 	pickle.dump(pred, f, pickle.HIGHEST_PROTOCOL)
