@@ -78,7 +78,6 @@ else:
 	H_known_Au = static_au
 	H_known_Sd = static_sd
 
-print "Home_sd shape: ", H_known_Sd.shape
 
 b = 3
 if algo == 'adagrad':
@@ -173,10 +172,8 @@ for train_percentage in range(10, 110, 10):
 			
 			for i in range(1, 7):
 				for j in range(12):
-					print i, j				
 					tensor_copy = tensor.copy()
 					tensor_copy[:num_test, i, j] = np.NaN
-					print "tensor shape: ", tensor_copy.shape
 
 					if algo == 'adagrad':
 						cost = 'l21'
@@ -197,7 +194,7 @@ for train_percentage in range(10, 110, 10):
 
 
 				HAT = multiply_case(H_sd, A_sd, T_sd, case)
-				pred[:, i, :] = HAT[:num_test, i, :]
+				pred[:, i, j] = HAT[:num_test, i, j]
 			# get the prediction
 			
 			for appliance in APPLIANCES_ORDER:
