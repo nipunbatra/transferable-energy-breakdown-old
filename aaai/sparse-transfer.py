@@ -29,7 +29,11 @@ n_splits = 10
 case = 2
 
 source, target, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage = sys.argv[1:]
+name = "{}-{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage)
+filename = os.path.expanduser('~/aaai2017/transfer_{}_{}/'.format(source, target) + name + '.pkl')
 
+if os.path.exists(filename):
+	sys.exit(0)
 
 
 def get_tensor(df):
@@ -136,7 +140,5 @@ for appliance in APPLIANCES_ORDER:
 
 import pickle
 
-name = "{}-{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage)
-
-with open(os.path.expanduser('~/aaai2017/transfer_{}_{}/'.format(source, target) + name + '.pkl'), 'wb') as f:
+with open(filename, 'wb') as f:
 	pickle.dump(pred, f, pickle.HIGHEST_PROTOCOL)
