@@ -72,6 +72,24 @@ def learn_HAT_adagrad(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False,
 		# return np.sqrt((error ** 2).mean()) + lam*np.sum(A[A!=0])
 		return np.sqrt((error ** 2).mean()) + lam * l1
 
+	def cost_l1(H, A, T, E_np_masked, case, lam=0.1):
+		HAT = multiply_case(H, A, T, case)
+		mask = ~np.isnan(E_np_masked)
+		error = (HAT - E_np_masked)[mask].flatten()
+		A_shape = A.shape
+		A_flat = A.reshape(A_shape[0]*A_shape[1] * A_shape[2], )
+
+		return np.sqrt((error ** 2).mean()) + lam * np.sum(A_flat)
+
+	def cost_l1_without_flat(H, A, T, E_np_masked, case, lam=0.1):
+		HAT = multiply_case(H, A, T, case)
+		mask = ~np.isnan(E_np_masked)
+		error = (HAT - E_np_masked)[mask].flatten()
+
+
+		return np.sqrt((error ** 2).mean()) + lam * np.sum(A)
+
+
 
 	def cost_l12(H, A, T, E_np_masked, case, lam=0.1):
 		HAT = multiply_case(H, A, T, case)
@@ -124,6 +142,11 @@ def learn_HAT_adagrad(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False,
 		cost = cost_l21
 	elif cost_function == 'l12':
 		cost = cost_l12
+	elif cost_function == 'l1':
+		cost = cost_l1
+	elif cost_function == 'l1-without-flat':
+		cost = cost_l1_without_flat
+
 
 	mg = multigrad(cost, argnums=[0, 1, 2])
 
