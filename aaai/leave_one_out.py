@@ -9,6 +9,7 @@ from degree_days import dds
 from sklearn.model_selection import train_test_split, KFold
 from common import compute_rmse_fraction
 from common import compute_rmse
+import pickle
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
@@ -68,7 +69,7 @@ static_fac, algo, k = sys.argv[1:]
 k = int(k)
 
 cost = 'l21'
-algo = 'adagrad'
+#algo = 'adagrad'
 
 
 if static_fac == 'None':
@@ -139,7 +140,7 @@ for appliance in APPLIANCES_ORDER:
 
 kf = KFold(n_splits=n_splits)
 
-for train_percentage in range(10, 110, 10):
+for train_percentage in range(10, 20, 10):
 	print "training percentage: ", train_percentage
 	rd = 0
 	for train_max, test in kf.split(sd_df):
@@ -193,8 +194,8 @@ for train_percentage in range(10, 110, 10):
 							H_sd, A_sd, T_sd = learn_HAT(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
 
 
-				HAT = multiply_case(H_sd, A_sd, T_sd, case)
-				pred[:, i, j] = HAT[:num_test, i, j]
+					HAT = multiply_case(H_sd, A_sd, T_sd, case)
+					pred[:, i, j] = HAT[:num_test, i, j]
 			# get the prediction
 			
 			for appliance in APPLIANCES_ORDER:
