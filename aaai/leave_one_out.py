@@ -65,8 +65,9 @@ static_sd = static_sd.values
 
 
 m,n,o = sd_tensor.shape
-static_fac, algo, k = sys.argv[1:]
+static_fac, algo, k, per= sys.argv[1:]
 k = int(k)
+per = int(per)
 
 cost = 'l21'
 #algo = 'adagrad'
@@ -136,11 +137,11 @@ print (static_fac, algo, k)
 pred_cv = {}
 
 for appliance in APPLIANCES_ORDER:
-	pred_cv[appliance] = {f:[] for f in range(10, 110, 10)}
+	pred_cv[appliance] = {f:[] for f in range(10, 110, 40)}
 
 kf = KFold(n_splits=n_splits)
 
-for train_percentage in range(10, 20, 10):
+for train_percentage in [per]:
 	print "training percentage: ", train_percentage
 	rd = 0
 	for train_max, test in kf.split(sd_df):
@@ -175,7 +176,7 @@ for train_percentage in range(10, 20, 10):
 				for j in range(12):
 					tensor_copy = tensor.copy()
 					tensor_copy[:num_test, i, j] = np.NaN
-
+					print i, j
 					if algo == 'adagrad':
 						cost = 'l21'
 						if static_fac == 'static':
@@ -202,4 +203,4 @@ for train_percentage in range(10, 20, 10):
 				pred_cv[appliance][train_percentage].append(pd.DataFrame(pred[:, appliance_index[appliance], :], index=test_ix))
 
 			rd += 1
-save_obj(pred_cv, "pred_month_" + static_fac + "_" + algo + "_" + str(k))
+save_obj(pred_cv, "pred_month_" + static_fac + "_" + algo + "_" + str(k) + "_" + str(per))
