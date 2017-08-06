@@ -151,6 +151,7 @@ for train_percentage in TRAIN_SPLITS:
                 H_normal, A_normal, T_normal = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd, T_known=np.ones(12).reshape(-1, 1))
             else:
                 a = 2
+                print "here"
                 H_normal, A_normal, T_normal = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
 
 
@@ -174,6 +175,7 @@ for train_percentage in TRAIN_SPLITS:
                 H_transfer, A_transfer, T_transfer = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_ASd, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
             else:
                 a = 2
+                print "here"
                 H_transfer, A_transfer, T_transfer = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
 
 
