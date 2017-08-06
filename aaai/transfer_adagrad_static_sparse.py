@@ -69,7 +69,7 @@ sd = {}
 out = {}
 n_splits = 10
 n_iter = 3000
-TRAIN_SPLITS = range(10, 110, 10)
+TRAIN_SPLITS = range(10, 110, 40)
 case = 2
 
 cost = 'l21'
@@ -86,8 +86,8 @@ else:
     H_known_Sd = static_sd
 
 for appliance in APPLIANCES_ORDER:
-    pred_normal[appliance] = {f:[] for f in range(10, 110, 10)}
-    pred_transfer[appliance] = {f:[] for f in range(10, 110, 10)}
+    pred_normal[appliance] = {f:[] for f in range(10, 110, 40)}
+    pred_transfer[appliance] = {f:[] for f in range(10, 110, 40)}
 
 
 
