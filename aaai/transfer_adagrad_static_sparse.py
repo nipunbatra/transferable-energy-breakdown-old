@@ -41,7 +41,6 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 region = "SanDiego"
 year = 2014
-cost='abs'
 
 au_df, au_dfc = create_matrix_single_region("Austin", year)
 au_tensor = get_tensor(au_df, au_dfc)
@@ -59,40 +58,56 @@ static_sd['total_occupants'] = static_sd['total_occupants'].div(8)
 static_sd['num_rooms'] = static_sd['num_rooms'].div(8)
 static_sd = static_sd.values
 
-train_iter, static_fac, lam, random_seed = sys.argv[1:]
+train_iter, algo, static_fac, lam, random_seed = sys.argv[1:]
 train_iter = int(train_iter)
 lam = float(lam)
 random_seed = int(random_seed)
 
-pred = {}
+pred_normal = {}
+pred_transfer = {}
 sd = {}
 out = {}
 n_splits = 10
 n_iter = 3000
 TRAIN_SPLITS = range(10, 110, 10)
 case = 2
-num_home = 5
-a = 3
 
 cost = 'l21'
 algo = 'adagrad'
 
 kf = KFold(n_splits=n_splits)
-if static_fac is None:
+
+
+if static_fac == 'None':
     H_known_Au = None
     H_known_Sd = None
 else:
     H_known_Au = static_au
     H_known_Sd = static_sd
 
-print ("pred_transfer_" + str(train_iter) + "_" + str(static_fac) + "_" + str(lam) + "_" + str(random_seed) + "_const")
 for appliance in APPLIANCES_ORDER:
-    pred[appliance] = {f:[] for f in range(10, 110, 10)}
+    pred_normal[appliance] = {f:[] for f in range(10, 110, 10)}
+    pred_transfer[appliance] = {f:[] for f in range(10, 110, 10)}
 
-if static_fac is not None:
-    H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, num_home, a, num_iter=train_iter, lr=1, dis=False, cost_function=cost, H_known=H_known_Au, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
+
+
+b = 3
+if algo == 'adagrad':
+    cost = 'l21'
+    if static_fac == 'static':
+        a = 5
+        H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Au, T_known=np.ones(12).reshape(-1, 1), penalty_coeff=lam)
+    else:
+        a = 2
+        H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1), penalty_coeff=lam)
 else:
-    H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, num_home, a, num_iter=train_iter, lr=1, dis=False, cost_function=cost, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
+    cost = 'abs'
+    if static_fac == 'static':
+        a = 5
+        H_au, A_au, T_au = learn_HAT(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Au, T_known=np.ones(12).reshape(-1, 1))
+    else:
+        a = 2
+        H_au, A_au, T_au = learn_HAT(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
 
 
 for train_percentage in TRAIN_SPLITS:
@@ -113,18 +128,63 @@ for train_percentage in TRAIN_SPLITS:
         train_test_ix = np.concatenate([test_ix, train_ix])
         df_t, dfc_t = df.ix[train_test_ix], dfc.ix[train_test_ix]
         tensor = get_tensor(df_t, dfc_t)
-        tensor_copy = tensor.copy()
+        
+
         # First n
+        ################################################################
+        # Normal learning in SanDiego
+        ################################################################
+        tensor_copy = tensor.copy()
         tensor_copy[:num_test, 1:, :] = np.NaN
-        if static_fac is not None:
-            H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, num_home, a, num_iter=n_iter, lr=1, dis=False, cost_function=cost, A_known=A_au, H_known=H_known_Sd[np.concatenate([test, train])],T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
+        if algo == 'adagrad':
+            cost = 'l21'
+            if static_fac == 'static':
+                a = 5
+                H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
+            else:
+                a = 2
+                H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
         else:
-            H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, num_home, a, num_iter=n_iter, lr=1, dis=False, cost_function=cost, A_known=A_au, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
+            cost = 'abs'
+            if static_fac == 'static':
+                a = 5
+                H_normal, A_normal, T_normal = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd, T_known=np.ones(12).reshape(-1, 1))
+            else:
+                a = 2
+                H_normal, A_normal, T_normal = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
+
+
+        ################################################################
+        # Transfer learning in SanDiego
+        ################################################################
+        tensor_copy = tensor.copy()
+        tensor_copy[:num_test, 1:, :] = np.NaN
+        if algo == 'adagrad':
+            cost = 'l21'
+            if static_fac == 'static':
+                a = 5
+                H_transfer, A_transfer, T_transfer, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd, A_known = A_au, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
+            else:
+                a = 2
+                H_transfer, A_transfer, T_transfer, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, A_known = A_au, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
+        else:
+            cost = 'abs'
+            if static_fac == 'static':
+                a = 5
+                H_transfer, A_transfer, T_transfer = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_ASd, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
+            else:
+                a = 2
+                H_transfer, A_transfer, T_transfer = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
+
 
         # assert(np.allclose(A, A_au))
-        HAT = multiply_case(H, A, T, case)
-        for appliance in APPLIANCES_ORDER:
-            pred[appliance][train_percentage].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
+        HAT_normal = multiply_case(H_normal, A_normal, T_normal, case)
+        HAT_transfer = multiply_case(H_transfer, A_transfer, T_transfer, case)
 
-save_obj(pred, "pred_transfer_" + str(train_iter) + "_" + str(static_fac) + "_" + str(lam) + "_" + str(random_seed) + "_const")
+        for appliance in APPLIANCES_ORDER:
+            pred_normal[appliance][train_percentage].append(pd.DataFrame(HAT_normal[:num_test, appliance_index[appliance], :], index=test_ix))
+            pred_transfer[appliance][train_percentage].append(pd.DataFrame(HAT_transfer[:num_test, appliance_index[appliance], :], index=test_ix))
+
+save_obj(pred_normal, "pred_normal_" + str(train_iter) + "_" + algo + "_" + str(static_fac) + "_" + str(lam) + "_" + str(random_seed))
+save_obj(pred_transfer, "pred_transfer_" + str(train_iter) + "_" + algo + "_" + str(static_fac) + "_" + str(lam) + "_" + str(random_seed))
 
