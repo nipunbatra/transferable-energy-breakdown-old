@@ -25,10 +25,10 @@ import time
 for static in ['static', 'None']:
 	for algo in ['adagrad', 'gd']:
 		for k in range(12):
-			OFILE = "%s/out_%s_%s_%d.out" % (SLURM_OUT, static, algo, k)
-			EFILE = "%s/out_%s_%s_%d.err" % (SLURM_OUT, static, algo, k)
-			SLURM_SCRIPT = "%s/out_%s_%s_%d.pbs" % ("./pbs_file", static, algo, k)
-			CMD = 'python compute_error.py %s %s %d' % (static, algo, k)
+			OFILE = "%s/out1_%s_%s_%d.out" % (SLURM_OUT, static, algo, k)
+			EFILE = "%s/out1_%s_%s_%d.err" % (SLURM_OUT, static, algo, k)
+			SLURM_SCRIPT = "%s/out1_%s_%s_%d.pbs" % ("./pbs_file", static, algo, k)
+			CMD = 'python leave_one_out.py %s %s %d' % (static, algo, k)
 			lines = []
 			lines.append("#!/bin/sh\n")
 			lines.append('#SBATCH --time=1-16:0:00\n')

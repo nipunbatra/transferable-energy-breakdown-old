@@ -9,6 +9,7 @@ from degree_days import dds
 from sklearn.model_selection import train_test_split, KFold
 from common import compute_rmse_fraction
 from common import compute_rmse
+import pickle
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
@@ -64,11 +65,12 @@ static_sd = static_sd.values
 
 
 m,n,o = sd_tensor.shape
-static_fac, algo, k = sys.argv[1:]
+static_fac, algo, k, per= sys.argv[1:]
 k = int(k)
+per = int(per)
 
 cost = 'l21'
-algo = 'adagrad'
+#algo = 'adagrad'
 
 
 if static_fac == 'None':
@@ -77,6 +79,7 @@ if static_fac == 'None':
 else:
 	H_known_Au = static_au
 	H_known_Sd = static_sd
+
 
 b = 3
 if algo == 'adagrad':
@@ -134,11 +137,11 @@ print (static_fac, algo, k)
 pred_cv = {}
 
 for appliance in APPLIANCES_ORDER:
-	pred_cv[appliance] = {f:[] for f in range(10, 110, 10)}
+	pred_cv[appliance] = {f:[] for f in range(10, 110, 40)}
 
 kf = KFold(n_splits=n_splits)
 
-for train_percentage in range(10, 110, 10):
+for train_percentage in [per]:
 	print "training percentage: ", train_percentage
 	rd = 0
 	for train_max, test in kf.split(sd_df):
@@ -151,7 +154,7 @@ for train_percentage in range(10, 110, 10):
 			if train_percentage==100:
 				train = train_max
 			else:
-				train, _ = train_test_split(train_max, train_size = train_percentage/100.0, random_state=random_seed)
+				train, _ = train_test_split(train_max, train_size = train_percentage/100.0, random_state=k)
 
 			# get the index of training and testing data
 			train_ix = sd_df.index[train]
@@ -171,34 +174,44 @@ for train_percentage in range(10, 110, 10):
 			
 			for i in range(1, 7):
 				for j in range(12):
-				
 					tensor_copy = tensor.copy()
 					tensor_copy[:num_test, i, j] = np.NaN
-
+					print i, j
 					if algo == 'adagrad':
 						cost = 'l21'
 						if static_fac == 'static':
 							a = 5
-							H_sd, A_sd, T_sd, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
+							H_sd, A_sd, T_sd, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])], T_known=np.ones(12).reshape(-1, 1))
 						else:
 							a = 2
-							H_sd, A_sd, T_sd, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
+<<<<<<< HEAD
+							H_sd, A_sd, T_sd, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
+=======
+							H_sd, A_sd, T_sd, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost,  T_known=np.ones(12).reshape(-1, 1))
+>>>>>>> 10f9ff142a57f6c4dbfbc8b80b448336ecb5d9dd
 					else:
 						cost = 'abs'
 						if static_fac == 'static':
 							a = 5
-							H_sd, A_sd, T_sd = learn_HAT(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
+<<<<<<< HEAD
+							H_sd, A_sd, T_sd = learn_HAT(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])], T_known=np.ones(12).reshape(-1, 1))
 						else:
 							a = 2
-							H_sd, A_sd, T_sd = learn_HAT(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
+							H_sd, A_sd, T_sd = learn_HAT(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
+=======
+							H_sd, A_sd, T_sd = learn_HAT(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])],  T_known=np.ones(12).reshape(-1, 1))
+						else:
+							a = 2
+							H_sd, A_sd, T_sd = learn_HAT(case, tensor_copy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost,  T_known=np.ones(12).reshape(-1, 1))
+>>>>>>> 10f9ff142a57f6c4dbfbc8b80b448336ecb5d9dd
 
 
-				HAT = multiply_case(H_sd, A_sd, T_sd, case)
-				pred[:, i, :] = HAT[:num_test, i, :]
+					HAT = multiply_case(H_sd, A_sd, T_sd, case)
+					pred[:, i, j] = HAT[:num_test, i, j]
 			# get the prediction
 			
 			for appliance in APPLIANCES_ORDER:
 				pred_cv[appliance][train_percentage].append(pd.DataFrame(pred[:, appliance_index[appliance], :], index=test_ix))
 
 			rd += 1
-save_obj(pred_cv, "pred__month_" + static_fac + "_" + algo + "_" + str(k))
+save_obj(pred_cv, "pred_month_normal" + static_fac + "_" + algo + "_" + str(k) + "_" + str(per))
