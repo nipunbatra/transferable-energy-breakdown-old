@@ -33,7 +33,7 @@ def get_tensor(df, dfc):
     return tensor
 
 def save_obj(obj, name ):
-    with open(os.path.expanduser('~/git/'+ name + '.pkl'), 'wb') as f:
+    with open(os.path.expanduser('~/git/pred_explore/'+ name + '.pkl'), 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
