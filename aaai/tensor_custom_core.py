@@ -59,7 +59,7 @@ def learn_HAT_adagrad(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False,
                       A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0):
 
 
-	def cost_l21(H, A, T, E_np_masked, case, lam=0.1):
+	def cost_l12(H, A, T, E_np_masked, case, lam=0.1):
 		HAT = multiply_case(H, A, T, case)
 		mask = ~np.isnan(E_np_masked)
 		error = (HAT - E_np_masked)[mask].flatten()
@@ -91,7 +91,7 @@ def learn_HAT_adagrad(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False,
 
 
 
-	def cost_l12(H, A, T, E_np_masked, case, lam=0.1):
+	def cost_l21(H, A, T, E_np_masked, case, lam=0.1):
 		HAT = multiply_case(H, A, T, case)
 		mask = ~np.isnan(E_np_masked)
 		error = (HAT - E_np_masked)[mask].flatten()
