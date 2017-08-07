@@ -70,7 +70,7 @@ sd = {}
 out = {}
 n_splits = 10
 n_iter = 3000
-TRAIN_SPLITS = range(10, 110, 40)
+TRAIN_SPLITS = range(10, 110, 10)
 case = 2
 
 
@@ -85,8 +85,8 @@ else:
     H_known_Sd = static_sd
 
 for appliance in APPLIANCES_ORDER:
-    pred_normal[appliance] = {f:[] for f in range(10, 110, 40)}
-    pred_transfer[appliance] = {f:[] for f in range(10, 110, 40)}
+    pred_normal[appliance] = {f:[] for f in range(10, 110, 10)}
+    pred_transfer[appliance] = {f:[] for f in range(10, 110, 10)}
 
 
 
@@ -140,7 +140,6 @@ for train_percentage in TRAIN_SPLITS:
             if static_fac == 'static':
                 a = 5
                 H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])], T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
-                print A_normal
             else:
                 a = 2
                 H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
@@ -181,8 +180,7 @@ for train_percentage in TRAIN_SPLITS:
         # assert(np.allclose(A, A_au))
         HAT_normal = multiply_case(H_normal, A_normal, T_normal, case)
         HAT_transfer = multiply_case(H_transfer, A_transfer, T_transfer, case)
-        print HAT_normal[0][0][0]
-        print HAT_transfer[0][0][0]
+
 
         for appliance in APPLIANCES_ORDER:
             pred_normal[appliance][train_percentage].append(pd.DataFrame(HAT_normal[:num_test, appliance_index[appliance], :], index=test_ix))
