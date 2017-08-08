@@ -51,49 +51,45 @@ au_df, au_dfc = create_matrix_single_region("Austin", year)
 au_tensor = get_tensor(au_df, au_dfc)
 
 def load_obj(name):
-	with open(os.path.expanduser('~/git/pred_adagrad/' + name + '.pkl'), 'rb') as f:
+	with open(os.path.expanduser('~/git/pred_explore/' + name + '.pkl'), 'rb') as f:
 		return pickle.load(f)
 def save_obj(obj, name ):
-	with open(os.path.expanduser('~/git/'+ name + '.pkl'), 'wb') as f:
+	with open(os.path.expanduser('~/git/out_explore/'+ name + '.pkl'), 'wb') as f:
 		pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 
-<<<<<<< HEAD
-iters, static_fac, lam = sys.argv[1:]
+iters, algo, static_fac, lam = sys.argv[1:]
 iters = int(iters)
 lam = float(lam)
-=======
-static_fac, lam = sys.argv[1:]
-#iters = int(iters)
-lam = float(lam)
 
->>>>>>> 0bc20a60ba19c03ee238aec36ca46544b32e13a3
 
 import pickle
 pred = {}
+pred['normal'] = {}
+pred['transfer'] = {}
 for random_seed in range(10):
-<<<<<<< HEAD
-	pred[random_seed] = load_obj('pred_transfer_' + str(iters) + '_' + static_fac + '_' + str(lam) + '_' + str(random_seed) + '_const')
-
-=======
-	pred[random_seed] = load_obj('pred_normal_' + static_fac + '_' + str(lam) + '_' + str(random_seed) + '_const')
->>>>>>> 0bc20a60ba19c03ee238aec36ca46544b32e13a3
+	pred['transfer'][random_seed] = load_obj('pred_transfer_' + str(iters) + '_' + algo + '_' + static_fac + '_' + str(lam) + '_' + str(random_seed))
+	pred['normal'][random_seed] = load_obj('pred_normal_' + str(iters) + '_' + algo + '_' + static_fac + '_' + str(lam) + '_' + str(random_seed))
 
 out = {}
+out['normal'] = {}
+out['transfer'] = {}
 for random_seed in range(10):
-	out[random_seed] = {}
+	out['normal'][random_seed] = {}
+	out['transfer'][random_seed] = {}
 	for appliance in APPLIANCES_ORDER[1:]:
-		out[random_seed][appliance] = {}
+		out['normal'][random_seed][appliance] = {}
+		out['transfer'][random_seed][appliance] = {}
 		for f in range(10, 110, 10):
 			print random_seed, appliance, f
-			s = pd.concat(pred[random_seed][appliance][f]).ix[sd_df.index]
+			s_transfer = pd.concat(pred['transfer'][random_seed][appliance][f]).ix[sd_df.index]
+			s_normal = pd.concat(pred['normal'][random_seed][appliance][f]).ix[sd_df.index]
 			if appliance=="hvac":
-				out[random_seed][appliance][f] = compute_rmse_fraction(appliance,s[range(4, 10)],'SanDiego')[2]
+				out['transfer'][random_seed][appliance][f] = compute_rmse_fraction(appliance,s_transfer[range(4, 10)],'SanDiego')[2]
+				out['normal'][random_seed][appliance][f] = compute_rmse_fraction(appliance,s_normal[range(4, 10)],'SanDiego')[2]
 			else:   
-				out[random_seed][appliance][f] = compute_rmse_fraction(appliance, s,'SanDiego')[2]
+				out['transfer'][random_seed][appliance][f] = compute_rmse_fraction(appliance,s_transfer,'SanDiego')[2]
+				out['normal'][random_seed][appliance][f] = compute_rmse_fraction(appliance,s_normal,'SanDiego')[2]
 
-<<<<<<< HEAD
-save_obj(out, "out_transfer_" + str(iters) + '_' + static_fac + '_' + str(lam) + '_' + str(random_seed) + '_const')
-=======
-save_obj(out, "out_normal_" + static_fac + '_' + str(lam) + '_const')
->>>>>>> 0bc20a60ba19c03ee238aec36ca46544b32e13a3
+save_obj(out['transfer'], "out_transfer_" + str(iters) + '_' + algo + '_' + static_fac + '_' + str(lam))
+save_obj(out['normal'], "out_normal_" + str(iters) + '_' + algo + '_' + static_fac + '_' + str(lam))
