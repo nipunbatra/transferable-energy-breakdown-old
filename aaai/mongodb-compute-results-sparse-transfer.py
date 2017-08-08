@@ -20,7 +20,7 @@ name = "{}-{}-{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, num_
 directory = os.path.expanduser('~/aaai2017/transfer_{}_{}_{}/'.format(source, target, cost))
 
 filename = os.path.join(directory, name + '.pkl')
-pr = pickle.load(open(filename), 'r')
+pr = pickle.load(open(filename, 'r'))
 out = {'static':static_fac, 'lam':lam, 'num_home_factors':num_home_factors,
        'num_season_factors':num_season_factors,'train_percentage':int(train_percentage),
        'random_seed':random_seed}
