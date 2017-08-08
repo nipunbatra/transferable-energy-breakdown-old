@@ -28,9 +28,12 @@ def un_normalize(x, maximum, minimum):
 n_splits = 10
 case = 2
 
-source, target, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage = sys.argv[1:]
-name = "{}-{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage)
-filename = os.path.expanduser('~/aaai2017/transfer_{}_{}/'.format(source, target) + name + '.pkl')
+source, target, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage, cost = sys.argv[1:]
+name = "{}-{}-{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage, cost)
+directory = os.path.expanduser('~/aaai2017/transfer_{}_{}_{}/'.format(source, target, cost))
+if not os.path.exists(directory):
+	os.makedirs(directory)
+filename = os.path.expanduser('~/aaai2017/transfer_{}_{}_{}/'.format(source, target, cost) + name + '.pkl')
 
 if os.path.exists(filename):
 	sys.exit(0)
@@ -71,7 +74,6 @@ TRAIN_SPLITS = range(10, 110, 40)
 case = 2
 n_iter = 1200
 
-cost = 'l21'
 algo = 'adagrad'
 
 lam = float(lam)

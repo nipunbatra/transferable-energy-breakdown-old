@@ -21,7 +21,7 @@ MAX_NUM_MY_JOBS = 140
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-for train_iter in [500, 1000, 1500, 2000, 2500, 3000]:
+for train_iter in [1500]:
 	for algo in ['adagrad', 'gd']:
 		for static_fac in ['static', 'None']:
 			for lam in [1e-2, 1e-1, 0, 1]:

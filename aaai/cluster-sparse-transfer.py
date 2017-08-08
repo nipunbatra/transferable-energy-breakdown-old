@@ -23,6 +23,7 @@ import time
 
 source = 'SanDiego'
 target = 'Austin'
+cost = 'l21'
 for static_fac in ['None','static']:
 	for lam in [0, 0.001, 0.01, 0.1, 1]:
 		for num_home_factors in range(3, 9):
@@ -34,7 +35,7 @@ for static_fac in ['None','static']:
 						OFILE = "{}/{}-{}-{}-{}-{}-{}.out".format(SLURM_OUT, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage )
 						EFILE = "{}/{}-{}-{}-{}-{}-{}.err".format(SLURM_OUT, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage )
 						SLURM_SCRIPT = "{}-{}-{}-{}-{}-{}.pbs".format(static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage)
-						CMD = 'python sparse-transfer.py {} {} {} {} {} {} {} {}'.format(source, target, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage)
+						CMD = 'python sparse-transfer.py {} {} {} {} {} {} {} {} {}'.format(source, target, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage, cost)
 						lines = []
 						lines.append("#!/bin/sh\n")
 						lines.append('#SBATCH --time=1-16:0:00\n')
