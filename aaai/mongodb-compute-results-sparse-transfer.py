@@ -24,7 +24,7 @@ out = {'static': static_fac, 'lam': lam, 'num_home_factors': num_home_factors,
 appliance='hvac'
 region='SanDiego'
 year=2014
-pred_df = pr[appliance]
+pred_df = pr[appliance][range(4, 10)]
 from sklearn.metrics import mean_squared_error
 appliance_df = create_matrix_region_appliance_year(region, year, appliance)
 
@@ -36,7 +36,7 @@ pred_df = pred_df.copy()
 pred_df.columns = [['%s_%d' % (appliance, month) for month in range(start, stop)]]
 gt_df = appliance_df[pred_df.columns].ix[pred_df.index]
 
-aggregate_df = appliance_df.ix[pred_df.index][['aggregate_%d' % month for month in range(start, stop)]]
+aggregate_df = appliance_df.loc[pred_df.index][['aggregate_%d' % month for month in range(start, stop)]]
 
 aggregate_df.columns = gt_df.columns
 rows, cols = np.where((aggregate_df < 100))
