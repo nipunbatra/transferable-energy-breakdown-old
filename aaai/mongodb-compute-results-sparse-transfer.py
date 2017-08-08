@@ -24,7 +24,7 @@ pr = pickle.load(open(filename, 'r'))
 out = {'static':static_fac, 'lam':lam, 'num_home_factors':num_home_factors,
        'num_season_factors':num_season_factors,'train_percentage':int(train_percentage),
        'random_seed':random_seed}
-for appliance in APPLIANCES_ORDER:
+for appliance in APPLIANCES_ORDER[1:]:
 	if appliance=="hvac":
 		out[appliance] = compute_rmse_fraction(appliance, pr[appliance][range(4, 10)], 'SanDiego')[2]
 	else:
