@@ -21,10 +21,10 @@ MAX_NUM_MY_JOBS = 140
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-for train_iter in [1500]:
-	for algo in ['adagrad', 'gd']:
-		for static_fac in ['static', 'None']:
-			for lam in [1e-2, 1e-1, 0, 1]:
+for train_iter in [5000]:
+	for algo in ['gd']:
+		for static_fac in ['static']:
+			for lam in [0]:
 				for random_seed in range(10):
 					OFILE = "%s/out_%d_%s_%s_%f_%d.out" % (SLURM_OUT, train_iter, algo, static_fac, lam, random_seed)
 					EFILE = "%s/out_%d_%s_%s_%f_%d.err" % (SLURM_OUT, train_iter, algo, static_fac, lam, random_seed)
