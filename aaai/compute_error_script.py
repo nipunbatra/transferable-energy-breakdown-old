@@ -21,10 +21,10 @@ MAX_NUM_MY_JOBS = 140
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-for train_iter in [500, 1000, 1500, 2000]:
-	for algo in ['adagrad', 'gd']:
-		for static in ['static', 'None']:
-			for lam in [0.01, 0.1, 0, 1]:
+for train_iter in [5000]:
+	for algo in ['gd']:
+		for static in ['static']:
+			for lam in [0]:
 				OFILE = "%s/out_%d_%s_%s_%f.out" % (SLURM_OUT, train_iter, algo, static, lam)
 				EFILE = "%s/out_%d_%s_%s_%f.err" % (SLURM_OUT, train_iter, algo, static, lam)
 				SLURM_SCRIPT = "%s/out_%d_%s_%s_%f.pbs" % ("./pbs_file", train_iter, algo, static, lam)
