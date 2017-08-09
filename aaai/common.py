@@ -2,6 +2,20 @@ from sklearn.metrics import mean_squared_error
 from create_matrix import *
 
 
+contri = {}
+
+for region in ['SanDiego','Austin']:
+
+	temp = {}
+	r_df = create_matrix_single_region('SanDiego', 2014)[0]
+	for appliance in APPLIANCES_ORDER[1:]:
+	    df_app = r_df[['{}_{}'.format(appliance, month) for month in range(5, 11)]]
+	    df_agg = r_df[['{}_{}'.format("aggregate", month) for month in range(5, 11)]]
+	    df_app.columns = df_agg.columns
+	    temp[appliance] = df_app.div(df_agg).mean().mean()
+	error_weights = pd.Series(temp).div(pd.Series(temp).sum()).to_dict()
+	contri[region] = error_weights
+
 
 def compute_rmse(appliance, pred_df, region='Austin',year=2014):
 	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
