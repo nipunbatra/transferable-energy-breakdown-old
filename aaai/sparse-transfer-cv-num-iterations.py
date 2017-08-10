@@ -97,7 +97,7 @@ kf = KFold(n_splits=n_splits)
 pred = {}
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = []
-print(lam, static_fac, num_season_factors, num_home_factors, random_seed, train_percentage)
+print(lam, static_fac, random_seed, train_percentage)
 best_params_global = {}
 for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	# Just a random thing
