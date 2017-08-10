@@ -79,8 +79,7 @@ n_iter = 1200
 algo = 'adagrad'
 
 lam = float(lam)
-num_home_factors = int(num_home_factors)
-num_season_factors = int(num_season_factors)
+
 random_seed = int(random_seed)
 train_percentage = float(train_percentage)
 
