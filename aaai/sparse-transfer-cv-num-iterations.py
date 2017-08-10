@@ -29,8 +29,8 @@ def un_normalize(x, maximum, minimum):
 n_splits = 10
 case = 2
 
-source, target, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage, cost = sys.argv[1:]
-name = "{}-{}-{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage, cost)
+source, target, static_fac, lam, random_seed, train_percentage, cost = sys.argv[1:]
+name = "{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, random_seed, train_percentage, cost)
 directory = os.path.expanduser('~/aaai2017/transfer_{}_{}_{}/'.format(source, target, cost))
 if not os.path.exists(directory):
 	os.makedirs(directory)
