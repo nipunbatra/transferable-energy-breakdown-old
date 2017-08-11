@@ -190,7 +190,7 @@ out = {'Prediction': pd.concat(pred_df), 'Parameters': best_params_global}
 import os
 import pickle
 name = "{}-{}-{}".format(features, random_seed, train_percentage)
-directory = os.path.expanduser('~/aaai2017/Normal-MF_{}/'.format(target))
+directory = os.path.expanduser('~/aaai2017/Normal-MF_{}/{}'.format(target, appliance))
 if not os.path.exists(directory):
 	os.makedirs(directory)
 filename = '{}'.format(os.path.join(directory, name + '.pkl'))
