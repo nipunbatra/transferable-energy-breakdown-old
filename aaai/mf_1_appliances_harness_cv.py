@@ -58,7 +58,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print("-" * 80)
 	print("Progress: {}".format(100.0 * outer_loop_iteration / n_splits))
 	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
-	if train_percentage == 100:
+	if train_percentage > 90:
 		train = train_max
 	else:
 		# Sample `train_percentage` homes
