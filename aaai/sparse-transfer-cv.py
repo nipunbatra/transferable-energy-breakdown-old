@@ -106,6 +106,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
 	if train_percentage == 100:
 		train = train_max
+		train_ix = target_df.index[train]
+		# print("Train set {}".format(train_ix.values))
+		test_ix = target_df.index[test]
 	else:
 		# Sample `train_percentage` homes
 		# An important condition here is that all homes should have energy data
