@@ -14,7 +14,7 @@ for features in ['energy', 'energy_static']:
 	out[features] = {}
 	for appliance in APPLIANCES:
 		out[features][appliance] = {}
-		for train_percentage in range(10, 110, 10):
+		for train_percentage in [x*1. for x in range(10, 110, 10)]:
 			out[features][appliance][train_percentage] = {}
 			for random_seed in range(5):
 				out[features][appliance][train_percentage][random_seed] = {}
