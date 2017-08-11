@@ -26,7 +26,7 @@ for static_fac in ['None','static']:
 	for lam in [0]:
 
 		for random_seed in range(5):
-			for train_percentage in range(10, 110, 10):
+			for train_percentage in range(10, 110, 20):
 
 
 				OFILE = "{}/{}-{}-{}-{}.out".format(SLURM_OUT, static_fac[0], lam, random_seed, train_percentage )
