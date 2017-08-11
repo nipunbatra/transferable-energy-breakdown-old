@@ -1,14 +1,13 @@
-
 import sys
-
+import pickle
 from sklearn.model_selection import KFold
-
 from create_matrix import *
 from sklearn.model_selection import train_test_split, KFold
 from common import compute_rmse_fraction, contri
 from tensor_custom_core import *
 from create_matrix import *
 from tensor_custom_core import *
+
 from degree_days import dds
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
@@ -272,7 +271,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = pd.DataFrame(pd.concat(pred[appliance]))
 
-import pickle
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
 with open(filename, 'wb') as f:
