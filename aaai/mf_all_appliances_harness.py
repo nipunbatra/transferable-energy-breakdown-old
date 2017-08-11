@@ -25,7 +25,7 @@ else:
 	all_features = False
 
 
-region, year = 'Austin', 2014
+region, year = 'SanDiego', 2014
 df, dfc = create_matrix_single_region(region, year)
 start, stop = 1, 13
 energy_cols = np.array(

@@ -71,8 +71,6 @@ pred = {}
 sd = {}
 out = {}
 n_splits = 10
-NUM_RANDOM = 3
-TRAIN_SPLITS = range(10, 110, 40)
 case = 2
 n_iter = 1200
 
@@ -125,8 +123,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print("-" * 80)
 
 	print("Test set {}".format(test_ix.values))
-	print("Train max set {}".format(target_df.index[train_max].values))
-	print("Train set {}".format(train_ix.values))
+
 
 	print("-"*80)
 	print("Current Error, Least Error, #Iterations")
@@ -141,20 +138,16 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	least_error = 1e6
 
 	overall_df_inner = target_df.loc[train_ix]
-	print("#" * 80)
-	print("Inner Loop")
-	print("#" * 80)
+
 	best_params_global[outer_loop_iteration] = {}
-	for num_iterations_cv in range(100, 300, 100):
-		for num_season_factors_cv in range(2, 4):
-			for num_home_factors_cv in range(2, 4):
+	for num_iterations_cv in range(100, 1300, 200):
+		for num_season_factors_cv in range(2, 6):
+			for num_home_factors_cv in range(2, 6):
 				pred_inner = {}
 				for train_inner, test_inner in inner_kf.split(overall_df_inner):
 
 					train_ix_inner = overall_df_inner.index[train_inner]
 					test_ix_inner = overall_df_inner.index[test_inner]
-					print("Test set inner: {}".format(test_ix_inner.values))
-					print("Train set inner: {}".format(train_ix_inner.values))
 
 					if static_fac == 'static':
 						H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, source_tensor, num_home_factors_cv,
@@ -169,7 +162,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 					                                                                          num_iter=num_iterations_cv, lr=1, dis=False,
 					                                                                          cost_function=cost,
 					                                                                          penalty_coeff=lam)
-					train_test_ix_inner = np.concatenate([test_ix_inner, train_ix])
+					train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
 					df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[train_test_ix_inner]
 					tensor_inner = get_tensor(df_t_inner)
 					tensor_copy_inner = tensor_inner.copy()
@@ -259,7 +252,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	# First n
 	tensor_copy[:num_test, 1:, :] = np.NaN
 	if static_fac!='None':
-		print("Heer I  am")
 		H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, best_num_home_factors, best_num_season_factors,
 		                                                     num_iter=best_num_iterations, lr=1, dis=False, cost_function=cost,
 		                                                     A_known=A_source,
