@@ -176,7 +176,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 						                                                     num_iter=num_iterations_cv, lr=1, dis=False,
 						                                                     cost_function=cost,
 						                                                     A_known=A_source,
-						                                                     H_known=H_known_target[np.concatenate([test_inner, train])],
+						                                                     H_known=H_known_target[np.concatenate([test_inner, train_inner])],
 						                                                     penalty_coeff=lam)
 					else:
 						H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy_inner, num_home_factors_cv,

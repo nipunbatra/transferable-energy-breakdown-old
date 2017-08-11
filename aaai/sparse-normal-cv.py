@@ -125,9 +125,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 
 	overall_df_inner = source_df.loc[train_ix]
 	best_params_global[outer_loop_iteration] = {}
-	for num_iterations_cv in range(100, 1300, 300):
-		for num_season_factors_cv in range(2, 4):
-			for num_home_factors_cv in range(3, 5):
+	for num_iterations_cv in range(100, 1400, 300):
+		for num_season_factors_cv in range(2, 6):
+			for num_home_factors_cv in range(3, 8):
 				pred_inner = {}
 				for train_inner, test_inner in inner_kf.split(overall_df_inner):
 					train_ix_inner = overall_df_inner.index[train_inner]
@@ -147,7 +147,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 						                                                     dis=False,
 						                                                     cost_function=cost,
 						                                                     H_known=H_known_source[
-							                                                     np.concatenate([test_inner, train])],
+							                                                     np.concatenate([test_inner, train_inner])],
 						                                                     penalty_coeff=lam)
 					else:
 						H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy_inner,
