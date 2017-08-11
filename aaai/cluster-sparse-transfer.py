@@ -25,29 +25,28 @@ source = 'Austin'
 target = 'SanDiego'
 cost = 'l21'
 for static_fac in ['None','static']:
-	for lam in [0, 0.001, 0.01, 0.1, 1]:
-		for num_home_factors in range(3, 9):
-			for num_season_factors in range(1, 9):
-				for random_seed in range(5):
-					for train_percentage in range(10, 110, 10):
+	for lam in [0]:
+
+		for random_seed in range(5):
+			for train_percentage in range(10, 110, 10):
 
 
-						OFILE = "{}/{}-{}-{}-{}-{}-{}.out".format(SLURM_OUT, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage )
-						EFILE = "{}/{}-{}-{}-{}-{}-{}.err".format(SLURM_OUT, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage )
-						SLURM_SCRIPT = "{}-{}-{}-{}-{}-{}.pbs".format(static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage)
-						CMD = 'python sparse-transfer.py {} {} {} {} {} {} {} {} {}'.format(source, target, static_fac, lam, num_home_factors, num_season_factors, random_seed, train_percentage, cost)
-						lines = []
-						lines.append("#!/bin/sh\n")
-						lines.append('#SBATCH --time=1-16:0:00\n')
-						lines.append('#SBATCH --mem=16\n')
-						lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
-						lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
-						lines.append(CMD + '\n')
-						with open(SLURM_SCRIPT, 'w') as f:
-							f.writelines(lines)
-						command = ['sbatch', SLURM_SCRIPT]
-						while len(delegator.run('squeue -u %s' % username).out.split("\n")) > MAX_NUM_MY_JOBS + 2:
-							time.sleep(DELAY_NUM_JOBS_EXCEEDED)
+				OFILE = "{}/{}-{}-{}-{}-{}.out".format(SLURM_OUT, "TRANSFER", static_fac, lam, random_seed, train_percentage )
+				EFILE = "{}/{}-{}-{}-{}-{}.err".format(SLURM_OUT, "TRANSFER", static_fac, lam, random_seed, train_percentage )
+				SLURM_SCRIPT = "{}-{}-{}-{}-{}.pbs".format(static_fac, "TRANSFER", lam, random_seed, train_percentage)
+				CMD = 'python sparse-transfer-cv.py {} {} {} {} {} {} {}'.format(source, target, static_fac, lam, random_seed, train_percentage, cost)
+				lines = []
+				lines.append("#!/bin/sh\n")
+				lines.append('#SBATCH --time=1-16:0:00\n')
+				lines.append('#SBATCH --mem=16\n')
+				lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
+				lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
+				lines.append(CMD + '\n')
+				with open(SLURM_SCRIPT, 'w') as f:
+					f.writelines(lines)
+				command = ['sbatch', SLURM_SCRIPT]
+				while len(delegator.run('squeue -u %s' % username).out.split("\n")) > MAX_NUM_MY_JOBS + 2:
+					time.sleep(DELAY_NUM_JOBS_EXCEEDED)
 
-						delegator.run(command, block=False)
-						print SLURM_SCRIPT
+				delegator.run(command, block=False)
+				print SLURM_SCRIPT
