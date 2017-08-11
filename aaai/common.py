@@ -62,6 +62,9 @@ def compute_rmse_fraction(appliance, pred_df, region='Austin',year=2014):
     gt_fraction = gt_df.div(aggregate_df) * 100
     pred_fraction = pred_df.div(aggregate_df) * 100
 
+    # Capping it to 100%
+    pred_fraction[pred_fraction > 100] = 100.
+
     gt_fraction_dropna = gt_fraction.unstack().dropna()
     pred_fraction_dropna = pred_fraction.unstack().dropna()
     index_intersection = gt_fraction_dropna.index.intersection(pred_fraction_dropna.index)

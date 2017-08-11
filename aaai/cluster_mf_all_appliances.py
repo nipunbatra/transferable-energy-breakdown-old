@@ -1,4 +1,4 @@
-region = "Austin"
+region = "SanDiego"
 year = 2014
 SLURM_OUT = "../../slurm_out"
 import time

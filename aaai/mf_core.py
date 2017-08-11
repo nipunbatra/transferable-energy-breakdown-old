@@ -51,13 +51,12 @@ def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_
 		if iter_num % 2 == 1:
 			X = cvx.Variable(k, n)
 			constraint = [X >= 0]
-
-			for ap in range(n/2):
-
+			"""
+			for ap in range(n / 2):
 				# Put constraints that aggregate factor be more than
 				# appliance factor
-				constraint.append(X[:, ap] < X[:, ap+n/2])
-
+				constraint.append(X[:, ap] < X[:, ap + n / 2])
+			"""
 
 			if idx_item is not None:
 				for index_item, it_name in enumerate(idx_item):
@@ -71,7 +70,6 @@ def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_
 
 			constraint = [Y >= 0]
 			if idx_user is not None:
-				# print idx_user, len(idx_user), type(idx_user)
 				# print np.size(idx_user)
 				num_cols = len(idx_user)
 				# print num_cols
@@ -85,8 +83,12 @@ def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_
 
 		if cost == 'absolute':
 			error = A.values[mask] - (Y * X)[mask]
-		else:
+		elif cost =='relative':
 			error = cvx.mul_elemwise(one_A, A.values[mask] - (Y * X)[mask])
+		else:
+			print("NO COST DEFINED. BREAKING")
+			import sys
+			sys.exit(0)
 		# Solve the problem.
 		if not regularisation:
 			obj = cvx.Minimize(cvx.norm(error, 'fro'))
@@ -96,9 +98,9 @@ def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_
 
 
 			if iter_num % 2 == 1:
-				obj = cvx.Minimize(cvx.norm(A.values[mask] - (Y * X)[mask], 'fro') + 0.02 * cvx.norm(X))
+				obj = cvx.Minimize(cvx.norm(A.values[mask] - (Y * X)[mask], 'fro'))
 			else:
-				obj = cvx.Minimize(cvx.norm(A.values[mask] - (Y * X)[mask], 'fro') + 0.02 * cvx.norm(Y))
+				obj = cvx.Minimize(cvx.norm(A.values[mask] - (Y * X)[mask], 'fro'))
 
 		prob = cvx.Problem(obj, constraint)
 		prob.solve(solver=cvx.SCS)
@@ -119,16 +121,23 @@ def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_
 	return X, Y, residual
 
 
-def transform_2(pred_df, appliance, matrix_max, matrix_min):
+def transform_2(pred_df, appliance, matrix_max, matrix_min, normalisation=False):
 	pred_df_copy = pred_df.copy()
 	if appliance == "hvac":
 		start, stop = 5, 11
 	else:
 		start, stop = 1, 13
 
-	for month in range(start, stop):
-		pred_df_copy['%s_%d' % (appliance, month)] = (matrix_max * 1. - matrix_min * 1.) * pred_df[
+	if not normalisation:
+		for month in range(start, stop):
+			pred_df_copy['%s_%d' % (appliance, month)] = pred_df[
+				'%s_%d' % (appliance, month)]
+	else:
+		for month in range(start, stop):
+			pred_df_copy['%s_%d' % (appliance, month)] = (matrix_max * 1. - matrix_min * 1.) * pred_df[
 			'%s_%d' % (appliance, month)] * 1. + matrix_min * 1.
+
+
 	return pred_df_copy
 
 
@@ -169,9 +178,9 @@ def preprocess(df, dfc, appliance, matrix_max=None, matrix_min=None, use_all=Tru
 	if matrix_min is None:
 		matrix_min = temp.min().min()
 
-	ix_use = df[((df[all_cols] >= matrix_max).sum(axis=1) == 0)].index
-	df = df.ix[ix_use]
-	dfc = dfc.ix[ix_use]
+	#ix_use = df[((df[all_cols] >= matrix_max).sum(axis=1) == 0)].index
+	#df = df.ix[ix_use]
+	#dfc = dfc.ix[ix_use]
 
 	if use_all:
 		static_cols = ['area', 'num_rooms', 'total_occupants']
@@ -346,11 +355,11 @@ def create_matrix_factorised_all_appliances(test_home_list, X_normalised):
 	return A
 
 
-def create_prediction(test_home, X, Y, X_normalised, appliance, matrix_max, matrix_min, appliance_cols):
+def create_prediction(test_home_list, X, Y, X_normalised, appliance, matrix_max, matrix_min, appliance_cols, normalisation=False):
 	pred_df = pd.DataFrame(Y * X)
 	pred_df.columns = X_normalised.columns
 	pred_df.index = X_normalised.index
-	pred_df = transform_2(pred_df.ix[test_home], appliance, matrix_max, matrix_min)[appliance_cols]
+	pred_df = transform_2(pred_df.ix[test_home_list], appliance, matrix_max, matrix_min, normalisation)[appliance_cols]
 	return pred_df
 
 def create_prediction_all_appliances(test_home, X, Y, X_normalised, appliance, matrix_max, matrix_min, appliance_cols):
