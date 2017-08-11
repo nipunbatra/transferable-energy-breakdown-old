@@ -27,6 +27,7 @@ for features in ['energy', 'energy_static']:
 					if appliance=="hvac":
 						pred = pred[['hvac_{}'.format(month) for month in range(5, 11)]]
 						out[features][appliance][train_percentage][random_seed] = compute_rmse_fraction(appliance, pred, target)[2]
-				except:
+				except Exception, e:
+					print(e)
 					print(appliance, features, train_percentage, random_seed)
 			out[features][appliance][train_percentage] = pd.Series(out[features][appliance][train_percentage][random_seed]).mean()
