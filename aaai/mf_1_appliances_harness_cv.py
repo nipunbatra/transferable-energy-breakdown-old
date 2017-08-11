@@ -119,7 +119,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
 				# Static features can only be used if we have atleast some values from the train homes
 				if idx_user is not None:
-					if max([len(x) for x in idx_user.values()])==0:
+					if min([len(x) for x in idx_user.values()])==0:
 						idx_user = None
 						data_user =None
 
@@ -185,12 +185,12 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	else:
 		feature_comb = ['occ', 'area', 'rooms']
 	idx_user, data_user = prepare_known_features(feature_comb, static_features, X_normalised)
-	# Static features can only be used if we have atleast some values from the train homes
+	# Static features can only be used if we have atleast some values from the train homes for each of the features
 	if idx_user is not None:
-		if max([len(x) for x in idx_user.values()]) == 0:
+		if min([len(x) for x in idx_user.values()]) == 0:
 			idx_user = None
 			data_user = None
-			
+
 	A = create_matrix_factorised(appliance, test_ix, X_normalised)
 	X, Y, res = nmf_features(A=A, k=best_num_latent_factors, constant=0.01, regularisation=False,
 	                         idx_user=idx_user, data_user=data_user,

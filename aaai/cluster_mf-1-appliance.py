@@ -6,12 +6,13 @@ import time
 from subprocess import Popen
 
 for appliance in APPLIANCES:
-	for features in ['energy', 'energy_static']:
+	#for features in ['energy', 'energy_static']:
+	for features in ['energy_static']:
 
 		for cost in ['absolute']:
 			for random_seed in range(5):
 				#for train_percentage in range(10, 110, 10):
-				for train_percentage in [100]:
+				for train_percentage in [10, 20]:
 					OFILE = "%s/%s_%s_%s_%s_%d.out" % (
 						SLURM_OUT, appliance[0], cost[0], features[-1], random_seed, train_percentage)
 					EFILE = "%s/%s_%s_%s_%s_%d.err" % (
