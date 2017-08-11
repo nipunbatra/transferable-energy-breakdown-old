@@ -30,6 +30,6 @@ for appliance in APPLIANCES:
 					with open(SLURM_SCRIPT, 'w') as f:
 						f.writelines(lines)
 					command = ['sbatch', SLURM_SCRIPT]
-					time.sleep(1)
+					#time.sleep(1)
 					Popen(command)
 					print SLURM_SCRIPT
