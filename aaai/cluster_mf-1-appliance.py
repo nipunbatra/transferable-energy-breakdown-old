@@ -17,7 +17,7 @@ for appliance in APPLIANCES:
 						SLURM_OUT, appliance[0], cost[0], features[-1], random_seed, train_percentage)
 					SLURM_SCRIPT = "%s_%s_%s_%d_%d.pbs" % (
 						appliance[0], cost[0], features[-1], random_seed, train_percentage)
-					CMD = 'python mf_1_appliances_harness.py %s %s %s %d %d' % (
+					CMD = 'python mf_1_appliances_harness_cv.py %s %s %s %d %d' % (
 						appliance, features, cost, random_seed, train_percentage)
 					lines = []
 					lines.append("#!/bin/sh\n")
