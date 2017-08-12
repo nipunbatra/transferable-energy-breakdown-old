@@ -33,7 +33,7 @@ def get_tensor(df, dfc):
     return tensor
 
 def save_obj(obj, name ):
-    with open(os.path.expanduser('~/git/pred_static/'+ name + '.pkl'), 'wb') as f:
+    with open(os.path.expanduser('~/git/'+ name + '.pkl'), 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
@@ -72,28 +72,23 @@ case = 2
 kf = KFold(n_splits=n_splits)
 
 
-if static_fac == 'None':
-    H_known_Au = None
-    H_known_Sd = None
-else:
-    H_known_Au = static_au
-    H_known_Sd = static_sd
 
 for appliance in APPLIANCES_ORDER:
     pred[appliance] = {f:[] for f in range(10, 110, 10)}
 
 a = 5
 b = 3
-
 # Learning A_au with static factors, depends on different algorithms
 if method == 'transfer':
     if algo == 'adagrad':
         cost = 'l21'
-        H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Au, T_known=np.ones(12).reshape(-1, 1))
+        H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, a, b, num_iter=3000, lr=0.1, dis=False, cost_function=cost, H_known = static_au, T_known=np.ones(12).reshape(-1, 1))
     else:
         cost = 'abs'
-        H_au, A_au, T_au = learn_HAT(case, au_tensor, a, b, num_iter=2000, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Au, T_known=np.ones(12).reshape(-1, 1))
+        print "here"
+        H_au, A_au, T_au = learn_HAT(case, au_tensor, a, b, num_iter=3000, lr=0.1, dis=False, cost_function=cost, H_known = static_au, T_known=np.ones(12).reshape(-1, 1))
     
+print A_au
 
 np.random.seed(random_seed)
 for train_percentage in TRAIN_SPLITS:
@@ -127,14 +122,14 @@ for train_percentage in TRAIN_SPLITS:
             if algo == 'adagrad':
                 cost = 'l21'
                 if static_fac == 'static':
-                    H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])], T_known = np.ones(12).reshape(-1, 1))
+                    H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = static_sd[np.concatenate([test, train])], T_known = np.ones(12).reshape(-1, 1))
                 else:
                     H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, T_known = np.ones(12).reshape(-1, 1))
             else:
                 print 'here'
                 cost = 'abs'
                 if static_fac == 'static':
-                    H_normal, A_normal, T_normal = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])], T_known = np.ones(12).reshape(-1, 1))
+                    H_normal, A_normal, T_normal = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = static_sd[np.concatenate([test, train])], T_known = np.ones(12).reshape(-1, 1))
                 else:
                     H_normal, A_normal, T_normal = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, T_known = np.ones(12).reshape(-1, 1))
             HAT = multiply_case(H_normal, A_normal, T_normal, case)
@@ -142,16 +137,18 @@ for train_percentage in TRAIN_SPLITS:
             if algo == 'adagrad':
                 cost = 'l21'
                 if static_fac == 'static':
-                    H_transfer, A_transfer, T_transfer, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])], A_known = A_au, T_known = np.ones(12).reshape(-1, 1))
+                    H_transfer, A_transfer, T_transfer, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = static_sd[np.concatenate([test, train])], A_known = A_au, T_known = np.ones(12).reshape(-1, 1))
                 else:
                     H_transfer, A_transfer, T_transfer, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, A_known = A_au, T_known = np.ones(12).reshape(-1, 1))
             else:
                 cost = 'abs'
                 if static_fac =='static':
-                    H_transfer, A_transfer, T_transfer = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])], A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
+                    H_transfer, A_transfer, T_transfer = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = static_sd[np.concatenate([test, train])], A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
                 else:
+                    print "here"
                     H_transfer, A_transfer, T_transfer = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
             HAT = multiply_case(H_transfer, A_transfer, T_transfer, case)
+            print HAT[0][0][0]
        
 
         for appliance in APPLIANCES_ORDER:
