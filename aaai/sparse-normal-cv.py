@@ -1,4 +1,6 @@
 import sys
+import pickle
+
 
 from sklearn.model_selection import KFold
 
@@ -12,8 +14,6 @@ from degree_days import dds
 from common import compute_rmse_fraction, contri
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
-
-
 
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 
@@ -30,7 +30,6 @@ n_splits = 10
 case = 2
 
 source, static_fac, lam, random_seed, train_percentage = sys.argv[1:]
-
 
 
 def get_tensor(df):
@@ -53,8 +52,9 @@ def create_region_df_dfc_static(region, year):
 	static_region['area'] = static_region['area'].div(4000)
 	static_region['total_occupants'] = static_region['total_occupants'].div(8)
 	static_region['num_rooms'] = static_region['num_rooms'].div(8)
-	static_region =static_region.values
+	static_region = static_region.values
 	return df, dfc, tensor, static_region
+
 
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
 
@@ -79,9 +79,7 @@ else:
 	H_known_source = source_static
 np.random.seed(random_seed)
 
-
 kf = KFold(n_splits=n_splits)
-
 
 pred = {}
 
@@ -92,10 +90,10 @@ best_params_global = {}
 
 for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 	# Just a random thing
-	np.random.seed(10 * random_seed + 7*outer_loop_iteration)
+	np.random.seed(10 * random_seed + 7 * outer_loop_iteration)
 	np.random.shuffle(train_max)
 	print("-" * 80)
-	print("Progress: {}".format(100.0*outer_loop_iteration/n_splits))
+	print("Progress: {}".format(100.0 * outer_loop_iteration / n_splits))
 	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
 	if train_percentage == 100:
 		train = train_max
@@ -120,7 +118,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 	best_num_iterations = 0
 	best_num_season_factors = 0
 	best_num_home_factors = 0
-	best_appliance_wise_err = {appliance:1e6 for appliance in APPLIANCES_ORDER[1:]}
+	best_appliance_wise_err = {appliance: 1e6 for appliance in APPLIANCES_ORDER[1:]}
 	least_error = 1e6
 
 	overall_df_inner = source_df.loc[train_ix]
@@ -147,7 +145,8 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 						                                                     dis=False,
 						                                                     cost_function=cost,
 						                                                     H_known=H_known_source[
-							                                                     np.concatenate([test_inner, train_inner])],
+							                                                     np.concatenate(
+								                                                     [test_inner, train_inner])],
 						                                                     penalty_coeff=lam)
 					else:
 						H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy_inner,
@@ -156,7 +155,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 						                                                     num_iter=num_iterations_cv, lr=1,
 						                                                     dis=False,
 						                                                     cost_function=cost,
-						                                                      penalty_coeff=lam)
+						                                                     penalty_coeff=lam)
 					HAT = multiply_case(H, A, T, case)
 					for appliance in APPLIANCES_ORDER:
 						if appliance not in pred_inner:
@@ -174,7 +173,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 					try:
 						if appliance == "hvac":
 							err[appliance] = \
-							compute_rmse_fraction(appliance, pred_inner[appliance][range(4, 10)], 'SanDiego')[2]
+								compute_rmse_fraction(appliance, pred_inner[appliance][range(4, 10)], 'SanDiego')[2]
 						else:
 							err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], 'SanDiego')[2]
 						appliance_to_weight.append(appliance)
@@ -212,16 +211,20 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 	tensor_copy = tensor.copy()
 	# First n
 	tensor_copy[:num_test, 1:, :] = np.NaN
-	if static_fac!='None':
-		H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, best_num_home_factors, best_num_season_factors,
-		                                                     num_iter=best_num_iterations, lr=1, dis=False, cost_function=cost,
+	if static_fac != 'None':
+		H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, best_num_home_factors,
+		                                                     best_num_season_factors,
+		                                                     num_iter=best_num_iterations, lr=1, dis=False,
+		                                                     cost_function=cost,
 
 		                                                     H_known=H_known_source[np.concatenate([test, train])],
 		                                                     penalty_coeff=lam)
 	else:
-		H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, best_num_home_factors, best_num_season_factors,
-		                                                     num_iter=best_num_iterations, lr=1, dis=False, cost_function=cost,
-		                                                      penalty_coeff=lam)
+		H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, best_num_home_factors,
+		                                                     best_num_season_factors,
+		                                                     num_iter=best_num_iterations, lr=1, dis=False,
+		                                                     cost_function=cost,
+		                                                     penalty_coeff=lam)
 
 	HAT = multiply_case(H, A, T, case)
 	for appliance in APPLIANCES_ORDER:
@@ -230,10 +233,14 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = pd.DataFrame(pd.concat(pred[appliance]))
 
-
 name = "{}-{}-{}-{}-{}-{}".format(source, static_fac, lam, random_seed, train_percentage, cost)
 directory = os.path.expanduser('~/aaai2017/normal_{}_{}/'.format(source, cost))
 if not os.path.exists(directory):
 	os.makedirs(directory)
 filename = os.path.expanduser('~/aaai2017/normal_{}_{}/'.format(source, cost) + name + '.pkl')
 
+out = {'Predictions': pred, 'Learning Params': best_params_global}
+
+
+with open(filename, 'wb') as f:
+	pickle.dump(out, f, pickle.HIGHEST_PROTOCOL)
