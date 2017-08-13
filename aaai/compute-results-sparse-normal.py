@@ -23,7 +23,7 @@ for static_fac in ['None','static']:
 			out[static_fac][lam][train_percentage] ={}
 			for random_seed in range(5):
 				out[static_fac][lam][train_percentage][random_seed] = {}
-				name = "{}-{}-{}-{}-{}-{}".format(source, static_fac, lam, random_seed, train_percentage, cost)
+				name = "{}-{}-{}-{}-{}-{}".format(source, static_fac, lam*1.0, random_seed, train_percentage*1., cost)
 
 				directory = os.path.expanduser('~/aaai2017/normal_{}_{}/'.format(source, cost))
 
