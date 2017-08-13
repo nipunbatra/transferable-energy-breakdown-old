@@ -44,8 +44,9 @@ for static_fac in ['None','static']:
 					print(e)
 					print("Exception")
 
+			out[static_fac][lam][train_percentage] = pd.DataFrame(out[static_fac][lam][train_percentage]).mean(axis=1)
 
-
+pickle.dump(out, open("predictions/sparse-transfer-cv.pkl","w"))
 
 
 
