@@ -233,7 +233,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = pd.DataFrame(pd.concat(pred[appliance]))
 
-name = "{}-{}-{}-{}-{}-{}".format(source, static_fac, lam, random_seed, train_percentage, cost)
+name = "{}-{}-{}-{}-{}-{}".format(source, static_fac, lam*1., random_seed, train_percentage*1., cost)
 directory = os.path.expanduser('~/aaai2017/normal_{}_{}/'.format(source, cost))
 if not os.path.exists(directory):
 	os.makedirs(directory)
