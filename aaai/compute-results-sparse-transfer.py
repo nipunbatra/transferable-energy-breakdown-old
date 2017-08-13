@@ -23,6 +23,7 @@ for static_fac in ['None','static']:
 
 			out[static_fac][lam][train_percentage] ={}
 			for random_seed in range(5):
+				out[static_fac][lam][train_percentage][random_seed] = {}
 				name = "{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, random_seed, train_percentage,
 				                                     cost)
 				directory = os.path.expanduser('~/aaai2017/transfer_{}_{}_{}/'.format(source, target, cost))
@@ -30,17 +31,19 @@ for static_fac in ['None','static']:
 				filename = os.path.join(directory, name + '.pkl')
 				try:
 					pr = pickle.load(open(filename, 'r'))
-					pred = pr['Prediction']
-					'''
-										if appliance == "hvac":
-						pred = pred[['hvac_{}'.format(month) for month in range(5, 11)]]
-						out[static_fac][lam][train_percentage] = \
-					compute_rmse_fraction(appliance, pred, target)[2]
-					'''
+					pred = pr['Predictions']
+					for appliance in APPLIANCES_ORDER[1:]:
+						prediction = pred[appliance]
+						if appliance == "hvac":
+							prediction = prediction[range(4, 10)]
+							out[static_fac][lam][train_percentage][random_seed][appliance]= \
+					compute_rmse_fraction(appliance, prediction, target)[2]
+					print("Computed for: {}".format(name))
 
-				except:
-					pass
-				print (name)
+				except Exception, e:
+					print(e)
+					print("Exception")
+
 
 
 
