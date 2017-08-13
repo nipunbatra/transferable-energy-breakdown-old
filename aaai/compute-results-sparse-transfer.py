@@ -36,7 +36,7 @@ for static_fac in ['None','static']:
 						prediction = pred[appliance]
 						if appliance == "hvac":
 							prediction = prediction[range(4, 10)]
-							out[static_fac][lam][train_percentage][random_seed][appliance]= \
+						out[static_fac][lam][train_percentage][random_seed][appliance]= \
 					compute_rmse_fraction(appliance, prediction, target)[2]
 					print("Computed for: {}".format(name))
 
