@@ -16,13 +16,13 @@ if not os.path.exists(SLURM_OUT):
 	os.makedirs(SLURM_OUT)
 
 # Max. num running processes you want. This is to prevent hogging the cluster
-MAX_NUM_MY_JOBS = 360
+MAX_NUM_MY_JOBS = 150
 # Delay between jobs when we exceed the max. number of jobs we want on the cluster
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-source = 'Austin'
-target = 'SanDiego'
+source = 'SanDiego'
+target = 'Austin'
 cost = 'l21'
 for static_fac in ['None','static']:
 	for lam in [0]:
