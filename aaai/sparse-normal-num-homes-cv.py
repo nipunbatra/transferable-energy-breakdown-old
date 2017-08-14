@@ -233,11 +233,11 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = pd.DataFrame(pd.concat(pred[appliance]))
 
-name = "{}-{}-{}-{}-{}-{}".format(source, static_fac, lam*1., random_seed, train_percentage, cost)
-directory = os.path.expanduser('~/aaai2017/normal_{}_{}/'.format(source, cost))
+name = "{}-{}-{}-{}-{}-{}".format(source, static_fac, lam*1., random_seed, num_homes, cost)
+directory = os.path.expanduser('~/aaai2017/normal_num_homes_{}_{}/'.format(source, cost))
 if not os.path.exists(directory):
 	os.makedirs(directory)
-filename = os.path.expanduser('~/aaai2017/normal_{}_{}/'.format(source, cost) + name + '.pkl')
+filename = os.path.expanduser('~/aaai2017/normal_num_homes_{}_{}/'.format(source, cost) + name + '.pkl')
 
 out = {'Predictions': pred, 'Learning Params': best_params_global}
 
