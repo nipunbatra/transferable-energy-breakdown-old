@@ -11,7 +11,7 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 
 import os
 import pickle
-source = 'SanDiego'
+source = 'Austin'
 cost = 'l21'
 out = {}
 for static_fac in ['None','static']:
@@ -46,7 +46,7 @@ for static_fac in ['None','static']:
 
 			out[static_fac][lam][train_percentage] = pd.DataFrame(out[static_fac][lam][train_percentage]).mean(axis=1)
 
-pickle.dump(out, open("predictions/sparse-normal-cv.pkl","w"))
+pickle.dump(out, open("predictions/{}-sparse-normal-cv.pkl".format(source),"w"))
 
 
 
