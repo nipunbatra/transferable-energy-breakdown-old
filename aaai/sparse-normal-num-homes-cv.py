@@ -30,7 +30,7 @@ n_splits = 10
 case = 2
 
 source, static_fac, lam, random_seed, num_homes = sys.argv[1:]
-
+MAX_HOMES = 50
 
 def get_tensor(df):
 	start, stop = 1, 13
@@ -47,6 +47,9 @@ def get_tensor(df):
 
 def create_region_df_dfc_static(region, year):
 	df, dfc = create_matrix_single_region(region, year)
+	if source=="Austin":
+		df = df.head(MAX_HOMES)
+		dfc = dfc.head(MAX_HOMES)
 	tensor = get_tensor(df)
 	static_region = df[['area', 'total_occupants', 'num_rooms']].copy()
 	static_region['area'] = static_region['area'].div(4000)
