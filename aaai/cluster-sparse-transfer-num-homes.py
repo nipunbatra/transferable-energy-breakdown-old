@@ -28,7 +28,7 @@ for static_fac in ['None','static']:
 	for lam in [0]:
 
 		for random_seed in range(5):
-			for num_homes in range(4, 40, 4):
+			for num_homes in range(4, 40, 8):
 
 
 				OFILE = "{}/{}-{}-{}-{}-{}.out".format(SLURM_OUT, "TRANSFER", static_fac, lam, random_seed, num_homes)
