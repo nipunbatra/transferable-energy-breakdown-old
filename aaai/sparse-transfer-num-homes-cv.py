@@ -103,7 +103,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print("-" * 80)
 	print("Progress: {}".format(100.0*outer_loop_iteration/n_splits))
 	num_train = num_homes
-	if num_homes >= train_max:
+	if num_homes >= len(train_max):
 		train = train_max
 		train_ix = target_df.index[train]
 		# print("Train set {}".format(train_ix.values))
