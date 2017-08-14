@@ -173,9 +173,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 					try:
 						if appliance == "hvac":
 							err[appliance] = \
-								compute_rmse_fraction(appliance, pred_inner[appliance][range(4, 10)], 'SanDiego')[2]
+								compute_rmse_fraction(appliance, pred_inner[appliance][range(4, 10)], source)[2]
 						else:
-							err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], 'SanDiego')[2]
+							err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], source)[2]
 						appliance_to_weight.append(appliance)
 					except Exception, e:
 						# This appliance does not have enough samples. Will not be
