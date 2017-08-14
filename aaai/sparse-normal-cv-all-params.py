@@ -201,7 +201,11 @@ posts = db.posts
 res = {'num-iterations':num_iterations_cv, 'num-home-factors':num_home_factors_cv,
        'num-season-factors':num_season_factors_cv,
        'mean-error':mean_err,
-       'error':err}
+       'error':err,
+       'source':source, 'static-fac':static_fac,
+       'lam':lam,
+       'random-seed':random_seed,
+       'train-percentage':train_percentage}
 
 posts.insert_one(res)
 
