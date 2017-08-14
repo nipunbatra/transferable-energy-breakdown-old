@@ -125,6 +125,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print("-" * 80)
 
 	print("Test set {}".format(test_ix.values))
+	print("Train set {}".format(train_ix.values))
 
 
 	print("-"*80)
