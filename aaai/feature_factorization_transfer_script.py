@@ -24,7 +24,7 @@ import time
 
 for feature_fac in ['None','feature']:
 	for random_seed in range(5):
-		for train_percentage in range(10, 110, 20):
+		for train_percentage in range(10, 100, 20):
 
 			OFILE = "{}/{}-{}-{}.out".format(SLURM_OUT, feature_fac, random_seed, train_percentage )
 			EFILE = "{}/{}-{}-{}.err".format(SLURM_OUT, feature_fac, random_seed, train_percentage )
