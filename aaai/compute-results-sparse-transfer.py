@@ -11,7 +11,7 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 
 import os
 import pickle
-source = 'SanDiego'
+source = 'Austin'
 target = 'Boulder'
 cost = 'l21'
 out = {}
