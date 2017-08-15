@@ -145,7 +145,7 @@ target = 'SanDiego'
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year)
 
-feature_fac, train_percentage, random_seed = sys.argv[1:]
+feature_fac, random_seed, train_percentage = sys.argv[1:]
 train_percentage = float(train_percentage)
 random_seed = int(random_seed)
 
