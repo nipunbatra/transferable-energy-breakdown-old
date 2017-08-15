@@ -175,7 +175,6 @@ pred = {}
 
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = []
-print(lam, static_fac, random_seed, train_percentage)
 best_params_global = {}
 
 for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
@@ -228,7 +227,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 					# First n
 					tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
 					if feature_fac == 'feature':
-						H, A, T, H_feature, F, Hs, As, Ts, H_features, Fs, HATs, costs = learn_HAT_adagrad_feature(case, tensor_copy_inner, target_static[np.concatenate([test_inner, train_inner])],
+						H, A, T, H_feature, F, Hs, As, Ts, H_features, Fs, HATs, costs = learn_HAT_adagrad_feature(case, tensor_copy_inner, source_static[np.concatenate([test_inner, train_inner])],
                                                                                                             num_home_factors_cv, num_season_factors_cv,
                                                                                                          num_iter=num_iterations_cv, lr=1, dis=False,
                                                                                                          T_known=np.ones(12).reshape(-1,1))
@@ -240,7 +239,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 						                                                     num_iter=num_iterations_cv, lr=1,
 						                                                     dis=False,
 						                                                     cost_function=cost,
-						                                                     H_known=H_known_source[np.concatenate([test_inner, train_inner])],
+						                                                     H_known=source_static[np.concatenate([test_inner, train_inner])],
 						                                                     T_known=np.ones(12).reshape(-1,1)
 						                                                     )
 					HAT = multiply_case(H, A, T, case)
@@ -298,20 +297,20 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 	tensor_copy = tensor.copy()
 	# First n
 	tensor_copy[:num_test, 1:, :] = np.NaN
-	if static_fac != 'None':
-		H, A, T, H_feature, F, Hs, As, Ts, H_features, Fs, HATs, costs = learn_HAT_adagrad_feature(case, tensor_copy_inner, target_static[np.concatenate([test_inner, train_inner])],
+	if feature_fac == 'feature':
+		H, A, T, H_feature, F, Hs, As, Ts, H_features, Fs, HATs, costs = learn_HAT_adagrad_feature(case, tensor_copy, source_static[np.concatenate([test, train])],
                                                                                                           best_num_home_factors, best_num_season_factors,
                                                                                                          num_iter=best_num_iterations, lr=1, dis=False,
                                                                                                          T_known=np.ones(12).reshape(-1,1))
                         
 	else:
-		H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy_inner,
+		H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy,
 		                                                     best_num_home_factors,
 		                                                     best_num_season_factors,
 		                                                     num_iter=best_num_iterations, lr=1,
 		                                                     dis=False,
 		                                                     cost_function=cost,
-		                                                     H_known=H_known_source[np.concatenate([test_inner, train_inner])],
+		                                                     H_known=source_static[np.concatenate([test, train])],
 		                                                     T_known=np.ones(12).reshape(-1,1)
 		                                                     )
 

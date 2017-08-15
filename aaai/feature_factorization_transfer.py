@@ -236,7 +236,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
                                                                                                   num_season_factors_cv,
                                                                                                   num_iter=num_iterations_cv, lr=1, dis=False,
                                                                                                   cost_function=cost,
-                                                                                                  H_known=H_known_source,
+                                                                                                  H_known=source_static,
                                                                                                   T_known = np.ones(12).reshape(-1, 1))
                     train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
                     df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[train_test_ix_inner]
@@ -256,7 +256,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
                                                                              num_iter=num_iterations_cv, lr=1, dis=False,
                                                                              cost_function=cost,
                                                                              A_known=A_source,
-                                                                             H_known=H_known_target[np.concatenate([test_inner, train_inner])],
+                                                                             H_known=target_static[np.concatenate([test_inner, train_inner])],
                                                                              T_known=np.ones(12).reshape(-1,1))
 
                     HAT = multiply_case(H, A, T, case)
@@ -315,7 +315,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
                                                                                   best_num_season_factors,
                                                                                   num_iter=best_num_iterations, lr=1, dis=False,
                                                                                   cost_function=cost,
-                                                                                  H_known=H_known_source,
+                                                                                  H_known=source_static,
                                                                                   T_known = np.ones(12).reshape(-1, 1))
 
     num_test = len(test_ix)
@@ -337,7 +337,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
                                                              num_iter=best_num_iterations, lr=1, dis=False,
                                                              cost_function=cost,
                                                              A_known=A_source,
-                                                             H_known=H_known_target[np.concatenate([test, train])],
+                                                             H_known=target_static[np.concatenate([test, train])],
                                                              T_known=np.ones(12).reshape(-1,1))
 
     HAT = multiply_case(H, A, T, case)
