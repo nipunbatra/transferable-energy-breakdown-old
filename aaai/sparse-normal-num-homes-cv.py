@@ -29,8 +29,8 @@ def un_normalize(x, maximum, minimum):
 n_splits = 10
 case = 2
 
-source, static_fac, lam, random_seed, train_percentage = sys.argv[1:]
-
+source, static_fac, lam, random_seed, num_homes = sys.argv[1:]
+MAX_HOMES = 50
 
 def get_tensor(df):
 	start, stop = 1, 13
@@ -48,8 +48,8 @@ def get_tensor(df):
 def create_region_df_dfc_static(region, year):
 	df, dfc = create_matrix_single_region(region, year)
 	if source=="Austin":
-		df = df.head(50)
-		dfc = df.head(50)
+		df = df.head(MAX_HOMES)
+		dfc = dfc.head(MAX_HOMES)
 	tensor = get_tensor(df)
 	static_region = df[['area', 'total_occupants', 'num_rooms']].copy()
 	static_region['area'] = static_region['area'].div(4000)
@@ -74,7 +74,7 @@ algo = 'adagrad'
 lam = float(lam)
 
 random_seed = int(random_seed)
-train_percentage = float(train_percentage)
+num_homes = int(num_homes)
 
 if static_fac == 'None':
 	H_known_source = None
@@ -88,7 +88,7 @@ pred = {}
 
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = []
-print(lam, static_fac, random_seed, train_percentage)
+print(lam, static_fac, random_seed, num_homes)
 best_params_global = {}
 
 for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
@@ -97,14 +97,14 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 	np.random.shuffle(train_max)
 	print("-" * 80)
 	print("Progress: {}".format(100.0 * outer_loop_iteration / n_splits))
-	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
-	if train_percentage == 100:
+	num_train = num_homes
+	if num_train >= len(train_max):
 		train = train_max
 		train_ix = source_df.index[train]
 		# print("Train set {}".format(train_ix.values))
 		test_ix = source_df.index[test]
 	else:
-		train, _ = train_test_split(train_max, train_size=train_percentage / 100.0)
+		train, _ = train_test_split(train_max, train_size=num_train)
 		train_ix = source_df.index[train]
 		# print("Train set {}".format(train_ix.values))
 		test_ix = source_df.index[test]
@@ -236,11 +236,11 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = pd.DataFrame(pd.concat(pred[appliance]))
 
-name = "{}-{}-{}-{}-{}-{}".format(source, static_fac, lam*1., random_seed, train_percentage, cost)
-directory = os.path.expanduser('~/aaai2017/normal_{}_{}/'.format(source, cost))
+name = "{}-{}-{}-{}-{}-{}".format(source, static_fac, lam*1., random_seed, num_homes, cost)
+directory = os.path.expanduser('~/aaai2017/normal_num_homes_{}_{}/'.format(source, cost))
 if not os.path.exists(directory):
 	os.makedirs(directory)
-filename = os.path.expanduser('~/aaai2017/normal_{}_{}/'.format(source, cost) + name + '.pkl')
+filename = os.path.expanduser('~/aaai2017/normal_num_homes_{}_{}/'.format(source, cost) + name + '.pkl')
 
 out = {'Predictions': pred, 'Learning Params': best_params_global}
 

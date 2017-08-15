@@ -22,19 +22,19 @@ DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
 source = 'SanDiego'
-target = 'Boulder'
+target = 'Austin'
 cost = 'l21'
 for static_fac in ['None','static']:
 	for lam in [0]:
 
 		for random_seed in range(5):
-			for train_percentage in range(10, 110, 20):
+			for num_homes in range(4, 40, 8):
 
 
-				OFILE = "{}/{}-{}-{}-{}-{}.out".format(SLURM_OUT, "TRANSFER", static_fac, lam, random_seed, train_percentage )
-				EFILE = "{}/{}-{}-{}-{}-{}.err".format(SLURM_OUT, "TRANSFER", static_fac, lam, random_seed, train_percentage )
-				SLURM_SCRIPT = "{}-{}-{}-{}-{}.pbs".format(static_fac, "TRANSFER", lam, random_seed, train_percentage)
-				CMD = 'python sparse-transfer-cv.py {} {} {} {} {} {} {}'.format(source, target, static_fac, lam, random_seed, train_percentage, cost)
+				OFILE = "{}/{}-{}-{}-{}-{}.out".format(SLURM_OUT, "TRANSFER", static_fac, lam, random_seed, num_homes)
+				EFILE = "{}/{}-{}-{}-{}-{}.err".format(SLURM_OUT, "TRANSFER", static_fac, lam, random_seed, num_homes)
+				SLURM_SCRIPT = "{}-{}-{}-{}-{}.pbs".format(static_fac, "TRANSFER", lam, random_seed, num_homes)
+				CMD = 'python sparse-transfer-num-homes-cv.py {} {} {} {} {} {} {}'.format(source, target, static_fac, lam, random_seed, num_homes, cost)
 				lines = []
 				lines.append("#!/bin/sh\n")
 				lines.append('#SBATCH --time=1-16:0:00\n')

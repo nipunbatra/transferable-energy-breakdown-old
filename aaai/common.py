@@ -4,10 +4,10 @@ from create_matrix import *
 
 contri = {}
 
-for region in ['SanDiego','Austin']:
+for region in ['SanDiego','Austin', 'Boulder']:
 
 	temp = {}
-	r_df = create_matrix_single_region('SanDiego', 2014)[0]
+	r_df = create_matrix_single_region(region, 2014)[0]
 	for appliance in APPLIANCES_ORDER[1:]:
 	    df_app = r_df[['{}_{}'.format(appliance, month) for month in range(5, 11)]]
 	    df_agg = r_df[['{}_{}'.format("aggregate", month) for month in range(5, 11)]]

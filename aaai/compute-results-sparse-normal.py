@@ -11,8 +11,7 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 
 import os
 import pickle
-source = 'Austin'
-target = 'Boulder'
+source = 'Boulder'
 cost = 'l21'
 out = {}
 for static_fac in ['None','static']:
@@ -24,11 +23,12 @@ for static_fac in ['None','static']:
 			out[static_fac][lam][train_percentage] ={}
 			for random_seed in range(5):
 				out[static_fac][lam][train_percentage][random_seed] = {}
-				name = "{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, random_seed, train_percentage,
-				                                     cost)
-				directory = os.path.expanduser('~/aaai2017/transfer_{}_{}_{}/'.format(source, target, cost))
+				name = "{}-{}-{}-{}-{}-{}".format(source, static_fac, lam*1.0, random_seed, train_percentage*1., cost)
 
-				filename = os.path.join(directory, name + '.pkl')
+				directory = os.path.expanduser('~/aaai2017/normal_{}_{}/'.format(source, cost))
+
+				filename = os.path.expanduser('~/aaai2017/normal_{}_{}/'.format(source, cost) + name + '.pkl')
+
 				try:
 					pr = pickle.load(open(filename, 'r'))
 					pred = pr['Predictions']
@@ -37,7 +37,7 @@ for static_fac in ['None','static']:
 						if appliance == "hvac":
 							prediction = prediction[range(4, 10)]
 						out[static_fac][lam][train_percentage][random_seed][appliance]= \
-					compute_rmse_fraction(appliance, prediction, target)[2]
+					compute_rmse_fraction(appliance, prediction, source)[2]
 					print("Computed for: {}".format(name))
 
 				except Exception, e:
@@ -46,7 +46,7 @@ for static_fac in ['None','static']:
 
 			out[static_fac][lam][train_percentage] = pd.DataFrame(out[static_fac][lam][train_percentage]).mean(axis=1)
 
-pickle.dump(out, open("predictions/{}-{}-sparse-transfer-cv.pkl".format(source, target),"w"))
+pickle.dump(out, open("predictions/{}-sparse-normal-cv.pkl".format(source),"w"))
 
 
 

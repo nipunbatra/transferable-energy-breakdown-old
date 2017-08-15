@@ -56,6 +56,9 @@ def get_tensor(df):
 
 def create_region_df_dfc_static(region, year):
 	df, dfc = create_matrix_single_region(region, year)
+	if target=="Austin":
+		df = df.head(50)
+		dfc = df.head(50)
 	tensor = get_tensor(df)
 	static_region = df[['area', 'total_occupants', 'num_rooms']].copy()
 	static_region['area'] = static_region['area'].div(4000)

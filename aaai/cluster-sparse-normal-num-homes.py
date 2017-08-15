@@ -21,26 +21,27 @@ MAX_NUM_MY_JOBS = 150
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-source = 'SanDiego'
-target = 'Boulder'
-cost = 'l21'
+source = 'Austin'
 for static_fac in ['None','static']:
 	for lam in [0]:
 
 		for random_seed in range(5):
-			for train_percentage in range(10, 110, 20):
+			for num_homes in range(4, 40, 8):
 
 
-				OFILE = "{}/{}-{}-{}-{}-{}.out".format(SLURM_OUT, "TRANSFER", static_fac, lam, random_seed, train_percentage )
-				EFILE = "{}/{}-{}-{}-{}-{}.err".format(SLURM_OUT, "TRANSFER", static_fac, lam, random_seed, train_percentage )
-				SLURM_SCRIPT = "{}-{}-{}-{}-{}.pbs".format(static_fac, "TRANSFER", lam, random_seed, train_percentage)
-				CMD = 'python sparse-transfer-cv.py {} {} {} {} {} {} {}'.format(source, target, static_fac, lam, random_seed, train_percentage, cost)
+				OFILE = "{}/{}-{}-{}-{}.out".format(SLURM_OUT, static_fac[0], lam, random_seed, num_homes )
+				EFILE = "{}/{}-{}-{}-{}.err".format(SLURM_OUT, static_fac[0], lam, random_seed, num_homes )
+				SLURM_SCRIPT = "{}-{}-{}-{}.pbs".format(static_fac, lam, random_seed, num_homes)
+				CMD = 'python sparse-normal-num-homes-cv.py {} {} {} {} {}'.format(source, static_fac, lam, random_seed, num_homes)
 				lines = []
 				lines.append("#!/bin/sh\n")
 				lines.append('#SBATCH --time=1-16:0:00\n')
 				lines.append('#SBATCH --mem=16\n')
 				lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
 				lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
+				lines.append('#SBATCH --exclude=artemis5\n')
+				lines.append('#SBATCH --exclude=artemis4\n')
+				lines.append('#SBATCH --exclude=artemis3\n')
 				lines.append(CMD + '\n')
 				with open(SLURM_SCRIPT, 'w') as f:
 					f.writelines(lines)

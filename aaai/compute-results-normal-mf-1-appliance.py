@@ -31,3 +31,6 @@ for features in ['energy', 'energy_static']:
 					print(e)
 					print(appliance, features, train_percentage, random_seed)
 			out[features][appliance][train_percentage] = pd.Series(out[features][appliance][train_percentage][random_seed]).mean()
+
+		import pickle
+		pickle.dump(out, open("predictions/mf-baseline-normal.pkl","w"))

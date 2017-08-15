@@ -28,12 +28,12 @@ def un_normalize(x, maximum, minimum):
 n_splits = 10
 case = 2
 
-source, target, static_fac, lam, random_seed, train_percentage, cost = sys.argv[1:]
-name = "{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, random_seed, train_percentage, cost)
-directory = os.path.expanduser('~/aaai2017/transfer_{}_{}_{}/'.format(source, target, cost))
+source, target, static_fac, lam, random_seed, num_homes, cost = sys.argv[1:]
+name = "{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, random_seed, num_homes, cost)
+directory = os.path.expanduser('~/aaai2017/transfer_num-homes_{}_{}_{}/'.format(source, target, cost))
 if not os.path.exists(directory):
 	os.makedirs(directory)
-filename = os.path.expanduser('~/aaai2017/transfer_{}_{}_{}/'.format(source, target, cost) + name + '.pkl')
+filename = os.path.expanduser('~/aaai2017/transfer_num-homes_{}_{}_{}/'.format(source, target, cost) + name + '.pkl')
 
 if os.path.exists(filename):
 	print("File already exists. Quitting.")
@@ -81,7 +81,7 @@ algo = 'adagrad'
 lam = float(lam)
 
 random_seed = int(random_seed)
-train_percentage = float(train_percentage)
+num_homes = int(num_homes)
 
 if static_fac =='None':
 	H_known_target = None
@@ -97,7 +97,7 @@ kf = KFold(n_splits=n_splits)
 pred = {}
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = []
-print(lam, static_fac, random_seed, train_percentage)
+print(lam, static_fac, random_seed, num_homes)
 best_params_global = {}
 for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	# Just a random thing
@@ -105,8 +105,8 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	np.random.shuffle(train_max)
 	print("-" * 80)
 	print("Progress: {}".format(100.0*outer_loop_iteration/n_splits))
-	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
-	if train_percentage == 100:
+	num_train = num_homes
+	if num_homes >= len(train_max):
 		train = train_max
 		train_ix = target_df.index[train]
 		# print("Train set {}".format(train_ix.values))
@@ -118,7 +118,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 		SAMPLE_CRITERION_MET = False
 
 
-		train, _ = train_test_split(train_max, train_size=train_percentage / 100.0)
+		train, _ = train_test_split(train_max, train_size=num_train)
 		train_ix = target_df.index[train]
 		#print("Train set {}".format(train_ix.values))
 		test_ix = target_df.index[test]
@@ -128,6 +128,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print("-" * 80)
 
 	print("Test set {}".format(test_ix.values))
+	print("Train set {}".format(train_ix.values))
 
 
 	print("-"*80)
