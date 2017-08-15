@@ -11,7 +11,7 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 
 import os
 import pickle
-source = 'Austin'
+source = 'Boulder'
 cost = 'l21'
 out = {}
 for static_fac in ['None','static']:

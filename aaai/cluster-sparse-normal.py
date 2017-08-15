@@ -39,9 +39,9 @@ for static_fac in ['None','static']:
 				lines.append('#SBATCH --mem=16\n')
 				lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
 				lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
-				lines.append('#SBATCH --exclude=artemis5\n')
-				lines.append('#SBATCH --exclude=artemis4\n')
-				lines.append('#SBATCH --exclude=artemis3\n')
+				#lines.append('#SBATCH --exclude=artemis5\n')
+				#lines.append('#SBATCH --exclude=artemis4\n')
+				#lines.append('#SBATCH --exclude=artemis3\n')
 				lines.append(CMD + '\n')
 				with open(SLURM_SCRIPT, 'w') as f:
 					f.writelines(lines)
