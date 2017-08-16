@@ -27,7 +27,7 @@ for feature_fac in ['None','feature']:
 		for train_percentage in range(10, 100, 20):
 			OFILE = "{}/transfer-{}-{}-{}.out".format(SLURM_OUT, feature_fac, random_seed, train_percentage )
 			EFILE = "{}/transfer-{}-{}-{}.err".format(SLURM_OUT, feature_fac, random_seed, train_percentage )
-			SLURM_SCRIPT = "{}/{}-{}-{}.pbs".format('pbs_files', feature_fac, random_seed, train_percentage)
+			SLURM_SCRIPT = "{}/transfer-{}-{}-{}.pbs".format('pbs_files', feature_fac, random_seed, train_percentage)
 			CMD = 'python feature_factorization_transfer.py {} {} {}'.format(feature_fac, random_seed, train_percentage)
 			lines = []
 			lines.append("#!/bin/sh\n")
