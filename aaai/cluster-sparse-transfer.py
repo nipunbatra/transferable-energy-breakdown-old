@@ -22,7 +22,7 @@ DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
 source = 'SanDiego'
-target = 'Boulder'
+target = 'Austin'
 cost = 'l21'
 for static_fac in ['None','static']:
 	for lam in [0]:
