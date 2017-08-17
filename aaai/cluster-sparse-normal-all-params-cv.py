@@ -21,16 +21,16 @@ MAX_NUM_MY_JOBS = 150
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-source = 'Austin'
+source = 'Boulder'
 for static_fac in ['None','static']:
 	for lam in [0]:
 
-		for random_seed in range(5)[:2]:
-			for train_percentage in range(10, 110, 20)[:1]:
-				for outer_loop_iteration in range(0, 10)[:2]:
-					for num_iterations_cv in range(100, 1300, 200)[:1]:
-						for num_season_factors_cv in range(3, 9, 2)[:1]:
-							for num_home_factors_cv in range(2, 8, 2)[:1]:
+		for random_seed in range(5)[:]:
+			for train_percentage in range(10, 110, 10)[:]:
+				for outer_loop_iteration in range(0, 10)[:]:
+					for num_iterations_cv in range(100, 1300, 200)[:]:
+						for num_season_factors_cv in range(3, 9, 1)[:]:
+							for num_home_factors_cv in range(2, 8, 1)[:]:
 
 
 								OFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}.out".format(SLURM_OUT, static_fac[0], lam, random_seed, train_percentage, outer_loop_iteration, num_iterations_cv, num_season_factors_cv, num_home_factors_cv )
