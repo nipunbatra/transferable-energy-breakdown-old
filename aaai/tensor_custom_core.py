@@ -55,6 +55,144 @@ def set_known(A, W):
 	return A
 
 
+def learn_HAT_multiple_source_adagrad(case, source_1_energy, source_2_energy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function='abs', H_known_s1=None,
+                      A_known=None, T_known_s1=None, H_known_s2=None, T_known_s2 = None,
+                        random_seed=0, eps=1e-8, penalty_coeff=0.0, source_ratio=0.5):
+
+
+
+
+
+	def cost_l21(H_s1, A, T_s1, H_s2, T_s2, source_1_energy, source_2_energy, case, source_ratio, lam=0.1):
+		HAT_s1 = multiply_case(H_s1, A, T_s1, case)
+		HAT_s2 = multiply_case(H_s2, A, T_s2, case)
+		mask_s1 = ~np.isnan(source_1_energy)
+		mask_s2 = ~np.isnan(source_2_energy)
+		error_s1 = (HAT_s1 - source_1_energy)[mask_s1].flatten()
+		error_s2 = (HAT_s2 - source_2_energy)[mask_s2].flatten()
+		A_shape = A.shape
+		A_flat = A.reshape(A_shape[0], A_shape[1]*A_shape[2])
+		l1 = 0.
+		for j in range(A_shape[1]*A_shape[2]):
+			l1 = l1 + np.sqrt(np.square(A_flat[:, j]).sum())
+		# return np.sqrt((error ** 2).mean()) + lam*np.sum(A[A!=0])
+		return source_ratio*np.sqrt((error_s1 ** 2).mean()) + (1-source_ratio)*np.sqrt((error_s2 ** 2).mean())+ lam * l1
+
+
+
+	np.random.seed(random_seed)
+
+	cost = cost_l21
+
+
+	mg = multigrad(cost, argnums=[0, 1, 2, 3, 4])
+
+	params_s1 = {}
+	params_s1['M'], params_s1['N'], params_s1['O'] = source_1_energy.shape
+	params_s1['a'] = a
+	params_s1['b'] = b
+
+	params_s2 = {}
+	params_s2['M'], params_s2['N'], params_s2['O'] = source_2_energy.shape
+	params_s2['a'] = a
+	params_s2['b'] = b
+
+	H_dim_chars = list(cases[case]['HA'].split(",")[0].strip())
+	H_dim_s1 = tuple(params_s1[x] for x in H_dim_chars)
+	H_dim_s2 = tuple(params_s2[x] for x in H_dim_chars)
+
+	A_dim_chars = list(cases[case]['HA'].split(",")[1].split("-")[0].strip())
+	A_dim_s1 = tuple(params_s1[x] for x in A_dim_chars)
+	A_dim_s2 = tuple(params_s2[x] for x in A_dim_chars)
+
+	T_dim_chars = list(cases[case]['HAT'].split(",")[1].split("-")[0].strip())
+	T_dim_s1 = tuple(params_s1[x] for x in T_dim_chars)
+	T_dim_s2 = tuple(params_s2[x] for x in T_dim_chars)
+
+
+	H_s1 = np.random.rand(*H_dim_s1)
+	H_s2 = np.random.rand(*H_dim_s2)
+
+	A = np.random.rand(*A_dim_s1)
+	T_s1 = np.random.rand(*T_dim_s1)
+	T_s2 = np.random.rand(*T_dim_s2)
+
+	sum_square_gradients_H_s1 = np.zeros_like(H_s1)
+	sum_square_gradients_H_s2 = np.zeros_like(H_s2)
+
+	sum_square_gradients_A = np.zeros_like(A)
+
+	sum_square_gradients_T_s1 = np.zeros_like(T_s1)
+	sum_square_gradients_T_s2 = np.zeros_like(T_s2)
+
+
+	Hs_s1 = [H_s1.copy()]
+	Hs_s2 = [H_s2.copy()]
+	As = [A.copy()]
+	Ts_s1 = [T_s1.copy()]
+	Ts_s2 = [T_s2.copy()]
+	costs = [cost(H_s1, A, T_s1, H_s2, T_s2, source_1_energy, source_2_energy, 2,  penalty_coeff, source_ratio)]
+	HATs_s1 = [multiply_case(H_s1, A, T_s1, 2)]
+	HATs_s2 = [multiply_case(H_s2, A, T_s2, 2)]
+
+	# GD procedure
+	for i in range(num_iter):
+		del_h_s1, del_a, del_t_s1, del_h_s2, del_t_s2 = mg(H_s1, A, T_s1, H_s2, T_s2, source_1_energy, source_2_energy, case, source_ratio, penalty_coeff)
+		sum_square_gradients_H_s1 += eps + np.square(del_h_s1)
+		sum_square_gradients_H_s2 += eps + np.square(del_h_s2)
+
+		sum_square_gradients_A += eps + np.square(del_a)
+
+		sum_square_gradients_T_s1 += eps + np.square(del_t_s1)
+		sum_square_gradients_T_s2 += eps + np.square(del_t_s2)
+
+		lr_h_s1 = np.divide(lr, np.sqrt(sum_square_gradients_H_s1))
+		lr_h_s2 = np.divide(lr, np.sqrt(sum_square_gradients_H_s2))
+
+		lr_a = np.divide(lr, np.sqrt(sum_square_gradients_A))
+
+		lr_t_s1 = np.divide(lr, np.sqrt(sum_square_gradients_T_s1))
+		lr_t_s2 = np.divide(lr, np.sqrt(sum_square_gradients_T_s2))
+
+		H_s1 -= lr_h_s1 * del_h_s1
+		H_s2 -= lr_h_s2 * del_h_s2
+		A -= lr_a * del_a
+
+		T_s1 -= lr_t_s1 * del_t_s1
+		T_s2 -= lr_t_s2 * del_t_s2
+		# Projection to known values
+		if H_known_s1 is not None:
+			H_s1 = set_known(H_s1, H_known_s1)
+		if H_known_s2 is not None:
+			H_s2 = set_known(H_s2, H_known_s2)
+		if A_known is not None:
+			A = set_known(A, A_known)
+		if T_known_s1 is not None:
+			T = set_known(T, T_known_s1)
+		if T_known_s2 is not None:
+			T = set_known(T, T_known_s2)
+		# Projection to non-negative space
+		H_s1[H_s1 < 0] = 1e-8
+		H_s2[H_s2 < 0] = 1e-8
+		A[A < 0] = 1e-8
+		T_s1[T_s1 < 0] = 1e-8
+		T_s2[T_s2 < 0] = 1e-8
+
+		As.append(A.copy())
+		Ts_s1.append(T_s1.copy())
+		Ts_s2.append(T_s2.copy())
+		Hs_s1.append(H_s1.copy())
+		Hs_s2.append(H_s2.copy())
+		costs.append(cost(H_s1, A, T_s1, H_s2, T_s2, source_1_energy, source_2_energy, 2,  penalty_coeff,source_ratio))
+		HATs_s1.append(multiply_case(H_s1, A, T_s1, 2))
+		HATs_s2.append(multiply_case(H_s2, A, T_s2, 2))
+		if i % 500 == 0:
+			if dis:
+				print(cost(H_s1, A, T_s1, H_s2, T_s2, source_1_energy, source_2_energy, 2,  penalty_coeff, source_ratio))
+	return H_s1, A, T_s1, H_s2, T_s2, Hs_s1, As, Ts_s1, Hs_s2,  Ts_s2, HATs_s1, HATs_s2, costs
+
+
+
 def learn_HAT_adagrad(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, cost_function='abs', H_known=None,
                       A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0):
 

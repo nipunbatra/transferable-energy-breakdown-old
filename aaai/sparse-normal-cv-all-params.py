@@ -29,7 +29,8 @@ def un_normalize(x, maximum, minimum):
 n_splits = 10
 case = 2
 
-source, static_fac, lam, random_seed, train_percentage, outer_loop_iteration, num_iterations_cv, num_season_factors_cv, num_home_factors_cv = sys.argv[1:]
+SYS_ARGS = sys.argv[1:]
+source, static_fac, lam, random_seed, train_percentage, outer_loop_iteration, num_iterations_cv, num_season_factors_cv, num_home_factors_cv = SYS_ARGS
 
 
 def get_tensor(df):
@@ -192,22 +193,26 @@ err_weight = {}
 for appliance in appliance_to_weight:
 	err_weight[appliance] = err[appliance] * contri[source][appliance]
 mean_err = pd.Series(err_weight).sum()
+print(mean_err, err_weight)
 
-from pymongo import MongoClient
-client = MongoClient()
-db = client.test_nipun
-posts = db.posts
+
 
 res = {'num-iterations':num_iterations_cv, 'num-home-factors':num_home_factors_cv,
        'num-season-factors':num_season_factors_cv,
        'mean-error':mean_err,
-       'error':err,
+
        'source':source, 'static-fac':static_fac,
        'lam':lam,
        'random-seed':random_seed,
        'train-percentage':train_percentage}
 
-posts.insert_one(res)
+res.update(err)
 
+#posts.insert_one(res)
 
+import sqlite3
+from sqlalchemy import create_engine
+disk_engine = create_engine('sqlite:///predictions/normal-cv-{}.db'.format(source))
 
+name = "_".join(SYS_ARGS)
+pd.Series(res).to_frame(name=name).T.to_sql('t', disk_engine, if_exists='append')
