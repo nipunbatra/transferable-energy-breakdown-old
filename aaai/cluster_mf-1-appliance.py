@@ -1,4 +1,4 @@
-region = "SanDiego"
+region = "Boulder"
 year = 2014
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 SLURM_OUT = "../../slurm_out"
