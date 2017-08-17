@@ -1,4 +1,5 @@
-region = "Boulder"
+import sys
+region = sys.argv[1]
 year = 2014
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 SLURM_OUT = "../../slurm_out"
@@ -11,15 +12,15 @@ for appliance in APPLIANCES:
 
 		for cost in ['absolute']:
 			for random_seed in range(5):
-				#for train_percentage in range(10, 110, 10):
-				for train_percentage in [10, 20]:
-					OFILE = "%s/%s_%s_%s_%s_%d.out" % (
-						SLURM_OUT, appliance[0], cost[0], features[-1], random_seed, train_percentage)
-					EFILE = "%s/%s_%s_%s_%s_%d.err" % (
-						SLURM_OUT, appliance[0], cost[0], features[-1], random_seed, train_percentage)
-					SLURM_SCRIPT = "%s_%s_%s_%d_%d.pbs" % (
+				for train_percentage in range(10, 110, 10):
+				#for train_percentage in [10, 20]:
+					OFILE = "%s/%s_%s_%s_%s_%s_%d.out" % (
+						SLURM_OUT, region[0], appliance[0], cost[0], features[-1], random_seed, train_percentage)
+					EFILE = "%s/%s_%s_%s_%s_%s_%d.err" % (
+						SLURM_OUT, region[0], appliance[0], cost[0], features[-1], random_seed, train_percentage)
+					SLURM_SCRIPT = "%s_%s_%s_%s_%d_%d.pbs" % (region[0],
 						appliance[0], cost[0], features[-1], random_seed, train_percentage)
-					CMD = 'python mf_1_appliances_harness_cv.py %s %s %s %d %d' % (
+					CMD = 'python mf_1_appliances_harness_cv.py %s %s %s %s %d %d' % (region,
 						appliance, features, cost, random_seed, train_percentage)
 					lines = []
 					lines.append("#!/bin/sh\n")

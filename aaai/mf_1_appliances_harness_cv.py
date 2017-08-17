@@ -13,12 +13,12 @@ import sys
 
 n_splits = 10
 
-appliance, features, cost, random_seed, train_percentage = sys.argv[1:]
+region, appliance, features, cost, random_seed, train_percentage = sys.argv[1:]
 random_seed = int(random_seed)
 train_percentage = float(train_percentage)
 
 
-region, year = 'SanDiego', 2014
+year = 2014
 target = region
 target_df, target_dfc = create_matrix_single_region(region, year)
 start, stop = 1, 13
