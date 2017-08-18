@@ -41,12 +41,12 @@ for static_fac in ['None','static']:
 								CMD = 'python sparse-normal-cv-all-params.py {} {} {} {} {} {} {} {} {}'.format(source, static_fac, lam, random_seed, train_percentage, outer_loop_iteration, num_iterations_cv, num_season_factors_cv, num_home_factors_cv)
 								lines = []
 								lines.append("#!/bin/sh\n")
-								lines.append('#SBATCH --time=1-16:0:00\n')
+								lines.append('#SBATCH --time=04:0:00\n')
 								lines.append('#SBATCH --mem=16\n')
 								lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
 								lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
-								lines.append('#SBATCH --exclude=artemis5\n')
-								lines.append('#SBATCH --exclude=artemis4\n')
+								#lines.append('#SBATCH --exclude=artemis5\n')
+								#lines.append('#SBATCH --exclude=artemis4\n')
 								lines.append('#SBATCH --exclude=artemis3\n')
 								lines.append(CMD + '\n')
 								with open(SLURM_SCRIPT, 'w') as f:
