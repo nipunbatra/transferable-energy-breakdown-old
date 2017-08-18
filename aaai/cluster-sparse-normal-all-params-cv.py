@@ -52,7 +52,8 @@ for static_fac in ['None','static']:
 									f.writelines(lines)
 								command = ['sbatch', SLURM_SCRIPT]
 								while len(delegator.run('squeue -u %s' % username).out.split("\n")) > MAX_NUM_MY_JOBS + 2:
+									print(time.time.now(), "Waiting...")
 									time.sleep(DELAY_NUM_JOBS_EXCEEDED)
 
-				delegator.run(command, block=False)
-				print SLURM_SCRIPT
+								delegator.run(command, block=False)
+								print SLURM_SCRIPT
