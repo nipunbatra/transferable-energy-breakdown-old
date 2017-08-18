@@ -20,6 +20,7 @@ MAX_NUM_MY_JOBS = 150
 # Delay between jobs when we exceed the max. number of jobs we want on the cluster
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
+import datetime
 
 import sys
 source = sys.argv[1]
@@ -52,7 +53,7 @@ for static_fac in ['None','static']:
 									f.writelines(lines)
 								command = ['sbatch', SLURM_SCRIPT]
 								while len(delegator.run('squeue -u %s' % username).out.split("\n")) > MAX_NUM_MY_JOBS + 2:
-									print(time.time.now(), "Waiting...")
+									print(datetime.datetime.now(), "Waiting...")
 									time.sleep(DELAY_NUM_JOBS_EXCEEDED)
 
 								delegator.run(command, block=False)
