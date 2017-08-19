@@ -161,12 +161,13 @@ case = 2
 a = 5
 b = 3
 c = 3
+lam = 0.0001
 iters = 2000
 
 # H_au, A_au, T_au, F_au = learn_HAT_graph(2, au_tensor, static_au, sim_au, a, b, num_iter=iters, dis=True, T_known = np.ones(12).reshape(-1, 1))
 L_au = get_L_NN(au_agg)
 L_sd = get_L_NN(sd_agg)
-H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, au_tensor, L_au, a, b, num_iter=2000, lr=0.1, dis=True, T_known = np.ones(12).reshape(-1, 1))
+H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, au_tensor, L_au, a, b, num_iter=2000, lr=0.1, dis=True, lam=lam, T_known = np.ones(12).reshape(-1, 1))
 
 pred_normal = {}
 pred_transfer = {}
@@ -219,7 +220,7 @@ for random_seed in range(5):
             L = L_sd[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
             
 #             H, A, T, F = learn_HAT_graph(2, tensor_copy, static_sd[np.concatenate([test, train])], sim_sd, a, b, num_iter=iters,dis=True, T_known = np.ones(12).reshape(-1, 1))
-            H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, tensor_copy, L, a, b, num_iter=2000, lr=0.1, dis=True, T_known = np.ones(12).reshape(-1, 1))
+            H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, tensor_copy, L, a, b, num_iter=2000, lr=0.1, dis=True, lam=lam, T_known = np.ones(12).reshape(-1, 1))
 
 
             # get the prediction
@@ -238,7 +239,7 @@ for random_seed in range(5):
             
 #             H, A, T, F = learn_HAT_graph(2, tensor_copy, static_sd[np.concatenate([test, train])], sim_sd, a, b, num_iter=iters,dis=True, T_known = np.ones(12).reshape(-1, 1))
 #             H, A, T, F, Hs, As, Ts, Fs, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, agg, a, b, num_iter=20000, lr=0.1, dis=True,A_known = A_au)
-            H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, tensor_copy, L, a, b, num_iter=2000, lr=0.1, dis=True, A_known = A_au, T_known = np.ones(12).reshape(-1, 1))
+            H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, tensor_copy, L, a, b, num_iter=2000, lr=0.1, dis=True, lam=lam, A_known = A_au, T_known = np.ones(12).reshape(-1, 1))
 
       
             # get the prediction
@@ -254,8 +255,8 @@ def save_obj(obj, name):
     with open(os.path.expanduser('~/git/graph_test/'+ name + '.pkl'), 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
-save_obj(pred_normal, "normal")
-save_obj(pred_transfer, "transfer")
+save_obj(pred_normal, "normal_00001")
+save_obj(pred_transfer, "transfer_00001")
 
 
 
