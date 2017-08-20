@@ -46,8 +46,6 @@ def create_region_df_dfc_static(region, year):
     static_region =static_region.values
     return df, dfc, tensor, static_region
 
-
-
 def distance(x, y):
     return np.linalg.norm(x - y)
 
@@ -156,12 +154,15 @@ au_agg = au_df.loc[:, 'aggregate_1':'aggregate_12']
 sd_agg = np.nan_to_num(sd_agg)
 au_agg = np.nan_to_num(au_agg)
 
+lam = sys.argv[1]
+print lam
+lam = float(lam)
+
 n_splits = 10
 case = 2
 a = 5
 b = 3
 c = 3
-lam = 0.0001
 iters = 2000
 
 # H_au, A_au, T_au, F_au = learn_HAT_graph(2, au_tensor, static_au, sim_au, a, b, num_iter=iters, dis=True, T_known = np.ones(12).reshape(-1, 1))
@@ -255,8 +256,8 @@ def save_obj(obj, name):
     with open(os.path.expanduser('~/git/graph_test/'+ name + '.pkl'), 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
-save_obj(pred_normal, "normal_00001")
-save_obj(pred_transfer, "transfer_00001")
+save_obj(pred_normal, "normal_{}".format(lam))
+save_obj(pred_transfer, "transfer_{}".format(lam))
 
 
 
