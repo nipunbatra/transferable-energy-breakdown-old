@@ -69,7 +69,7 @@ pred_transfer = {}
 sd = {}
 out = {}
 n_splits = 10
-n_iter = 3000
+n_iter = 2000
 TRAIN_SPLITS = range(10, 110, 10)
 case = 2
 
@@ -163,7 +163,6 @@ for train_percentage in TRAIN_SPLITS:
             if static_fac == 'static':
                 a = 5
                 H_transfer, A_transfer, T_transfer, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])], A_known = A_au, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
-                print A_transfer
             else:
                 a = 2
                 H_transfer, A_transfer, T_transfer, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, A_known = A_au, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)

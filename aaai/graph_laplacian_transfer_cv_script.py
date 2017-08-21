@@ -23,7 +23,7 @@ import time
 
 
 for random_seed in range(5):
-	for train_percentage in range(10, 100, 20):
+	for train_percentage in (10, 100, 20):
 		OFILE = "{}/transfer-{}-{}.out".format(SLURM_OUT, random_seed, train_percentage )
 		EFILE = "{}/transfer-{}-{}.err".format(SLURM_OUT, random_seed, train_percentage )
 		SLURM_SCRIPT = "{}/transfer-{}-{}.pbs".format('pbs_files', random_seed, train_percentage)
