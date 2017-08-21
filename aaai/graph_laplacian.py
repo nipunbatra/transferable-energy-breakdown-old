@@ -154,7 +154,8 @@ au_agg = au_df.loc[:, 'aggregate_1':'aggregate_12']
 sd_agg = np.nan_to_num(sd_agg)
 au_agg = np.nan_to_num(au_agg)
 
-lam = 0.01
+lam = sys.argv[1]
+lam = float(lam)
 
 n_splits = 10
 case = 2
