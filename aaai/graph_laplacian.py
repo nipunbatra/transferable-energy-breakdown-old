@@ -154,9 +154,7 @@ au_agg = au_df.loc[:, 'aggregate_1':'aggregate_12']
 sd_agg = np.nan_to_num(sd_agg)
 au_agg = np.nan_to_num(au_agg)
 
-lam = sys.argv[1]
-print lam
-lam = float(lam)
+lam = 0.01
 
 n_splits = 10
 case = 2
@@ -256,8 +254,8 @@ def save_obj(obj, name):
     with open(os.path.expanduser('~/git/graph_test/'+ name + '.pkl'), 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
-save_obj(pred_normal, "normal_{}".format(lam))
-save_obj(pred_transfer, "transfer_{}".format(lam))
+save_obj(pred_normal, "normal_{}_new".format(lam))
+save_obj(pred_transfer, "transfer_{}_new".format(lam))
 
 
 
