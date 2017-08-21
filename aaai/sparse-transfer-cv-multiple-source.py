@@ -278,5 +278,5 @@ for appliance in APPLIANCES_ORDER:
 
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
-#with open(filename, 'wb') as f:
-#	pickle.dump(out, f, pickle.HIGHEST_PROTOCOL)
+with open(filename, 'wb') as f:
+	pickle.dump(out, f, pickle.HIGHEST_PROTOCOL)
