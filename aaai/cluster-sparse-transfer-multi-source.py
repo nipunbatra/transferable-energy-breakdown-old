@@ -40,7 +40,7 @@ for static_fac in ['None','static']:
 									OFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}.out".format(SLURM_OUT, source_1, source_2, target, static_fac, lam, random_seed, train_percentage, cost,  outer_loop_iteration, source_ratio, num_iterations_cv, num_season_factors_cv, num_home_factors_cv )
 									EFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}-{}.err".format(SLURM_OUT, source_1, source_2, target, static_fac, lam, random_seed, train_percentage, cost,  outer_loop_iteration, source_ratio, num_iterations_cv, num_season_factors_cv, num_home_factors_cv )
 									SLURM_SCRIPT = "{}-{}-{}-{}-{}-{}-{}-{}-{}.pbs".format(source_1, source_2, target, static_fac, lam, random_seed, train_percentage, cost,  outer_loop_iteration, source_ratio, num_iterations_cv, num_season_factors_cv, num_home_factors_cv)
-									CMD = 'python sparse-transfer-nested-cv-multiple-sources.py {} {} {} {} {} {} {} {} {}'.format(source_1, source_2, target, static_fac, lam, random_seed, train_percentage, cost,  outer_loop_iteration, source_ratio, num_iterations_cv, num_season_factors_cv, num_home_factors_cv)
+									CMD = 'python sparse-transfer-nested-cv-multiple-source.py {} {} {} {} {} {} {} {} {}'.format(source_1, source_2, target, static_fac, lam, random_seed, train_percentage, cost,  outer_loop_iteration, source_ratio, num_iterations_cv, num_season_factors_cv, num_home_factors_cv)
 									lines = []
 									lines.append("#!/bin/sh\n")
 									lines.append('#SBATCH --time=02:0:00\n')
