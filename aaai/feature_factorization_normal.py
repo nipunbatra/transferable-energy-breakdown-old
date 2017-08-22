@@ -50,12 +50,12 @@ def create_region_df_dfc_static(region, year):
 	static_region = static_region.values
 	return df, dfc, tensor, static_region
 
-def cost_feature(H, A, T, H_1, F, E_np_masked, static, case):
+def cost_feature(H, A, T, H_sub, F, E_np_masked, static, case):
     HAT = multiply_case(H, A, T, case)
     mask = ~np.isnan(E_np_masked)
     error_1 = (HAT - E_np_masked)[mask].flatten()
     
-    HF = np.einsum('na,ab->nb', H_1, F)
+    HF = np.einsum('na,ab->nb', H_sub, F)
     mask_static = ~np.isnan(static)
     error_2 = (HF - static)[mask_static].flatten()
     
