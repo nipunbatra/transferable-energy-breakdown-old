@@ -77,6 +77,7 @@ def cost_graph_laplacian_3(H, A, T, L, E_np_masked, lam, case):
 
 def learn_HAT_adagrad_graph_3(case, E_np_masked, L, a, b, num_iter=2000, lr=0.1, dis=False, lam = 1, H_known=None,A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0):
 
+    np.random.seed(random_seed)
     cost = cost_graph_laplacian_3
     mg = multigrad(cost, argnums=[0, 1, 2])
 
@@ -154,8 +155,9 @@ au_agg = au_df.loc[:, 'aggregate_1':'aggregate_12']
 sd_agg = np.nan_to_num(sd_agg)
 au_agg = np.nan_to_num(au_agg)
 
-lam = sys.argv[1]
+lam= sys.argv[1]
 lam = float(lam)
+# num = int(num)
 
 n_splits = 10
 case = 2
@@ -165,10 +167,12 @@ c = 3
 iters = 2000
 
 # H_au, A_au, T_au, F_au = learn_HAT_graph(2, au_tensor, static_au, sim_au, a, b, num_iter=iters, dis=True, T_known = np.ones(12).reshape(-1, 1))
+
 L_au = get_L_NN(au_agg)
 L_sd = get_L_NN(sd_agg)
 H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, au_tensor, L_au, a, b, num_iter=2000, lr=0.1, dis=True, lam=lam, T_known = np.ones(12).reshape(-1, 1))
 
+print A_au
 pred_normal = {}
 pred_transfer = {}
 for random_seed in range(5):
@@ -183,6 +187,7 @@ kf = KFold(n_splits=n_splits)
 for random_seed in range(5):
     print "random seed: ", random_seed
     np.random.seed(random_seed)
+    # H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, au_tensor, L_au, a, b, num_iter=2000, lr=0.1, dis=True, lam=lam, T_known = np.ones(12).reshape(-1, 1), random_seed = random_seed)
     for train_percentage in range(10, 110, 20):
         print "training percentage: ", train_percentage
         rd = 0
@@ -252,11 +257,11 @@ for random_seed in range(5):
 
 
 def save_obj(obj, name):
-    with open(os.path.expanduser('~/git/graph_test/'+ name + '.pkl'), 'wb') as f:
+    with open(os.path.expanduser('~/git/graph_test_2/'+ name + '.pkl'), 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
-save_obj(pred_normal, "normal_{}_new".format(lam))
-save_obj(pred_transfer, "transfer_{}_new".format(lam))
+save_obj(pred_normal, "normal_{}".format(lam))
+save_obj(pred_transfer, "transfer_{}".format(lam))
 
 
 

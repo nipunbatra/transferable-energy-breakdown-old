@@ -95,7 +95,7 @@ if algo == 'adagrad':
     cost = 'l21'
     if static_fac == 'static':
         a = 5
-        H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Au, T_known=np.ones(12).reshape(-1, 1), penalty_coeff=lam)
+        H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, H_known = static_au, T_known=np.ones(12).reshape(-1, 1), penalty_coeff=lam)
     else:
         a = 2
         H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1), penalty_coeff=lam)
@@ -103,7 +103,7 @@ else:
     cost = 'abs'
     if static_fac == 'static':
         a = 5
-        H_au, A_au, T_au = learn_HAT(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Au, T_known=np.ones(12).reshape(-1, 1))
+        H_au, A_au, T_au = learn_HAT(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, H_known = static_au, T_known=np.ones(12).reshape(-1, 1))
     else:
         a = 2
         H_au, A_au, T_au = learn_HAT(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
@@ -139,7 +139,7 @@ for train_percentage in TRAIN_SPLITS:
             cost = 'l21'
             if static_fac == 'static':
                 a = 5
-                H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])], T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
+                H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = static_sd[np.concatenate([test, train])], T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
             else:
                 a = 2
                 H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
@@ -147,7 +147,7 @@ for train_percentage in TRAIN_SPLITS:
             cost = 'abs'
             if static_fac == 'static':
                 a = 5
-                H_normal, A_normal, T_normal = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])], T_known=np.ones(12).reshape(-1, 1))
+                H_normal, A_normal, T_normal = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = static_sd[np.concatenate([test, train])], T_known=np.ones(12).reshape(-1, 1))
             else:
                 a = 2
                 H_normal, A_normal, T_normal = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
@@ -162,7 +162,7 @@ for train_percentage in TRAIN_SPLITS:
             cost = 'l21'
             if static_fac == 'static':
                 a = 5
-                H_transfer, A_transfer, T_transfer, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])], A_known = A_au, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
+                H_transfer, A_transfer, T_transfer, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = static_sd[np.concatenate([test, train])], A_known = A_au, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
             else:
                 a = 2
                 H_transfer, A_transfer, T_transfer, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, A_known = A_au, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
@@ -170,7 +170,7 @@ for train_percentage in TRAIN_SPLITS:
             cost = 'abs'
             if static_fac == 'static':
                 a = 5
-                H_transfer, A_transfer, T_transfer = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = H_known_Sd[np.concatenate([test, train])], A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
+                H_transfer, A_transfer, T_transfer = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = static_sd[np.concatenate([test, train])], A_known = A_au, T_known=np.ones(12).reshape(-1, 1))
             else:
                 a = 2
                 H_transfer, A_transfer, T_transfer = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, A_known = A_au, T_known=np.ones(12).reshape(-1, 1))

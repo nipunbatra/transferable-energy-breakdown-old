@@ -68,7 +68,7 @@ pred = {}
 sd = {}
 out = {}
 n_splits = 10
-n_iter = 3000
+n_iter = 2000
 TRAIN_SPLITS = range(10, 110, 10)
 case = 2
 num_home = 5
@@ -77,18 +77,6 @@ a = 3
 cost = 'l21'
 algo = 'adagrad'
 
-<<<<<<< HEAD
-if static_fac is None:
-    print ('here')
-    H_known_Sd = None
-=======
-if static_fac == 'None':
-	print 'None'
-	H_known_Sd = None
->>>>>>> 0bc20a60ba19c03ee238aec36ca46544b32e13a3
-else:
-	print 'static'
-	H_known_Sd = static_sd
 
 for appliance in APPLIANCES_ORDER:
     pred[appliance] = {f:[] for f in range(10, 110, 10)}
@@ -120,7 +108,7 @@ for train_percentage in TRAIN_SPLITS:
         tensor_copy[:num_test, 1:, :] = np.NaN
 
         if static_fac == 'static':
-            H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, num_home, a, num_iter=n_iter, lr=1, dis=False, cost_function=cost, H_known=H_known_Sd[np.concatenate([test, train])], T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
+            H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, num_home, a, num_iter=n_iter, lr=1, dis=False, cost_function=cost, H_known=static_sd[np.concatenate([test, train])], T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
         else:
             H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, num_home, a, num_iter=n_iter, lr=1, dis=False, cost_function=cost, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
 
