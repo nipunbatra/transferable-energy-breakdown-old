@@ -147,7 +147,6 @@ global case
 global source_df, source_dfc, source_tensor, source_static
 global source_L, target_L
 global target_df, target_dfc, target_tensor, target_static
-global error
 case = 2
 
 random_seed, train_percentage = sys.argv[1:]
@@ -296,7 +295,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     results = []
     cpus = mp.cpu_count()
     pool = mp.Pool()
-    for num_iterations_cv in range(100, 1400, 800):
+    for num_iterations_cv in range(100, 1400, 400):
         for num_season_factors_cv in range(2, 5):
             for num_home_factors_cv in range(3, 6):
                 for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
