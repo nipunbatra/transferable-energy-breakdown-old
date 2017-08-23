@@ -49,8 +49,15 @@ def create_region_df_dfc_static(region, year):
 def distance(x, y):
     return np.linalg.norm(x - y)
 
+def fill_missing(X):
+    n_sample, n_feature = X.shape
+    mean = np.mean(X, axis=0)
+    for i in range(n_feature):
+        X.iloc[:, i].loc[X.iloc[:, i].isnull()] = mean[i]
+    return X
 
 from sklearn.neighbors import NearestNeighbors
+
 def get_L_NN(X):
     nbrs = NearestNeighbors(n_neighbors=5, algorithm='ball_tree').fit(X)
     distances, indices = nbrs.kneighbors(X)
@@ -152,8 +159,10 @@ sd_df, sd_dfc, sd_tensor, sd_static = create_region_df_dfc_static('SanDiego', ye
 sd_agg = sd_df.loc[:, 'aggregate_1':'aggregate_12']
 au_agg = au_df.loc[:, 'aggregate_1':'aggregate_12']
 
-sd_agg = np.nan_to_num(sd_agg)
-au_agg = np.nan_to_num(au_agg)
+# sd_agg = np.nan_to_num(sd_agg)
+# au_agg = np.nan_to_num(au_agg)
+sd_agg = fill_missing(sd_agg)
+au_agg = fill_missing(au_agg)
 
 lam= sys.argv[1]
 lam = float(lam)
@@ -221,7 +230,7 @@ for random_seed in range(5):
             ############################################################################################
             tensor_copy = tensor.copy()
             tensor_copy[:num_test, 1:, :] = np.NaN
-            agg = sd_agg[np.concatenate([test, train])]
+            # agg = sd_agg[np.concatenate([test_ix, train_ix])]
             L = L_sd[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
             
 #             H, A, T, F = learn_HAT_graph(2, tensor_copy, static_sd[np.concatenate([test, train])], sim_sd, a, b, num_iter=iters,dis=True, T_known = np.ones(12).reshape(-1, 1))
@@ -239,7 +248,7 @@ for random_seed in range(5):
             ############################################################################################
             tensor_copy = tensor.copy()
             tensor_copy[:num_test, 1:, :] = np.NaN
-            agg = sd_agg[np.concatenate([test, train])]
+            # agg = sd_agg[np.concatenate([test, train])]
             L = L_sd[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
             
 #             H, A, T, F = learn_HAT_graph(2, tensor_copy, static_sd[np.concatenate([test, train])], sim_sd, a, b, num_iter=iters,dis=True, T_known = np.ones(12).reshape(-1, 1))
@@ -257,7 +266,7 @@ for random_seed in range(5):
 
 
 def save_obj(obj, name):
-    with open(os.path.expanduser('~/git/graph_test_2/'+ name + '.pkl'), 'wb') as f:
+    with open(os.path.expanduser('~/git/graph_test_new/'+ name + '.pkl'), 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 save_obj(pred_normal, "normal_{}".format(lam))
