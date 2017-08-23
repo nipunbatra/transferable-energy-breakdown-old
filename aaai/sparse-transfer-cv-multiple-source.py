@@ -7,6 +7,7 @@ from common import compute_rmse_fraction, contri
 from tensor_custom_core import *
 from create_matrix import *
 from tensor_custom_core import *
+import datetime
 
 from degree_days import dds
 
@@ -28,12 +29,12 @@ def un_normalize(x, maximum, minimum):
 n_splits = 10
 case = 2
 
-source_1, source_2, target, static_fac, lam, random_seed, train_percentage, cost, source_ratio = sys.argv[1:]
-name = "{}-{}-{}-{}-{}-{}-{}-{}".format(source_1, source_2, target, static_fac, lam, random_seed, train_percentage, cost)
-directory = os.path.expanduser('~/aaai2017/transfer_{}_{}_{}_{}/'.format(source_1, source_2, target, cost))
+source_1, source_2, target, static_fac, lam, random_seed, train_percentage = sys.argv[1:]
+name = "{}-{}-{}-{}-{}-{}-{}".format(source_1, source_2, target, static_fac, lam, random_seed, train_percentage)
+directory = os.path.expanduser('~/aaai2017/transfer_{}_{}_{}/'.format(source_1, source_2, target))
 if not os.path.exists(directory):
 	os.makedirs(directory)
-filename = os.path.expanduser('~/aaai2017/transfer_{}_{}_{}_{}/'.format(source_1, source_2, target, cost) + name + '.pkl')
+filename = os.path.expanduser('~/aaai2017/transfer_{}_{}_{}/'.format(source_1, source_2, target) + name + '.pkl')
 
 if os.path.exists(filename):
 	print("File already exists. Quitting.")
@@ -79,7 +80,6 @@ case = 2
 n_iter = 1200
 
 algo = 'adagrad'
-source_ratio = float(source_ratio)
 lam = float(lam)
 
 random_seed = int(random_seed)
@@ -97,6 +97,7 @@ np.random.seed(random_seed)
 
 kf = KFold(n_splits=n_splits)
 
+cost = 'l21'
 pred = {}
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = []
@@ -107,7 +108,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	np.random.seed(10 * random_seed + 7*outer_loop_iteration)
 	np.random.shuffle(train_max)
 	print("-" * 80)
+	print(datetime.datetime.now())
 	print("Progress: {}".format(100.0*outer_loop_iteration/n_splits))
+	sys.stdout.flush()
 	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
 	if train_percentage == 100:
 		train = train_max
@@ -135,7 +138,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
 	print("-"*80)
 	print("Current Error, Least Error, #Iterations")
-
+	sys.stdout.flush()
 
 	### Inner CV loop to find the optimum set of params. In this case: the number of iterations
 	inner_kf = KFold(n_splits=2)
@@ -149,10 +152,11 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	overall_df_inner = target_df.loc[train_ix]
 
 	best_params_global[outer_loop_iteration] = {}
-	for num_iterations_cv in range(100, 1400, 400):
+	for num_iterations_cv in range(100, 1400, 600):
 		for num_season_factors_cv in range(2, 5, 2):
 			for num_home_factors_cv in range(3, 6, 2):
-				for ratio_cv in [0, 0.5, 1]:
+				for ratio_cv in [0, 0.32, 0.65, 1]:
+					print(num_iterations_cv, num_season_factors_cv, num_home_factors_cv, ratio_cv)
 					pred_inner = {}
 					for train_inner, test_inner in inner_kf.split(overall_df_inner):
 
@@ -162,11 +166,11 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 						if static_fac == 'static':
 							H_s1, A_source, T_s1, H_s2, T_s2, Hs_s1, As, Ts_s1, Hs_s2, Ts_s2, HATs_s1, HATs_s2, costs = learn_HAT_multiple_source_adagrad(
 								case, source_1_tensor, source_2_tensor, num_home_factors_cv, num_season_factors_cv,
-								num_iter=num_iterations_cv, lr=1, dis=False, cost_function=cost, H_known_s1=source_1_static,
+								num_iter=num_iterations_cv, lr=1, dis=False,  H_known_s1=source_1_static,
 								H_known_s2=source_2_static,
 								random_seed=0, eps=1e-8, penalty_coeff=lam, source_ratio=ratio_cv)
 						else:
-							H_s1, A_source, T_s1, H_s2, T_s2, Hs_s1, As, Ts_s1, Hs_s2, Ts_s2, HATs_s1, HATs_s2, costs = learn_HAT_multiple_source_adagrad(case, source_1_tensor, source_2_tensor, num_home_factors_cv, num_season_factors_cv, num_iter=num_iterations_cv, lr=1, dis=False, cost_function=cost, H_known_s1=source_1_static,
+							H_s1, A_source, T_s1, H_s2, T_s2, Hs_s1, As, Ts_s1, Hs_s2, Ts_s2, HATs_s1, HATs_s2, costs = learn_HAT_multiple_source_adagrad(case, source_1_tensor, source_2_tensor, num_home_factors_cv, num_season_factors_cv, num_iter=num_iterations_cv, lr=1, dis=False,  H_known_s1=source_1_static,
 	                       H_known_s2=source_2_static,
 	                        random_seed=0, eps=1e-8, penalty_coeff=lam, source_ratio=ratio_cv)
 
@@ -180,15 +184,15 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 							H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy_inner, num_home_factors_cv,
 							                                                     num_season_factors_cv,
 							                                                     num_iter=num_iterations_cv, lr=1, dis=False,
-							                                                     cost_function=cost,
 							                                                     A_known=A_source,
+							                                                     cost_function='l21',
 							                                                     H_known=H_known_target[np.concatenate([test_inner, train_inner])],
 							                                                     penalty_coeff=lam)
 						else:
 							H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy_inner, num_home_factors_cv,
 							                                                     num_season_factors_cv,
+							                                                     cost_function='l21',
 							                                                     num_iter=num_iterations_cv, lr=1, dis=False,
-							                                                     cost_function=cost,
 							                                                     A_known=A_source, penalty_coeff=lam)
 
 						HAT = multiply_case(H, A, T, case)
@@ -215,6 +219,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 							print(e)
 							print(appliance)
 					print("Error weighted on: {}".format(appliance_to_weight))
+					sys.stdout.flush()
 					err_weight = {}
 					for appliance in appliance_to_weight:
 						err_weight[appliance] = err[appliance]*contri[target][appliance]
@@ -226,6 +231,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 						best_ratio =ratio_cv
 						least_error = mean_err
 					print(mean_err, least_error, num_iterations_cv, num_home_factors_cv, num_season_factors_cv, ratio_cv)
+					sys.stdout.flush()
 	best_params_global[outer_loop_iteration] = {'Iterations':best_num_iterations,
 	                                            "Appliance Train Error": err,
 	                                            'Num season factors':best_num_season_factors,
@@ -237,17 +243,17 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print(best_params_global[outer_loop_iteration])
 	print("******* BEST PARAMS *******")
 	# Now we will be using the best parameter set obtained to compute the predictions
-
+	sys.stdout.flush()
 	if static_fac == 'static':
 		H_s1, A_source, T_s1, H_s2, T_s2, Hs_s1, As, Ts_s1, Hs_s2, Ts_s2, HATs_s1, HATs_s2, costs = learn_HAT_multiple_source_adagrad(
 			case, source_1_tensor, source_2_tensor, best_num_home_factors, best_num_season_factors,
-			num_iter=best_num_iterations, lr=1, dis=False, cost_function=cost, H_known_s1=source_1_static,
+			num_iter=best_num_iterations, lr=1, dis=False, H_known_s1=source_1_static,
 			H_known_s2=source_2_static,
 			random_seed=0, eps=1e-8, penalty_coeff=lam, source_ratio=best_ratio)
 	else:
 		H_s1, A_source, T_s1, H_s2, T_s2, Hs_s1, As, Ts_s1, Hs_s2, Ts_s2, HATs_s1, HATs_s2, costs = learn_HAT_multiple_source_adagrad(
 			case, source_1_tensor, source_2_tensor, best_num_home_factors, best_num_season_factors, num_iter=best_num_iterations, lr=1,
-			dis=False, cost_function=cost, H_known_s1=source_1_static,
+			dis=False,  H_known_s1=source_1_static,
 			H_known_s2=source_2_static,
 			random_seed=0, eps=1e-8, penalty_coeff=lam, source_ratio=best_ratio)
 
@@ -260,13 +266,15 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	tensor_copy[:num_test, 1:, :] = np.NaN
 	if static_fac!='None':
 		H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, best_num_home_factors, best_num_season_factors,
-		                                                     num_iter=best_num_iterations, lr=1, dis=False, cost_function=cost,
+		                                                     num_iter=best_num_iterations, lr=1, dis=False,
 		                                                     A_known=A_source,
+		                                                     cost_function='l21',
 		                                                     H_known=H_known_target[np.concatenate([test, train])],
 		                                                     penalty_coeff=lam)
 	else:
 		H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, best_num_home_factors, best_num_season_factors,
-		                                                     num_iter=best_num_iterations, lr=1, dis=False, cost_function=cost,
+		                                                     cost_function='l21',
+		                                                     num_iter=best_num_iterations, lr=1, dis=False,
 		                                                     A_known=A_source, penalty_coeff=lam)
 
 	HAT = multiply_case(H, A, T, case)

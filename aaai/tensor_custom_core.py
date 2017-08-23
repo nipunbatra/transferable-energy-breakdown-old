@@ -55,7 +55,7 @@ def set_known(A, W):
 	return A
 
 
-def learn_HAT_multiple_source_adagrad(case, source_1_energy, source_2_energy, a, b, num_iter=2000, lr=0.1, dis=False, cost_function='abs', H_known_s1=None,
+def learn_HAT_multiple_source_adagrad(case, source_1_energy, source_2_energy, a, b, num_iter=2000, lr=0.1, dis=False,  H_known_s1=None,
                       A_known=None, T_known_s1=None, H_known_s2=None, T_known_s2 = None,
                         random_seed=0, eps=1e-8, penalty_coeff=0.0, source_ratio=0.5):
 
