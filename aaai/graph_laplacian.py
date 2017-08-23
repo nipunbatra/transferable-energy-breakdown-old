@@ -59,18 +59,20 @@ def fill_missing(X):
 from sklearn.neighbors import NearestNeighbors
 
 def get_L_NN(X):
-    nbrs = NearestNeighbors(n_neighbors=5, algorithm='ball_tree').fit(X)
+    nbrs = NearestNeighbors(n_neighbors=5, radius = 0.05, algorithm='ball_tree').fit(X)
     distances, indices = nbrs.kneighbors(X)
     n_sample, n_feature = X.shape
     W = np.zeros((n_sample, n_sample))
     for i in range(n_sample):
+        if distances[i][4] == 0:
+            continue
         for j in indices[i]:
             W[i][j] = 1
             W[j][i] = 1
     K = np.dot(W, np.ones((n_sample, n_sample)))
     D = np.diag(np.diag(K))
+#     print W
     return D - W
-
 def cost_graph_laplacian_3(H, A, T, L, E_np_masked, lam, case):
     HAT = multiply_case(H, A, T, case)
     mask = ~np.isnan(E_np_masked)
@@ -164,6 +166,9 @@ au_agg = au_df.loc[:, 'aggregate_1':'aggregate_12']
 sd_agg = fill_missing(sd_agg)
 au_agg = fill_missing(au_agg)
 
+au_static = np.nan_to_num(au_static)
+sd_static = np.nan_to_num(sd_static)
+
 lam= sys.argv[1]
 lam = float(lam)
 # num = int(num)
@@ -177,8 +182,11 @@ iters = 2000
 
 # H_au, A_au, T_au, F_au = learn_HAT_graph(2, au_tensor, static_au, sim_au, a, b, num_iter=iters, dis=True, T_known = np.ones(12).reshape(-1, 1))
 
-L_au = get_L_NN(au_agg)
-L_sd = get_L_NN(sd_agg)
+# L_au = get_L_NN(au_agg)
+# L_sd = get_L_NN(sd_agg)
+
+L_au = get_L_NN(au_static)
+L_sd = get_L_NN(sd_static)
 H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, au_tensor, L_au, a, b, num_iter=2000, lr=0.1, dis=True, lam=lam, T_known = np.ones(12).reshape(-1, 1))
 
 print A_au
@@ -266,7 +274,7 @@ for random_seed in range(5):
 
 
 def save_obj(obj, name):
-    with open(os.path.expanduser('~/git/graph_test_new/'+ name + '.pkl'), 'wb') as f:
+    with open(os.path.expanduser('~/git/graph_test_static/'+ name + '.pkl'), 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 save_obj(pred_normal, "normal_{}".format(lam))
