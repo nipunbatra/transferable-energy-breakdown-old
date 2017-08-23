@@ -30,6 +30,6 @@ for random_seed in range(2):
 
 		CMD = 'python sparse-transfer-cv-static-matrix.py {} {} {} {} {}'.format(source, target,  random_seed, train_percentage, "&> "+str(random_seed)+"_"+str(train_percentage)+"&")
 		print(CMD)
-		command = [CMD]
+		command = CMD
 
 		delegator.run(command, block=False)
