@@ -11,12 +11,21 @@ from sklearn.model_selection import train_test_split, KFold
 from common import compute_rmse_fraction, contri
 from sklearn.neighbors import NearestNeighbors
 import pickle
+import multiprocessing as mp
 
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
 
+global case
+global source_df, source_dfc, source_tensor, source_static
+global source_L, target_L
+global target_df, target_dfc, target_tensor, target_static
+
+cpus = mp.cpu_count()
+pool = mp.Pool()
+results = []
 
 def un_normalize(x, maximum, minimum):
     return (maximum - minimum) * x + minimum
@@ -141,6 +150,65 @@ def learn_HAT_adagrad_graph_3(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01
                 print(cost(H, A, T, L, E_np_masked, lam, case))
     return H, A, T, Hs, As, Ts, HATs, costs
 
+def compute_inner_error(param):
+    overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv = param
+    print num_iterations_cv, num_season_factors_cv,num_home_factors_cv,lam_cv
+    inner_kf = KFold(n_splits=2)
+    pred_inner = {}
+    for train_inner, test_inner in inner_kf.split(overall_df_inner):
+
+        train_ix_inner = overall_df_inner.index[train_inner]
+        test_ix_inner = overall_df_inner.index[test_inner]
+
+        H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, source_tensor, source_L, 
+                                                                                        num_home_factors_cv, num_season_factors_cv, 
+                                                                                        num_iter=num_iterations_cv, lr=1, dis=False, 
+                                                                                        lam=lam_cv, T_known = np.ones(12).reshape(-1, 1))
+
+        train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
+        df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[train_test_ix_inner]
+        tensor_inner = get_tensor(df_t_inner)
+        tensor_copy_inner = tensor_inner.copy()
+        # First n
+        tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
+        L_inner = target_L[np.ix_(np.concatenate([test_inner, train_inner]), np.concatenate([test_inner, train_inner]))]
+
+        H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, tensor_copy_inner, L_inner, 
+                                                                    num_home_factors_cv, num_season_factors_cv, 
+                                                                    num_iter=num_iterations_cv, lr=1, dis=False, 
+                                                                    lam=lam_cv, A_known = A_source,
+                                                                    T_known = np.ones(12).reshape(-1, 1))
+
+        HAT = multiply_case(H, A, T, case)
+        for appliance in APPLIANCES_ORDER:
+            if appliance not in pred_inner:
+                pred_inner[appliance] = []
+
+            pred_inner[appliance].append(pd.DataFrame(HAT[:len(test_ix_inner), appliance_index[appliance], :], index=test_ix_inner))
+
+    err = {}
+    appliance_to_weight = []
+    for appliance in APPLIANCES_ORDER[1:]:
+        pred_inner[appliance] = pd.DataFrame(pd.concat(pred_inner[appliance]))
+
+        try:
+            if appliance =="hvac":
+                err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance][range(4, 10)], 'SanDiego')[2]
+            else:
+                err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], 'SanDiego')[2]
+            appliance_to_weight.append(appliance)
+        except Exception, e:
+            # This appliance does not have enough samples. Will not be
+            # weighed
+            print(e)
+            print(appliance)
+    print("Error weighted on: {}".format(appliance_to_weight))
+    err_weight = {}
+    for appliance in appliance_to_weight:
+        err_weight[appliance] = err[appliance]*contri[target][appliance]
+    mean_err = pd.Series(err_weight).sum()
+    print mean_err
+    return mean_err
 
 random_seed, train_percentage = sys.argv[1:]
 train_percentage = float(train_percentage)
@@ -233,112 +301,81 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     overall_df_inner = target_df.loc[train_ix]
 
     best_params_global[outer_loop_iteration] = {}
-    for num_iterations_cv in range(100, 1400, 400):
+    params = {}
+    count = 0
+    for num_iterations_cv in range(100, 1400, 2000):
         for num_season_factors_cv in range(2, 5):
             for num_home_factors_cv in range(3, 6):
                 for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
-                    pred_inner = {}
-                    for train_inner, test_inner in inner_kf.split(overall_df_inner):
+                    params[count] = []
+                    params[count].extend((overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv))
+                    # print "params: ", params[count]
+                    count += 1
 
-                        train_ix_inner = overall_df_inner.index[train_inner]
-                        test_ix_inner = overall_df_inner.index[test_inner]
+    for i in range(count):
+        print i
+        result = pool.apply_async(compute_inner_error, params[i])
+        results.append(result)
+    pool.close()
+    pool.join()
+    for result in results:
+        print result.get()
 
-                        H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, source_tensor, source_L, 
-                                                                                                        num_home_factors_cv, num_season_factors_cv, 
-                                                                                                        num_iter=num_iterations_cv, lr=1, dis=False, 
-                                                                                                        lam=lam_cv, T_known = np.ones(12).reshape(-1, 1))
-                        train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
-                        df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[train_test_ix_inner]
-                        tensor_inner = get_tensor(df_t_inner)
-                        tensor_copy_inner = tensor_inner.copy()
-                        # First n
-                        tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
-                        L_inner = target_L[np.ix_(np.concatenate([test_inner, train_inner]), np.concatenate([test_inner, train_inner]))]
-
-                        H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, tensor_copy_inner, L_inner, 
-                                                                                    num_home_factors_cv, num_season_factors_cv, 
-                                                                                    num_iter=num_iterations_cv, lr=1, dis=False, 
-                                                                                    lam=lam_cv, A_known = A_source,
-                                                                                    T_known = np.ones(12).reshape(-1, 1))
-
-                        HAT = multiply_case(H, A, T, case)
-                        for appliance in APPLIANCES_ORDER:
-                            if appliance not in pred_inner:
-                                pred_inner[appliance] = []
-
-                            pred_inner[appliance].append(pd.DataFrame(HAT[:len(test_ix_inner), appliance_index[appliance], :], index=test_ix_inner))
-
-                    err = {}
-                    appliance_to_weight = []
-                    for appliance in APPLIANCES_ORDER[1:]:
-                        pred_inner[appliance] = pd.DataFrame(pd.concat(pred_inner[appliance]))
-
-                        try:
-                            if appliance =="hvac":
-                                err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance][range(4, 10)], 'SanDiego')[2]
-                            else:
-                                err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], 'SanDiego')[2]
-                            appliance_to_weight.append(appliance)
-                        except Exception, e:
-                            # This appliance does not have enough samples. Will not be
-                            # weighed
-                            print(e)
-                            print(appliance)
-                    print("Error weighted on: {}".format(appliance_to_weight))
-                    err_weight = {}
-                    for appliance in appliance_to_weight:
-                        err_weight[appliance] = err[appliance]*contri[target][appliance]
-                    mean_err = pd.Series(err_weight).sum()
-                    if mean_err < least_error:
-                        best_num_iterations = num_iterations_cv
-                        best_num_season_factors = num_season_factors_cv
-                        best_num_home_factors = num_home_factors_cv
-                        best_lam = lam_cv
-                        least_error = mean_err
-                    print(mean_err, least_error, num_iterations_cv, num_home_factors_cv, num_season_factors_cv, lam_cv)
-    best_params_global[outer_loop_iteration] = {'Iterations':best_num_iterations,
-                                                "Appliance Train Error": err,
-                                                'Num season factors':best_num_season_factors,
-                                                'Num home factors': best_num_home_factors,
-                                                'Lambda': best_lam,
-                                                "Least Train Error":least_error}
-
-    print("******* BEST PARAMS *******")
-    print(best_params_global[outer_loop_iteration])
-    print("******* BEST PARAMS *******")
-    # Now we will be using the best parameter set obtained to compute the predictions
+    #                 if mean_err < least_error:
+    #                     best_num_iterations = num_iterations_cv
+    #                     best_num_season_factors = num_season_factors_cv
+    #                     best_num_home_factors = num_home_factors_cv
+    #                     best_lam = lam_cv
+    #                     least_error = mean_err
+    #                 print(mean_err, least_error, num_iterations_cv, num_home_factors_cv, num_season_factors_cv, lam_cv)
+    # best_params_global[outer_loop_iteration] = {'Iterations':best_num_iterations,
+    #                                             "Appliance Train Error": err,
+    #                                             'Num season factors':best_num_season_factors,
+    #                                             'Num home factors': best_num_home_factors,
+    #                                             'Lambda': best_lam,
+    #                                             "Least Train Error":least_error}
+    # print "here1"
+    # pool.close()
+    # pool.join()
+    # print "here2"
+    # for result in results:
+    #     print (result.get())
+    # print("******* BEST PARAMS *******")
+    # print(best_params_global[outer_loop_iteration])
+    # print("******* BEST PARAMS *******")
+    # # Now we will be using the best parameter set obtained to compute the predictions
 
 
-    H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, source_tensor, source_L, 
-                                                                                    best_num_home_factors, best_num_season_factors, 
-                                                                                    num_iter=best_num_iterations, lr=1, dis=False, 
-                                                                                    lam=best_lam, T_known = np.ones(12).reshape(-1, 1))
+    # H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, source_tensor, source_L, 
+    #                                                                                 best_num_home_factors, best_num_season_factors, 
+    #                                                                                 num_iter=best_num_iterations, lr=1, dis=False, 
+    #                                                                                 lam=best_lam, T_known = np.ones(12).reshape(-1, 1))
 
-    num_test = len(test_ix)
-    train_test_ix = np.concatenate([test_ix, train_ix])
-    df_t, dfc_t = target_df.loc[train_test_ix], target_dfc.loc[train_test_ix]
-    tensor = get_tensor(df_t)
-    tensor_copy = tensor.copy()
-    # First n
-    tensor_copy[:num_test, 1:, :] = np.NaN
+    # num_test = len(test_ix)
+    # train_test_ix = np.concatenate([test_ix, train_ix])
+    # df_t, dfc_t = target_df.loc[train_test_ix], target_dfc.loc[train_test_ix]
+    # tensor = get_tensor(df_t)
+    # tensor_copy = tensor.copy()
+    # # First n
+    # tensor_copy[:num_test, 1:, :] = np.NaN
 
-    L = target_L[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
+    # L = target_L[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
 
-    H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, tensor_copy, L, 
-                                                                best_num_home_factors, best_num_season_factors, 
-                                                                num_iter=best_num_iterations, lr=1, dis=False, 
-                                                                lam=best_lam, A_known = A_source,
-                                                                T_known = np.ones(12).reshape(-1, 1))
+    # H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, tensor_copy, L, 
+    #                                                             best_num_home_factors, best_num_season_factors, 
+    #                                                             num_iter=best_num_iterations, lr=1, dis=False, 
+    #                                                             lam=best_lam, A_known = A_source,
+    #                                                             T_known = np.ones(12).reshape(-1, 1))
 
-    HAT = multiply_case(H, A, T, case)
-    for appliance in APPLIANCES_ORDER:
-        pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
+    # HAT = multiply_case(H, A, T, case)
+    # for appliance in APPLIANCES_ORDER:
+    #     pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
 
-for appliance in APPLIANCES_ORDER:
-    pred[appliance] = pd.DataFrame(pd.concat(pred[appliance]))
+# for appliance in APPLIANCES_ORDER:
+#     pred[appliance] = pd.DataFrame(pd.concat(pred[appliance]))
 
-out = {'Predictions':pred, 'Learning Params':best_params_global}
+# out = {'Predictions':pred, 'Learning Params':best_params_global}
 
-with open(filename, 'wb') as f:
-    pickle.dump(out, f, pickle.HIGHEST_PROTOCOL)
+# with open(filename, 'wb') as f:
+#     pickle.dump(out, f, pickle.HIGHEST_PROTOCOL)
 
