@@ -7,6 +7,7 @@ from common import compute_rmse_fraction, contri
 from tensor_custom_core import *
 from create_matrix import *
 from tensor_custom_core import *
+import datetime
 
 from degree_days import dds
 
@@ -185,7 +186,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	# Just a random thing
 	np.random.seed(10 * random_seed + 7*outer_loop_iteration)
 	np.random.shuffle(train_max)
+
 	print("-" * 80)
+	print(datetime.datetime.now())
 	print("Progress: {}".format(100.0*outer_loop_iteration/n_splits))
 	sys.stdout.flush()
 	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
@@ -231,12 +234,14 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
 	best_params_global[outer_loop_iteration] = {}
 	count = 0
-	for num_iterations_cv in range(100, 1400, 800):
+	for num_iterations_cv in range(100, 1400, 600):
 		for num_season_factors_cv in range(2, 5, 2):
 			for num_home_factors_cv in range(3, 6, 2):
-				for lr_cv in [0.1, 1.]:
+				#for lr_cv in [0.1, 1.]:
+				for lr_cv in [1]:
 
-					for beta_cv in [1e-3,  1e-1, 0.]:
+					#for beta_cv in [1e-3,  1e-1, 0.]:
+					for beta_cv in [1e-3, 1e-1, 0.]:
 						count += 1
 						print(count, num_iterations_cv, num_home_factors_cv, num_season_factors_cv, lr_cv,  beta_cv)
 
@@ -326,10 +331,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	# First n
 	tensor_copy[:num_test, 1:, :] = np.NaN
 
-	H_known_target[np.concatenate([test, train])]
 
 	H, A, T, F, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_static(
-		case, tensor_copy_inner, H_known_target[np.concatenate([test, train])],
+		case, tensor_copy, H_known_target[np.concatenate([test, train])],
 		best_num_home_factors, best_num_season_factors, best_num_iterations, best_lr, False,
 		A_known=A_source,
 		beta=best_beta)
