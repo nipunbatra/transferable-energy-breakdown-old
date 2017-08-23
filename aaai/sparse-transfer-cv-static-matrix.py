@@ -179,6 +179,7 @@ pred = {}
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = []
 print(random_seed, train_percentage)
+sys.stdout.flush()
 best_params_global = {}
 for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	# Just a random thing
@@ -186,6 +187,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	np.random.shuffle(train_max)
 	print("-" * 80)
 	print("Progress: {}".format(100.0*outer_loop_iteration/n_splits))
+	sys.stdout.flush()
 	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
 	if train_percentage == 100:
 		train = train_max
@@ -213,7 +215,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
 	print("-"*80)
 	print("Current Error, Least Error, #Iterations")
-
+	sys.stdout.flush()
 
 	### Inner CV loop to find the optimum set of params. In this case: the number of iterations
 	inner_kf = KFold(n_splits=2)
@@ -237,6 +239,8 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 					for beta_cv in [1e-3,  1e-1, 0.]:
 						count += 1
 						print(count, num_iterations_cv, num_home_factors_cv, num_season_factors_cv, lr_cv,  beta_cv)
+
+						sys.stdout.flush()
 						pred_inner = {}
 						for train_inner, test_inner in inner_kf.split(overall_df_inner):
 
@@ -280,7 +284,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 								# weighed
 								print(e)
 								print(appliance)
+								sys.stdout.flush()
 						print("Error weighted on: {}".format(appliance_to_weight))
+						sys.stdout.flush()
 						err_weight = {}
 						for appliance in appliance_to_weight:
 							err_weight[appliance] = err[appliance]*contri[target][appliance]
@@ -292,6 +298,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 							best_lr = lr_cv
 							least_error = mean_err
 						print(mean_err, least_error, num_iterations_cv, num_home_factors_cv, num_season_factors_cv)
+						sys.stdout.flush()
 	best_params_global[outer_loop_iteration] = {'Iterations':best_num_iterations,
 	                                            "Appliance Train Error": err,
 	                                            'Num season factors':best_num_season_factors,
@@ -303,6 +310,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print("******* BEST PARAMS *******")
 	print(best_params_global[outer_loop_iteration])
 	print("******* BEST PARAMS *******")
+	sys.stdout.flush()
 	# Now we will be using the best parameter set obtained to compute the predictions
 	H_source, A_source, T_source, F_source, Hs_source, As_source, Ts_source, HATs_source, costs_source = learn_HAT_adagrad_static(
 		case, source_tensor, source_static,
