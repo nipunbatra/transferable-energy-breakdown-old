@@ -72,6 +72,7 @@ def cost_graph_laplacian_3(H, A, T, L, E_np_masked, lam, case):
 
 def learn_HAT_adagrad_graph_3(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, dis=False, lam = 1, H_known=None,A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0):
 
+    np.random.seed(random_seed)
     cost = cost_graph_laplacian_3
     mg = multigrad(cost, argnums=[0, 1, 2])
 
@@ -233,7 +234,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     overall_df_inner = target_df.loc[train_ix]
 
     best_params_global[outer_loop_iteration] = {}
-    for num_iterations_cv in range(100, 1400, 400):
+    for num_iterations_cv in range(100, 1400, 800):
         for num_season_factors_cv in range(2, 5):
             for num_home_factors_cv in range(3, 6):
                 for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
@@ -309,11 +310,13 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     # Now we will be using the best parameter set obtained to compute the predictions
 
 
+
     H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, source_tensor, source_L, 
                                                                                     best_num_home_factors, best_num_season_factors, 
                                                                                     num_iter=best_num_iterations, lr=1, dis=False, 
                                                                                     lam=best_lam, T_known = np.ones(12).reshape(-1, 1))
 
+    print A_source
     num_test = len(test_ix)
     train_test_ix = np.concatenate([test_ix, train_ix])
     df_t, dfc_t = target_df.loc[train_test_ix], target_dfc.loc[train_test_ix]
