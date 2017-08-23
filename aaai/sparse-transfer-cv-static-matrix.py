@@ -228,13 +228,15 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	overall_df_inner = target_df.loc[train_ix]
 
 	best_params_global[outer_loop_iteration] = {}
+	count = 0
 	for num_iterations_cv in range(100, 1400, 300):
 		for num_season_factors_cv in range(2, 6):
 			for num_home_factors_cv in range(3, 7):
 				for lr_cv in [0.1, 1]:
 
 					for beta_cv in [1e-3, 1e-2, 1e-1, 0]:
-						print(num_iterations_cv, num_home_factors_cv, num_season_factors_cv, lr_cv,  beta_cv)
+						count += 1
+						print(count, num_iterations_cv, num_home_factors_cv, num_season_factors_cv, lr_cv,  beta_cv)
 						pred_inner = {}
 						for train_inner, test_inner in inner_kf.split(overall_df_inner):
 
