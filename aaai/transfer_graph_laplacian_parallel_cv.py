@@ -295,10 +295,10 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     results = []
     cpus = mp.cpu_count()
     pool = mp.Pool()
-    for num_iterations_cv in range(100, 1400, 400):
-        for num_season_factors_cv in range(2, 5):
-            for num_home_factors_cv in range(3, 6):
-                for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
+    for num_iterations_cv in [1300, 900, 500, 100]:
+        for num_season_factors_cv in range(2, 3):
+            for num_home_factors_cv in range(3, 4):
+                for lam_cv in [0.001]:
                     params[count] = []
                     params[count].extend((overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv))
                     count += 1
@@ -319,6 +319,8 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     best_idx = np.argmin(error)
     overall_df_inner, best_num_iterations, best_num_season_factors, best_num_home_factors, best_lam = params[best_idx]
     least_error = error[best_idx]
+    print error
+    raw_input("Press Enter to continue")
 
 
     best_params_global[outer_loop_iteration] = {'Iterations':best_num_iterations,
