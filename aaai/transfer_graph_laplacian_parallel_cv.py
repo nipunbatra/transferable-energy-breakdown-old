@@ -219,6 +219,7 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
             # weighed
             print(e)
             print(appliance)
+    print "Done: ", num_iterations_cv
     print("Error weighted on: {}".format(appliance_to_weight))
     err_weight = {}
     for appliance in appliance_to_weight:
@@ -296,14 +297,14 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     cpus = mp.cpu_count()
     pool = mp.Pool()
     for num_iterations_cv in [1300, 900, 500, 100]:
-        for num_season_factors_cv in range(2, 3):
-            for num_home_factors_cv in range(3, 4):
-                for lam_cv in [0.001]:
+        for num_season_factors_cv in range(2, 5):
+            for num_home_factors_cv in range(3, 6):
+                for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
                     params[count] = []
                     params[count].extend((overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv))
                     count += 1
 
-    for i in range(count-1):
+    for i in range(count): 
         result = pool.apply_async(compute_inner_error, params[i])
         results.append(result)
     pool.close()

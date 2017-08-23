@@ -235,9 +235,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
     best_params_global[outer_loop_iteration] = {}
     for num_iterations_cv in [1300, 900, 500, 100]:
-        for num_season_factors_cv in range(2, 5):
-            for num_home_factors_cv in range(3, 6):
-                for lam_cv in [0.001]:
+        for num_season_factors_cv in range(2, 3):
+            for num_home_factors_cv in range(3, 4):
+                for lam_cv in [0.001, 0.01, 0.1]:
                     pred_inner = {}
                     for train_inner, test_inner in inner_kf.split(overall_df_inner):
 
