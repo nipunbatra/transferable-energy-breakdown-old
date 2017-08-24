@@ -19,7 +19,7 @@ APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
 
 import os
-
+import datetime
 
 def un_normalize(x, maximum, minimum):
 	return (maximum - minimum) * x + minimum
@@ -104,7 +104,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	np.random.seed(10 * random_seed + 7*outer_loop_iteration)
 	np.random.shuffle(train_max)
 	print("-" * 80)
+	print(datetime.datetime.now())
 	print("Progress: {}".format(100.0*outer_loop_iteration/n_splits))
+	sys.stdout.flush()
 	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
 	if train_percentage == 100:
 		train = train_max
@@ -132,6 +134,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
 	print("-"*80)
 	print("Current Error, Least Error, #Iterations")
+	sys.stdout.flush()
 
 
 	### Inner CV loop to find the optimum set of params. In this case: the number of iterations
@@ -145,9 +148,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	overall_df_inner = target_df.loc[train_ix]
 
 	best_params_global[outer_loop_iteration] = {}
-	for num_iterations_cv in range(100, 1400, 400):
-		for num_season_factors_cv in range(2, 5):
-			for num_home_factors_cv in range(3, 6):
+	for num_iterations_cv in range(100, 1400, 600):
+		for num_season_factors_cv in range(2, 5, 2):
+			for num_home_factors_cv in range(3, 6, 2):
 				pred_inner = {}
 				for train_inner, test_inner in inner_kf.split(overall_df_inner):
 
@@ -212,6 +215,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 						print(e)
 						print(appliance)
 				print("Error weighted on: {}".format(appliance_to_weight))
+				print(sys.stdout.flush())
 				err_weight = {}
 				for appliance in appliance_to_weight:
 					err_weight[appliance] = err[appliance]*contri[target][appliance]
@@ -222,6 +226,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 					best_num_home_factors = num_home_factors_cv
 					least_error = mean_err
 				print(mean_err, least_error, num_iterations_cv, num_home_factors_cv, num_season_factors_cv)
+				print(sys.stdout.flush())
 	best_params_global[outer_loop_iteration] = {'Iterations':best_num_iterations,
 	                                            "Appliance Train Error": err,
 	                                            'Num season factors':best_num_season_factors,
@@ -231,6 +236,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print("******* BEST PARAMS *******")
 	print(best_params_global[outer_loop_iteration])
 	print("******* BEST PARAMS *******")
+	print(sys.stdout.flush())
 	# Now we will be using the best parameter set obtained to compute the predictions
 
 	if static_fac == 'static':
