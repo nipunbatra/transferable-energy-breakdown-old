@@ -47,11 +47,13 @@ def distance(x, y):
     return np.linalg.norm(x - y)
 
 def get_L_NN(X):
-    nbrs = NearestNeighbors(n_neighbors=5, algorithm='ball_tree').fit(X)
+    nbrs = NearestNeighbors(n_neighbors=5, radius = 0.05, algorithm='ball_tree').fit(X)
     distances, indices = nbrs.kneighbors(X)
     n_sample, n_feature = X.shape
     W = np.zeros((n_sample, n_sample))
     for i in range(n_sample):
+        if distances[i][4] == 0:
+            continue
         for j in indices[i]:
             W[i][j] = 1
             W[j][i] = 1
@@ -159,9 +161,11 @@ target_agg = target_df.loc[:, 'aggregate_1':'aggregate_12']
 source_agg = np.nan_to_num(source_agg)
 target_agg = np.nan_to_num(target_agg)
 
-source_L = get_L_NN(source_agg)
-target_L = get_L_NN(target_agg)
+source_static = np.nan_to_num(source_static)
+target_static = np.nan_to_num(target_static)
 
+source_L = get_L_NN(source_static)
+target_L = get_L_NN(target_static)
 
 
 name = "{}-{}".format(random_seed, train_percentage)
@@ -235,9 +239,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
     best_params_global[outer_loop_iteration] = {}
     for num_iterations_cv in [1300, 900, 500, 100]:
-        for num_season_factors_cv in range(2, 3):
-            for num_home_factors_cv in range(3, 4):
-                for lam_cv in [0.001, 0.01, 0.1]:
+        for num_season_factors_cv in range(2, 5):
+            for num_home_factors_cv in range(3, 6):
+                for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
                     pred_inner = {}
                     for train_inner, test_inner in inner_kf.split(overall_df_inner):
 

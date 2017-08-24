@@ -59,7 +59,7 @@ def get_L_NN(X):
     D = np.diag(np.diag(K))
     return D - W
 
-def cost_graph_laplacian_3(H, A, T, L, E_np_masked, lam, case):
+def cost_graph_laplacian(H, A, T, L, E_np_masked, lam, case):
     HAT = multiply_case(H, A, T, case)
     mask = ~np.isnan(E_np_masked)
     error_1 = (HAT - E_np_masked)[mask].flatten()
@@ -70,10 +70,10 @@ def cost_graph_laplacian_3(H, A, T, L, E_np_masked, lam, case):
     
     return np.sqrt((error_1**2).mean()) + lam * error_2
 
-def learn_HAT_adagrad_graph_3(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, dis=False, lam = 1, H_known=None,A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0):
+def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, dis=False, lam = 1, H_known=None,A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0):
 
     np.random.seed(random_seed)
-    cost = cost_graph_laplacian_3
+    cost = cost_graph_laplacian
     mg = multigrad(cost, argnums=[0, 1, 2])
 
     params = {}
@@ -158,13 +158,16 @@ target = 'SanDiego'
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year)
 
-source_agg = source_df.loc[:, 'aggregate_1':'aggregate_12']
-target_agg = target_df.loc[:, 'aggregate_1':'aggregate_12']
-source_agg = np.nan_to_num(source_agg)
-target_agg = np.nan_to_num(target_agg)
+# source_agg = source_df.loc[:, 'aggregate_1':'aggregate_12']
+# target_agg = target_df.loc[:, 'aggregate_1':'aggregate_12']
+# source_agg = np.nan_to_num(source_agg)
+# target_agg = np.nan_to_num(target_agg)
 
-source_L = get_L_NN(source_agg)
-target_L = get_L_NN(target_agg)
+source_static = np.nan_to_num(source_static)
+target_static = np.nan_to_num(target_static)
+
+source_L = get_L_NN(source_static)
+target_L = get_L_NN(target_static)
 
 
 def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv):
@@ -177,7 +180,7 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
         train_ix_inner = overall_df_inner.index[train_inner]
         test_ix_inner = overall_df_inner.index[test_inner]
 
-        H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, source_tensor, source_L, 
+        H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
                                                                                         num_home_factors_cv, num_season_factors_cv, 
                                                                                         num_iter=num_iterations_cv, lr=1, dis=False, 
                                                                                         lam=lam_cv, T_known = np.ones(12).reshape(-1, 1))
@@ -190,7 +193,7 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
         tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
         L_inner = target_L[np.ix_(np.concatenate([test_inner, train_inner]), np.concatenate([test_inner, train_inner]))]
 
-        H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, tensor_copy_inner, L_inner, 
+        H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner, L_inner, 
                                                                     num_home_factors_cv, num_season_factors_cv, 
                                                                     num_iter=num_iterations_cv, lr=1, dis=False, 
                                                                     lam=lam_cv, A_known = A_source,
@@ -336,12 +339,12 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     # Now we will be using the best parameter set obtained to compute the predictions
 
 
-    H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, source_tensor, source_L, 
+    H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
                                                                                     best_num_home_factors, best_num_season_factors, 
                                                                                     num_iter=best_num_iterations, lr=1, dis=False, 
                                                                                     lam=best_lam, T_known = np.ones(12).reshape(-1, 1))
 
-    print A_source
+    # print A_source
     num_test = len(test_ix)
     train_test_ix = np.concatenate([test_ix, train_ix])
     df_t, dfc_t = target_df.loc[train_test_ix], target_dfc.loc[train_test_ix]
@@ -352,7 +355,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
     L = target_L[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
 
-    H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_3(case, tensor_copy, L, 
+    H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, 
                                                                 best_num_home_factors, best_num_season_factors, 
                                                                 num_iter=best_num_iterations, lr=1, dis=False, 
                                                                 lam=best_lam, A_known = A_source,
