@@ -145,7 +145,7 @@ for train_percentage in TRAIN_SPLITS:
                 H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = static_sd[np.concatenate([test, train])], T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
             else:
                 # a = 2
-                H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=True, cost_function=cost, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
+                H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
         else:
             cost = 'abs'
             if static_fac == 'static':
@@ -186,9 +186,6 @@ for train_percentage in TRAIN_SPLITS:
         for appliance in APPLIANCES_ORDER:
             pred_normal[appliance][train_percentage].append(pd.DataFrame(HAT_normal[:num_test, appliance_index[appliance], :], index=test_ix))
             pred_transfer[appliance][train_percentage].append(pd.DataFrame(HAT_transfer[:num_test, appliance_index[appliance], :], index=test_ix))
-
-        print pred_normal['hvac'][10]
-        raw_input('Enter to continue')
 
 
 save_obj(pred_normal, "pred_normal_" + str(train_iter) + "_" + algo + "_" + str(static_fac) + "_" + str(lam) + "_" + str(random_seed))
