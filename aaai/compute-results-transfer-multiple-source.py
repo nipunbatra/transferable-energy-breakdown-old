@@ -16,10 +16,13 @@ static_fac ='None'
 lam = 0
 cost = 'l21'
 out = {}
+betas = {}
 for train_percentage in range(10, 110, 10):
 	out[train_percentage] = {}
+	betas[train_percentage] = {}
 	for random_seed in range(5):
 		out[train_percentage][random_seed] ={}
+
 
 		name = "{}-{}-{}-{}-{}-{}-{}".format(source_1, source_2, target, static_fac, lam, random_seed, train_percentage)
 		directory = os.path.expanduser('~/aaai2017/transfer_{}_{}_{}/'.format(source_1, source_2, target))
@@ -29,6 +32,7 @@ for train_percentage in range(10, 110, 10):
 			'~/aaai2017/transfer_{}_{}_{}/'.format(source_1, source_2, target) + name + '.pkl')
 		try:
 			pr = pickle.load(open(filename, 'r'))
+			betas[train_percentage][random_seed] = [pr['Learning Params'][x]['Ratio'] for x in pr['Learning Params'].keys()]
 			pred = pr['Predictions']
 			for appliance in APPLIANCES_ORDER[1:]:
 				prediction = pred[appliance]
