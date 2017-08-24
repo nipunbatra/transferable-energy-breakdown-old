@@ -81,7 +81,7 @@ def cost_graph_laplacian(H, A, T, L, E_np_masked, lam, case):
     HTL = np.dot(H.T, L)
     HTLH = np.dot(HTL, H)
     error_2 = np.trace(HTLH)
-    
+
     return np.sqrt((error_1**2).mean()) + lam * error_2
 
 def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.1, dis=False, lam = 1, H_known=None,A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0):
@@ -105,6 +105,7 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.1, d
     A = np.random.rand(*A_dim)
     T = np.random.rand(*T_dim)
 
+    print T
     sum_square_gradients_H = np.zeros_like(H)
     sum_square_gradients_A = np.zeros_like(A)
     sum_square_gradients_T = np.zeros_like(T)
@@ -189,7 +190,7 @@ L_au = get_L_NN(au_static)
 L_sd = get_L_NN(sd_static)
 H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, au_tensor, L_au, a, b, num_iter=2000, lr=0.1, dis=True, lam=lam, T_known = np.ones(12).reshape(-1, 1))
 
-print A_au
+
 pred_normal = {}
 pred_transfer = {}
 for random_seed in range(5):
@@ -228,10 +229,10 @@ for random_seed in range(5):
             print "test_ix: ", test_ix
             
             # create the tensor
-            print test, train
             train_test_ix = np.concatenate([test_ix, train_ix])
             df_t, dfc_t = sd_df.ix[train_test_ix], sd_dfc.ix[train_test_ix]
             tensor = get_tensor(df_t)
+
             
             ############################################################################################
             # Normal learning: no constant constraint, no A_known, with learn_HAT
@@ -243,14 +244,14 @@ for random_seed in range(5):
             
 #             H, A, T, F = learn_HAT_graph(2, tensor_copy, static_sd[np.concatenate([test, train])], sim_sd, a, b, num_iter=iters,dis=True, T_known = np.ones(12).reshape(-1, 1))
             H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, a, b, num_iter=2000, lr=0.1, dis=True, lam=lam, T_known = np.ones(12).reshape(-1, 1))
-
+            
 
             # get the prediction
             HAT = multiply_case(H, A, T, case)
             for appliance in APPLIANCES_ORDER:
                 pred_normal[random_seed][appliance][train_percentage].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
                        
-            
+
             ############################################################################################
             # transfer learning: constant constraint, with A_known = A_a_const, with learn_HAT_constant
             ############################################################################################

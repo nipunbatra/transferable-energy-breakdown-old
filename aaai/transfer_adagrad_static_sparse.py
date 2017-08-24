@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split, KFold
 import sys
 import pickle
 
+
 def un_normalize(x, maximum, minimum):
     return (maximum - minimum) * x + minimum
 
@@ -98,6 +99,7 @@ if algo == 'adagrad':
         H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, H_known = static_au, T_known=np.ones(12).reshape(-1, 1), penalty_coeff=lam)
     else:
         # a = 2
+        print "Here"
         H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1), penalty_coeff=lam)
 else:
     cost = 'abs'
@@ -109,6 +111,7 @@ else:
         H_au, A_au, T_au = learn_HAT(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
 
 
+np.random.seed(random_seed)
 for train_percentage in TRAIN_SPLITS:
     rd = 0
     for train_max, test in kf.split(df):
@@ -119,7 +122,7 @@ for train_percentage in TRAIN_SPLITS:
         if train_percentage==100:
             train = train_max
         else:
-            train, _ = train_test_split(train_max, train_size = train_percentage/100.0, random_state=random_seed)
+            train, _ = train_test_split(train_max, train_size = train_percentage/100.0)
         train_ix = df.index[train]
         test_ix = df.index[test]
 
@@ -128,7 +131,7 @@ for train_percentage in TRAIN_SPLITS:
         df_t, dfc_t = df.ix[train_test_ix], dfc.ix[train_test_ix]
         tensor = get_tensor(df_t, dfc_t)
         
-
+        print test, train
         # First n
         ################################################################
         # Normal learning in SanDiego
@@ -142,7 +145,7 @@ for train_percentage in TRAIN_SPLITS:
                 H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, H_known = static_sd[np.concatenate([test, train])], T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
             else:
                 # a = 2
-                H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
+                H_normal, A_normal, T_normal, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=True, cost_function=cost, T_known = np.ones(12).reshape(-1, 1), penalty_coeff=lam)
         else:
             cost = 'abs'
             if static_fac == 'static':
@@ -151,7 +154,6 @@ for train_percentage in TRAIN_SPLITS:
             else:
                 # a = 2
                 H_normal, A_normal, T_normal = learn_HAT(case, tensor_copy, a, b, num_iter=n_iter, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1))
-
 
         ################################################################
         # Transfer learning in SanDiego
