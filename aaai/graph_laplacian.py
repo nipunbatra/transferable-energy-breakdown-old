@@ -237,7 +237,9 @@ for random_seed in range(5):
             HAT = multiply_case(H, A, T, case)
             for appliance in APPLIANCES_ORDER:
                 pred_normal[random_seed][appliance][train_percentage].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
-                       
+             
+            print pred_normal[0]['hvac'][10]
+            raw_input('Enter to continue')          
 
             ############################################################################################
             # transfer learning: constant constraint, with A_known = A_a_const, with learn_HAT_constant

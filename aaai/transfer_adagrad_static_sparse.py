@@ -187,6 +187,10 @@ for train_percentage in TRAIN_SPLITS:
             pred_normal[appliance][train_percentage].append(pd.DataFrame(HAT_normal[:num_test, appliance_index[appliance], :], index=test_ix))
             pred_transfer[appliance][train_percentage].append(pd.DataFrame(HAT_transfer[:num_test, appliance_index[appliance], :], index=test_ix))
 
+        print pred_normal['hvac'][10]
+        raw_input('Enter to continue')
+
+
 save_obj(pred_normal, "pred_normal_" + str(train_iter) + "_" + algo + "_" + str(static_fac) + "_" + str(lam) + "_" + str(random_seed))
 save_obj(pred_transfer, "pred_transfer_" + str(train_iter) + "_" + algo + "_" + str(static_fac) + "_" + str(lam) + "_" + str(random_seed))
 
