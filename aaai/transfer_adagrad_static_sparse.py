@@ -99,7 +99,6 @@ if algo == 'adagrad':
         H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, H_known = static_au, T_known=np.ones(12).reshape(-1, 1), penalty_coeff=lam)
     else:
         # a = 2
-        print "Here"
         H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, au_tensor, a, b, num_iter=train_iter, lr=0.1, dis=False, cost_function=cost, T_known=np.ones(12).reshape(-1, 1), penalty_coeff=lam)
 else:
     cost = 'abs'
@@ -138,6 +137,7 @@ for train_percentage in TRAIN_SPLITS:
         ################################################################
         tensor_copy = tensor.copy()
         tensor_copy[:num_test, 1:, :] = np.NaN
+
         if algo == 'adagrad':
             cost = 'l21'
             if static_fac == 'static':

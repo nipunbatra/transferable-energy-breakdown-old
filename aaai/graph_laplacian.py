@@ -46,6 +46,7 @@ def create_region_df_dfc_static(region, year):
     static_region =static_region.values
     return df, dfc, tensor, static_region
 
+
 def distance(x, y):
     return np.linalg.norm(x - y)
 
@@ -71,8 +72,8 @@ def get_L_NN(X):
             W[j][i] = 1
     K = np.dot(W, np.ones((n_sample, n_sample)))
     D = np.diag(np.diag(K))
-#     print W
     return D - W
+
 def cost_graph_laplacian(H, A, T, L, E_np_masked, lam, case):
     HAT = multiply_case(H, A, T, case)
     mask = ~np.isnan(E_np_masked)
@@ -105,7 +106,6 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.1, d
     A = np.random.rand(*A_dim)
     T = np.random.rand(*T_dim)
 
-    print T
     sum_square_gradients_H = np.zeros_like(H)
     sum_square_gradients_A = np.zeros_like(A)
     sum_square_gradients_T = np.zeros_like(T)
@@ -124,6 +124,8 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.1, d
         sum_square_gradients_H += eps + np.square(del_h)
         sum_square_gradients_A += eps + np.square(del_a)
         sum_square_gradients_T += eps + np.square(del_t)
+
+        
 
         lr_h = np.divide(lr, np.sqrt(sum_square_gradients_H))
         lr_a = np.divide(lr, np.sqrt(sum_square_gradients_A))
@@ -159,20 +161,11 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.1, d
 au_df, au_dfc, au_tensor, au_static = create_region_df_dfc_static('Austin', year)
 sd_df, sd_dfc, sd_tensor, sd_static = create_region_df_dfc_static('SanDiego', year)
 
-sd_agg = sd_df.loc[:, 'aggregate_1':'aggregate_12']
-au_agg = au_df.loc[:, 'aggregate_1':'aggregate_12']
-
-# sd_agg = np.nan_to_num(sd_agg)
-# au_agg = np.nan_to_num(au_agg)
-sd_agg = fill_missing(sd_agg)
-au_agg = fill_missing(au_agg)
-
 au_static = np.nan_to_num(au_static)
 sd_static = np.nan_to_num(sd_static)
 
 lam= sys.argv[1]
 lam = float(lam)
-# num = int(num)
 
 n_splits = 10
 case = 2
@@ -181,14 +174,9 @@ b = 3
 c = 3
 iters = 2000
 
-# H_au, A_au, T_au, F_au = learn_HAT_graph(2, au_tensor, static_au, sim_au, a, b, num_iter=iters, dis=True, T_known = np.ones(12).reshape(-1, 1))
-
-# L_au = get_L_NN(au_agg)
-# L_sd = get_L_NN(sd_agg)
-
 L_au = get_L_NN(au_static)
 L_sd = get_L_NN(sd_static)
-H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, au_tensor, L_au, a, b, num_iter=2000, lr=0.1, dis=True, lam=lam, T_known = np.ones(12).reshape(-1, 1))
+H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, au_tensor, L_au, a, b, num_iter=2000, lr=0.1, dis=False, lam=lam, T_known = np.ones(12).reshape(-1, 1))
 
 
 pred_normal = {}
@@ -205,7 +193,7 @@ kf = KFold(n_splits=n_splits)
 for random_seed in range(5):
     print "random seed: ", random_seed
     np.random.seed(random_seed)
-    # H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, au_tensor, L_au, a, b, num_iter=2000, lr=0.1, dis=True, lam=lam, T_known = np.ones(12).reshape(-1, 1), random_seed = random_seed)
+    # H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, au_tensor, L_au, a, b, num_iter=2000, lr=0.1, dis=False, lam=lam, T_known = np.ones(12).reshape(-1, 1), random_seed = random_seed)
     for train_percentage in range(10, 110, 20):
         print "training percentage: ", train_percentage
         rd = 0
@@ -241,11 +229,10 @@ for random_seed in range(5):
             tensor_copy[:num_test, 1:, :] = np.NaN
             # agg = sd_agg[np.concatenate([test_ix, train_ix])]
             L = L_sd[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
-            
-#             H, A, T, F = learn_HAT_graph(2, tensor_copy, static_sd[np.concatenate([test, train])], sim_sd, a, b, num_iter=iters,dis=True, T_known = np.ones(12).reshape(-1, 1))
-            H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, a, b, num_iter=2000, lr=0.1, dis=True, lam=lam, T_known = np.ones(12).reshape(-1, 1))
-            
 
+#             H, A, T, F = learn_HAT_graph(2, tensor_copy, static_sd[np.concatenate([test, train])], sim_sd, a, b, num_iter=iters,dis=False, T_known = np.ones(12).reshape(-1, 1))
+            H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, a, b, num_iter=2000, lr=0.1, dis=False, lam=lam, T_known = np.ones(12).reshape(-1, 1))
+            
             # get the prediction
             HAT = multiply_case(H, A, T, case)
             for appliance in APPLIANCES_ORDER:
@@ -260,9 +247,9 @@ for random_seed in range(5):
             # agg = sd_agg[np.concatenate([test, train])]
             L = L_sd[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
             
-#             H, A, T, F = learn_HAT_graph(2, tensor_copy, static_sd[np.concatenate([test, train])], sim_sd, a, b, num_iter=iters,dis=True, T_known = np.ones(12).reshape(-1, 1))
-#             H, A, T, F, Hs, As, Ts, Fs, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, agg, a, b, num_iter=20000, lr=0.1, dis=True,A_known = A_au)
-            H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, a, b, num_iter=2000, lr=0.1, dis=True, lam=lam, A_known = A_au, T_known = np.ones(12).reshape(-1, 1))
+#             H, A, T, F = learn_HAT_graph(2, tensor_copy, static_sd[np.concatenate([test, train])], sim_sd, a, b, num_iter=iters,dis=False, T_known = np.ones(12).reshape(-1, 1))
+#             H, A, T, F, Hs, As, Ts, Fs, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, agg, a, b, num_iter=20000, lr=0.1, dis=False,A_known = A_au)
+            H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, a, b, num_iter=2000, lr=0.1, dis=False, lam=lam, A_known = A_au, T_known = np.ones(12).reshape(-1, 1))
 
       
             # get the prediction
