@@ -11,6 +11,9 @@ from degree_days import dds
 import autograd.numpy as np
 import pickle
 from sklearn.model_selection import train_test_split, KFold
+from scipy.spatial.distance import pdist, squareform
+
+
 
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
@@ -18,7 +21,6 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 region = "SanDiego"
 year = 2014
-
 
 
 def un_normalize(x, maximum, minimum):
@@ -46,7 +48,6 @@ def create_region_df_dfc_static(region, year):
     static_region =static_region.values
     return df, dfc, tensor, static_region
 
-
 def distance(x, y):
     return np.linalg.norm(x - y)
 
@@ -70,6 +71,15 @@ def get_L_NN(X):
         for j in indices[i]:
             W[i][j] = 1
             W[j][i] = 1
+    K = np.dot(W, np.ones((n_sample, n_sample)))
+    D = np.diag(np.diag(K))
+    return D - W
+
+def get_L(X):
+    W = 1-squareform(pdist(X, 'cosine'))
+    W = np.nan_to_num(W)
+    n_sample, n_feature = W.shape
+    
     K = np.dot(W, np.ones((n_sample, n_sample)))
     D = np.diag(np.diag(K))
     return D - W
@@ -161,8 +171,15 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.1, d
 au_df, au_dfc, au_tensor, au_static = create_region_df_dfc_static('Austin', year)
 sd_df, sd_dfc, sd_tensor, sd_static = create_region_df_dfc_static('SanDiego', year)
 
-au_static = np.nan_to_num(au_static)
-sd_static = np.nan_to_num(sd_static)
+# using KNN to compute L
+# au_static = np.nan_to_num(au_static)
+# sd_static = np.nan_to_num(sd_static)
+# L_au = get_L_NN(au_static)
+# L_sd = get_L_NN(sd_static)
+
+# using cosine similarity to compute L
+L_au = get_L(au_static)
+L_sd = get_L(sd_static)
 
 lam= sys.argv[1]
 lam = float(lam)
@@ -174,8 +191,7 @@ b = 3
 c = 3
 iters = 2000
 
-L_au = get_L_NN(au_static)
-L_sd = get_L_NN(sd_static)
+
 H_au, A_au, T_au, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, au_tensor, L_au, a, b, num_iter=2000, lr=0.1, dis=False, lam=lam, T_known = np.ones(12).reshape(-1, 1))
 
 
