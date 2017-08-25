@@ -12,6 +12,7 @@ from common import compute_rmse_fraction, contri
 from sklearn.neighbors import NearestNeighbors
 import pickle
 import multiprocessing as mp
+from scipy.spatial.distance import pdist, squareform
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
@@ -55,6 +56,15 @@ def get_L_NN(X):
         for j in indices[i]:
             W[i][j] = 1
             W[j][i] = 1
+    K = np.dot(W, np.ones((n_sample, n_sample)))
+    D = np.diag(np.diag(K))
+    return D - W
+
+def get_L(X):
+    W = 1-squareform(pdist(X, 'cosine'))
+    W = np.nan_to_num(W)
+    n_sample, n_feature = W.shape
+    
     K = np.dot(W, np.ones((n_sample, n_sample)))
     D = np.diag(np.diag(K))
     return D - W
@@ -149,25 +159,16 @@ global source_L, target_L
 global target_df, target_dfc, target_tensor, target_static
 case = 2
 
-random_seed, train_percentage = sys.argv[1:]
+source, target, random_seed, train_percentage = sys.argv[1:]
 train_percentage = float(train_percentage)
 random_seed = int(random_seed)
 
-source = 'Austin'
-target = 'SanDiego'
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year)
 
-# source_agg = source_df.loc[:, 'aggregate_1':'aggregate_12']
-# target_agg = target_df.loc[:, 'aggregate_1':'aggregate_12']
-# source_agg = np.nan_to_num(source_agg)
-# target_agg = np.nan_to_num(target_agg)
-
-source_static = np.nan_to_num(source_static)
-target_static = np.nan_to_num(target_static)
-
-source_L = get_L_NN(source_static)
-target_L = get_L_NN(target_static)
+# # using cosine similarity to compute L
+source_L = get_L(source_static)
+target_L = get_L(target_static)
 
 
 def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv):
@@ -230,7 +231,6 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
     mean_err = pd.Series(err_weight).sum()
     # error[num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = mean_err
     return mean_err
-
 
 pred = {}
 n_splits = 10
@@ -323,8 +323,8 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     best_idx = np.argmin(error)
     overall_df_inner, best_num_iterations, best_num_season_factors, best_num_home_factors, best_lam = params[best_idx]
     least_error = error[best_idx]
-    # print error
-    # raw_input("Press Enter to continue")
+    print error
+    raw_input("Press Enter to continue")
 
 
     best_params_global[outer_loop_iteration] = {'Iterations':best_num_iterations,
