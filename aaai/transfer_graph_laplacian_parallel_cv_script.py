@@ -23,17 +23,17 @@ import time
 
 source = 'Austin'
 target = 'SanDiego'
-for random_seed in range(5):
-	for train_percentage in (10, 100, 20):
+for random_seed in [0]:
+	for train_percentage in range(10, 100, 20):
 		OFILE = "{}/{}_{}_{}_{}_graph_transfer.out".format(SLURM_OUT, source, target, random_seed, train_percentage )
 		EFILE = "{}/{}_{}_{}_{}_graph_transfer.err".format(SLURM_OUT, source, target, random_seed, train_percentage )
-		SLURM_SCRIPT = "{}/{}_{}_graph_transfer.pbs".format('pbs_files', source, target, random_seed, train_percentage)
+		SLURM_SCRIPT = "{}/{}_{}_{}_{}_graph_transfer.pbs".format('pbs_files', source, target, random_seed, train_percentage)
 		CMD = 'python transfer_graph_laplacian_parallel_cv.py {} {} {} {}'.format(source, target, random_seed, train_percentage)
 		lines = []
 		lines.append("#!/bin/sh\n")
 		lines.append('#SBATCH --time=1-16:0:00\n')
 		lines.append('#SBATCH --mem=16\n')
-		lines.append('#SBATCH -c 48')
+		lines.append('#SBATCH -c 24')
 		lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
 		lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
 		lines.append(CMD + '\n')
