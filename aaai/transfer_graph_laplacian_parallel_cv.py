@@ -323,12 +323,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     best_idx = np.argmin(error)
     overall_df_inner, best_num_iterations, best_num_season_factors, best_num_home_factors, best_lam = params[best_idx]
     least_error = error[best_idx]
-<<<<<<< HEAD
-    print error
-    raw_input('Enter to continue')
-=======
-
->>>>>>> 87c548e24ce24207c89d285d4f8e643f55c48396
 
     best_params_global[outer_loop_iteration] = {'Iterations':best_num_iterations,
                                                 'Num season factors':best_num_season_factors,
