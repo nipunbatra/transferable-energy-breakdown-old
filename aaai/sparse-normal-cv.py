@@ -90,13 +90,16 @@ for appliance in APPLIANCES_ORDER:
 	pred[appliance] = []
 print(lam, static_fac, random_seed, train_percentage)
 best_params_global = {}
+import datetime
 
 for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 	# Just a random thing
 	np.random.seed(10 * random_seed + 7 * outer_loop_iteration)
 	np.random.shuffle(train_max)
 	print("-" * 80)
+	print(datetime.datetime.now())
 	print("Progress: {}".format(100.0 * outer_loop_iteration / n_splits))
+	sys.stdout.flush()
 	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
 	if train_percentage == 100:
 		train = train_max
@@ -126,9 +129,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 
 	overall_df_inner = source_df.loc[train_ix]
 	best_params_global[outer_loop_iteration] = {}
-	for num_iterations_cv in range(100, 1400, 400):
-		for num_season_factors_cv in range(2, 5):
-			for num_home_factors_cv in range(3, 6):
+	for num_iterations_cv in range(100, 1400, 600):
+		for num_season_factors_cv in range(2, 5, 2):
+			for num_home_factors_cv in range(3, 6, 2):
 				pred_inner = {}
 				for train_inner, test_inner in inner_kf.split(overall_df_inner):
 					train_ix_inner = overall_df_inner.index[train_inner]
@@ -185,7 +188,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 						# weighed
 						print(e)
 						print(appliance)
+						sys.stdout.flush()
 				print("Error weighted on: {}".format(appliance_to_weight))
+				print(sys.stdout.flush())
 				err_weight = {}
 				for appliance in appliance_to_weight:
 					err_weight[appliance] = err[appliance] * contri[source][appliance]
@@ -197,6 +202,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 					least_error = mean_err
 					best_appliance_wise_err = err
 				print(mean_err, least_error, num_iterations_cv, num_home_factors_cv, num_season_factors_cv)
+				sys.stdout.flush()
 	best_params_global[outer_loop_iteration] = {'Iterations': best_num_iterations,
 	                                            "Appliance Train Error": best_appliance_wise_err,
 	                                            'Num season factors': best_num_season_factors,
@@ -206,6 +212,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 	print("******* BEST PARAMS *******")
 	print(best_params_global[outer_loop_iteration])
 	print("******* BEST PARAMS *******")
+	sys.stdout.flush()
 
 	num_test = len(test_ix)
 	train_test_ix = np.concatenate([test_ix, train_ix])
