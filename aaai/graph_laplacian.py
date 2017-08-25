@@ -171,15 +171,28 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.1, d
 au_df, au_dfc, au_tensor, au_static = create_region_df_dfc_static('Austin', year)
 sd_df, sd_dfc, sd_tensor, sd_static = create_region_df_dfc_static('SanDiego', year)
 
-# using KNN to compute L
-# au_static = np.nan_to_num(au_static)
-# sd_static = np.nan_to_num(sd_static)
-# L_au = get_L_NN(au_static)
-# L_sd = get_L_NN(sd_static)
+# using aggregate reading with KNN 
+au_agg = au_df.loc[:, 'aggregate_1':'aggregate_12'].copy()
+sd_agg = sd_df.loc[:, 'aggregate_1':'aggregate_12'].copy()
 
-# using cosine similarity to compute L
-L_au = get_L(au_static)
-L_sd = get_L(sd_static)
+au_agg = np.nan_to_num(au_agg)
+sd_agg = np.nan_to_num(sd_agg)
+
+L_au = get_L_NN(au_agg)
+L_sd = get_L_NN(sd_agg)
+
+
+# using KNN to compute L
+# au_static_copy = au_static.copy()
+# sd_static_copy = sd_static.copy()
+# au_static_copy = np.nan_to_num(au_static_copy)
+# sd_static_copy = np.nan_to_num(sd_static_copy)
+# L_au = get_L_NN(au_static_copy)
+# L_sd = get_L_NN(sd_static_copy)
+
+# # using cosine similarity to compute L
+# L_au = get_L(au_static)
+# L_sd = get_L(sd_static)
 
 lam= sys.argv[1]
 lam = float(lam)
@@ -277,7 +290,7 @@ for random_seed in range(5):
 
 
 def save_obj(obj, name):
-    with open(os.path.expanduser('~/git/graph_test_static/'+ name + '.pkl'), 'wb') as f:
+    with open(os.path.expanduser('~/git/graph_test_2/'+ name + '.pkl'), 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 save_obj(pred_normal, "normal_{}".format(lam))
