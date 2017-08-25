@@ -159,9 +159,10 @@ global source_L, target_L
 global target_df, target_dfc, target_tensor, target_static
 case = 2
 
-source, target, random_seed, train_percentage = sys.argv[1:]
+source, target, random_seed, train_percentage, outer_loop_iteration = sys.argv[1:]
 train_percentage = float(train_percentage)
 random_seed = int(random_seed)
+outer_loop_iteration = int(outer_loop_iteration)
 
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year)
@@ -244,132 +245,126 @@ for appliance in APPLIANCES_ORDER:
 best_params_global = {}
 kf = KFold(n_splits=n_splits)
 np.random.seed(random_seed)
-for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
-    # Just a random thing
-    np.random.seed(10 * random_seed + 7*outer_loop_iteration)
-    np.random.shuffle(train_max)
-    print("-" * 80)
-    print("Progress: {}".format(100.0*outer_loop_iteration/n_splits))
-    num_train = int((train_percentage * len(train_max) / 100) + 0.5)
-    if train_percentage == 100:
-        train = train_max
-        train_ix = target_df.index[train]
-        # print("Train set {}".format(train_ix.values))
-        test_ix = target_df.index[test]
-    else:
-        # Sample `train_percentage` homes
-        # An important condition here is that all homes should have energy data
-        # for all appliances for atleast one month.
-        SAMPLE_CRITERION_MET = False
 
 
-        train, _ = train_test_split(train_max, train_size=train_percentage / 100.0)
-        train_ix = target_df.index[train]
-        #print("Train set {}".format(train_ix.values))
-        test_ix = target_df.index[test]
-        a = target_df.loc[train_ix]
-        count_condition_violation = 0
+train_max, test = list(kf.split(target_df))[outer_loop_iteration]
+np.random.seed(10 * random_seed + 7*outer_loop_iteration)
+np.random.shuffle(train_max)
+print("-" * 80)
+print("Progress: {}".format(100.0*outer_loop_iteration/n_splits))
+num_train = int((train_percentage * len(train_max) / 100) + 0.5)
+if train_percentage == 100:
+    train = train_max
+    train_ix = target_df.index[train]
+    # print("Train set {}".format(train_ix.values))
+    test_ix = target_df.index[test]
+else:
+    # Sample `train_percentage` homes
+    # An important condition here is that all homes should have energy data
+    # for all appliances for atleast one month.
+    SAMPLE_CRITERION_MET = False
+    train, _ = train_test_split(train_max, train_size=train_percentage / 100.0)
+    train_ix = target_df.index[train]
+    #print("Train set {}".format(train_ix.values))
+    test_ix = target_df.index[test]
+    # a = target_df.loc[train_ix]
+    # count_condition_violation = 0
+print("-" * 80)
 
-    print("-" * 80)
-
-    print("Test set {}".format(test_ix.values))
+print("Test set {}".format(test_ix.values))
 
 
-    print("-"*80)
-    print("Current Error, Least Error, #Iterations")
-
+print("-"*80)
+print("Current Error, Least Error, #Iterations")
 
     ### Inner CV loop to find the optimum set of params. In this case: the number of iterations
-    inner_kf = KFold(n_splits=2)
+inner_kf = KFold(n_splits=2)
 
-    best_num_iterations = 0
-    best_num_season_factors = 0
-    best_num_home_factors = 0
-    best_lam = 0
-    least_error = 1e6
+best_num_iterations = 0
+best_num_season_factors = 0
+best_num_home_factors = 0
+best_lam = 0
+least_error = 1e6
 
-    overall_df_inner = target_df.loc[train_ix]
+overall_df_inner = target_df.loc[train_ix]
 
-    best_params_global[outer_loop_iteration] = {}
-    params = {}
-    count = 0
-    
-    ##############################################################
-    # Parallel part
-    results = []
-    cpus = mp.cpu_count()
-    pool = mp.Pool()
-    for num_iterations_cv in [100]:
-        for num_season_factors_cv in range(2, 5):
-            for num_home_factors_cv in range(3, 6):
-                for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
-                    params[count] = []
-                    params[count].extend((overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv))
-                    count += 1
+best_params_global[outer_loop_iteration] = {}
+params = {}
+count = 0
 
-    for i in range(count): 
-        result = pool.apply_async(compute_inner_error, params[i])
-        results.append(result)
-    pool.close()
-    pool.join()
-    # End of parallel part
-    ###############################################################
-    
-    # get the results of all processes
-    error = []
-    for result in results:
-        error.append(result.get())
-    # get the parameters for the best setting
-    best_idx = np.argmin(error)
-    overall_df_inner, best_num_iterations, best_num_season_factors, best_num_home_factors, best_lam = params[best_idx]
-    least_error = error[best_idx]
-    print error
-    raw_input('Enter to continue')
+##############################################################
+# Parallel part
+results = []
+cpus = mp.cpu_count()
+pool = mp.Pool()
+for num_iterations_cv in [100]:
+    for num_season_factors_cv in range(2, 5):
+        for num_home_factors_cv in range(3, 6):
+            for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
+                params[count] = []
+                params[count].extend((overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv))
+                count += 1
 
-    best_params_global[outer_loop_iteration] = {'Iterations':best_num_iterations,
-                                                'Num season factors':best_num_season_factors,
-                                                'Num home factors': best_num_home_factors,
-                                                'Lambda': best_lam,
-                                                "Least Train Error":least_error}
+for i in range(count): 
+    result = pool.apply_async(compute_inner_error, params[i])
+    results.append(result)
+pool.close()
+pool.join()
+# End of parallel part
+###############################################################
 
-    print("******* BEST PARAMS *******")
-    print(best_params_global[outer_loop_iteration])
-    print("******* BEST PARAMS *******")
-    # Now we will be using the best parameter set obtained to compute the predictions
+# get the results of all processes
+error = []
+for result in results:
+    error.append(result.get())
+# get the parameters for the best setting
+best_idx = np.argmin(error)
+overall_df_inner, best_num_iterations, best_num_season_factors, best_num_home_factors, best_lam = params[best_idx]
+least_error = error[best_idx]
 
 
-    H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
-                                                                                    best_num_home_factors, best_num_season_factors, 
-                                                                                    num_iter=best_num_iterations, lr=1, dis=False, 
-                                                                                    lam=best_lam, T_known = np.ones(12).reshape(-1, 1))
+best_params_global[outer_loop_iteration] = {'Iterations':best_num_iterations,
+                                            'Num season factors':best_num_season_factors,
+                                            'Num home factors': best_num_home_factors,
+                                            'Lambda': best_lam,
+                                            "Least Train Error":least_error}
 
-    # print A_source
-    num_test = len(test_ix)
-    train_test_ix = np.concatenate([test_ix, train_ix])
-    df_t, dfc_t = target_df.loc[train_test_ix], target_dfc.loc[train_test_ix]
-    tensor = get_tensor(df_t)
-    tensor_copy = tensor.copy()
-    # First n
-    tensor_copy[:num_test, 1:, :] = np.NaN
+print("******* BEST PARAMS *******")
+print(best_params_global[outer_loop_iteration])
+print("******* BEST PARAMS *******")
+# Now we will be using the best parameter set obtained to compute the predictions
 
-    L = target_L[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
 
-    H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, 
-                                                                best_num_home_factors, best_num_season_factors, 
-                                                                num_iter=best_num_iterations, lr=1, dis=False, 
-                                                                lam=best_lam, A_known = A_source,
-                                                                T_known = np.ones(12).reshape(-1, 1))
+H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
+                                                                                best_num_home_factors, best_num_season_factors, 
+                                                                                num_iter=best_num_iterations, lr=1, dis=False, 
+                                                                                lam=best_lam, T_known = np.ones(12).reshape(-1, 1))
 
-    HAT = multiply_case(H, A, T, case)
-    for appliance in APPLIANCES_ORDER:
-        pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
+# print A_source
+num_test = len(test_ix)
+train_test_ix = np.concatenate([test_ix, train_ix])
+df_t, dfc_t = target_df.loc[train_test_ix], target_dfc.loc[train_test_ix]
+tensor = get_tensor(df_t)
+tensor_copy = tensor.copy()
+# First n
+tensor_copy[:num_test, 1:, :] = np.NaN
 
+L = target_L[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
+
+H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, 
+                                                            best_num_home_factors, best_num_season_factors, 
+                                                            num_iter=best_num_iterations, lr=1, dis=False, 
+                                                            lam=best_lam, A_known = A_source,
+                                                            T_known = np.ones(12).reshape(-1, 1))
+
+HAT = multiply_case(H, A, T, case)
 for appliance in APPLIANCES_ORDER:
-    pred[appliance] = pd.DataFrame(pd.concat(pred[appliance]))
+    pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
+
 
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
-name = "{}-{}".format(random_seed, train_percentage)
+name = "{}-{}-{}".format(random_seed, train_percentage, outer_loop_iteration)
 directory = os.path.expanduser('~/git/pred_graph/transfer/')
 if not os.path.exists(directory):
     os.makedirs(directory)
