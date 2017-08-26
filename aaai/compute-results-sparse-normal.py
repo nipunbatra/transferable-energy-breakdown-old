@@ -11,14 +11,14 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 
 import os
 import pickle
-source = 'Boulder'
+source = 'SanDiego'
 cost = 'l21'
 out = {}
-for static_fac in ['None','static']:
+for static_fac in ['None']:
 	out[static_fac] = {}
 	for lam in [0]:
 		out[static_fac][lam] = {}
-		for train_percentage in range(10, 110, 20):
+		for train_percentage in range(10, 110, 10):
 
 			out[static_fac][lam][train_percentage] ={}
 			for random_seed in range(5):

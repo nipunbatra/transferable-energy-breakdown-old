@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split, KFold
 from common import compute_rmse_fraction, contri
 from sklearn.neighbors import NearestNeighbors
 import pickle
+from scipy.spatial.distance import pdist, squareform
 
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
@@ -57,6 +58,15 @@ def get_L_NN(X):
         for j in indices[i]:
             W[i][j] = 1
             W[j][i] = 1
+    K = np.dot(W, np.ones((n_sample, n_sample)))
+    D = np.diag(np.diag(K))
+    return D - W
+
+def get_L(X):
+    W = 1-squareform(pdist(X, 'cosine'))
+    W = np.nan_to_num(W)
+    n_sample, n_feature = W.shape
+    
     K = np.dot(W, np.ones((n_sample, n_sample)))
     D = np.diag(np.diag(K))
     return D - W
@@ -156,16 +166,9 @@ source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_stati
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year)
 
 
-source_agg = source_df.loc[:, 'aggregate_1':'aggregate_12']
-target_agg = target_df.loc[:, 'aggregate_1':'aggregate_12']
-source_agg = np.nan_to_num(source_agg)
-target_agg = np.nan_to_num(target_agg)
-
-source_static = np.nan_to_num(source_static)
-target_static = np.nan_to_num(target_static)
-
-source_L = get_L_NN(source_static)
-target_L = get_L_NN(target_static)
+# # using cosine similarity to compute L
+source_L = get_L(source_static)
+target_L = get_L(target_static)
 
 
 name = "{}-{}".format(random_seed, train_percentage)

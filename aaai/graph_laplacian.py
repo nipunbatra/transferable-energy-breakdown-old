@@ -171,15 +171,16 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.1, d
 au_df, au_dfc, au_tensor, au_static = create_region_df_dfc_static('Austin', year)
 sd_df, sd_dfc, sd_tensor, sd_static = create_region_df_dfc_static('SanDiego', year)
 
+
 # using aggregate reading with KNN 
-au_agg = au_df.loc[:, 'aggregate_1':'aggregate_12'].copy()
-sd_agg = sd_df.loc[:, 'aggregate_1':'aggregate_12'].copy()
+# au_agg = au_df.loc[:, 'aggregate_1':'aggregate_12'].copy()
+# sd_agg = sd_df.loc[:, 'aggregate_1':'aggregate_12'].copy()
 
-au_agg = np.nan_to_num(au_agg)
-sd_agg = np.nan_to_num(sd_agg)
+# au_agg = np.nan_to_num(au_agg)
+# sd_agg = np.nan_to_num(sd_agg)
 
-L_au = get_L_NN(au_agg)
-L_sd = get_L_NN(sd_agg)
+# L_au = get_L_NN(au_agg)
+# L_sd = get_L_NN(sd_agg)
 
 
 # using KNN to compute L
@@ -191,8 +192,10 @@ L_sd = get_L_NN(sd_agg)
 # L_sd = get_L_NN(sd_static_copy)
 
 # # using cosine similarity to compute L
-# L_au = get_L(au_static)
-# L_sd = get_L(sd_static)
+L_au = get_L(au_static)
+L_sd = get_L(sd_static)
+
+
 
 lam= sys.argv[1]
 lam = float(lam)

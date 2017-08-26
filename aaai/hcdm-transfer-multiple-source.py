@@ -29,7 +29,7 @@ for static_fac in ['None']:
 	for lam in [0]:
 
 		for random_seed in range(5):
-			for train_percentage in range(20, 110, 20):
+			for train_percentage in range(10, 110, 10):
 
 					CMD = 'python sparse-transfer-cv-multiple-source.py {} {} {} {} {} {} {} &> {}_{}_{}_{}.out &'.format(source_1, source_2, target, static_fac, lam, random_seed, train_percentage, source_1, source_2, train_percentage, random_seed)
 					print CMD
