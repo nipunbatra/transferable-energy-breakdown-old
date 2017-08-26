@@ -213,7 +213,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 	best_num_home_factors = 3
 	best_appliance_wise_err = {appliance: 1e6 for appliance in APPLIANCES_ORDER[1:]}
 	least_error = 1e6
-	best_lam = 0.01
+	best_lam = 1e-8
 
 	overall_df_inner = source_df.loc[train_ix]
 	best_params_global[outer_loop_iteration] = {}
