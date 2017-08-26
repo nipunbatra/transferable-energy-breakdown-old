@@ -1,7 +1,6 @@
 import sys
 import pickle
 
-
 from sklearn.model_selection import KFold
 
 from create_matrix import *
@@ -47,7 +46,7 @@ def get_tensor(df):
 
 def create_region_df_dfc_static(region, year):
 	df, dfc = create_matrix_single_region(region, year)
-	if source=="Austin":
+	if source == "Austin":
 		df = df.head(50)
 		dfc = df.head(50)
 	tensor = get_tensor(df)
@@ -71,7 +70,6 @@ n_iter = 1200
 cost = 'l21'
 algo = 'adagrad'
 
-
 random_seed = int(random_seed)
 train_percentage = float(train_percentage)
 
@@ -93,6 +91,7 @@ best_params_global = {}
 
 import autograd.numpy as np
 from wpca import WPCA
+
 
 def learning_pca(case, tensor, num_home_f, num_season_f, num_iter=2000, lr=0.1, dis=False, cost_function='abs',
                  random_seed=0, eps=1e-8, lam=0.0):
@@ -135,7 +134,6 @@ def learning_pca(case, tensor, num_home_f, num_season_f, num_iter=2000, lr=0.1, 
 	A_dim = tuple(params[x] for x in A_dim_chars)
 	T_dim_chars = list(cases[case]['HAT'].split(",")[1].split("-")[0].strip())
 	T_dim = tuple(params[x] for x in T_dim_chars)
-	print (H_dim, A_dim, T_dim)
 	H = np.random.rand(*H_dim)
 
 	A = np.random.rand(*A_dim)
@@ -182,136 +180,141 @@ import datetime
 
 best_params_global = {}
 for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
-    # Just a random thing
-    np.random.seed(10 * random_seed + 7 * outer_loop_iteration)
-    np.random.shuffle(train_max)
-    print("-" * 80)
-    print(datetime.datetime.now())
-    print("Progress: {}".format(100.0 * outer_loop_iteration / n_splits))
-    sys.stdout.flush()
-    num_train = int((train_percentage * len(train_max) / 100) + 0.5)
-    if train_percentage == 100:
-        train = train_max
-        train_ix = source_df.index[train]
-        # print("Train set {}".format(train_ix.values))
-        test_ix = source_df.index[test]
-    else:
-        train, _ = train_test_split(train_max, train_size=train_percentage / 100.0)
-        train_ix = source_df.index[train]
-        # print("Train set {}".format(train_ix.values))
-        test_ix = source_df.index[test]
+	# Just a random thing
+	np.random.seed(10 * random_seed + 7 * outer_loop_iteration)
+	np.random.shuffle(train_max)
+	print("-" * 80)
+	print(datetime.datetime.now())
+	print("Progress: {}".format(100.0 * outer_loop_iteration / n_splits))
+	sys.stdout.flush()
+	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
+	if train_percentage == 100:
+		train = train_max
+		train_ix = source_df.index[train]
+		# print("Train set {}".format(train_ix.values))
+		test_ix = source_df.index[test]
+	else:
+		train, _ = train_test_split(train_max, train_size=train_percentage / 100.0)
+		train_ix = source_df.index[train]
+		# print("Train set {}".format(train_ix.values))
+		test_ix = source_df.index[test]
 
-    print("-" * 80)
+	print("-" * 80)
 
-    print("Test set {}".format(test_ix.values))
+	print("Test set {}".format(test_ix.values))
 
-    print("-" * 80)
-    print("Current Error, Least Error, #Iterations")
+	print("-" * 80)
+	print("Current Error, Least Error, #Iterations")
 
-    ### Inner CV loop to find the optimum set of params. In this case: the number of iterations
-    inner_kf = KFold(n_splits=2)
-    best_num_iterations = 0
-    best_num_season_factors = 0
-    best_num_home_factors = 0
-    best_appliance_wise_err = {appliance: 1e6 for appliance in APPLIANCES_ORDER[1:]}
-    least_error = 1e6
+	### Inner CV loop to find the optimum set of params. In this case: the number of iterations
+	inner_kf = KFold(n_splits=2)
+	best_num_iterations = 100
+	best_num_season_factors = 3
+	best_num_home_factors = 3
+	best_appliance_wise_err = {appliance: 1e6 for appliance in APPLIANCES_ORDER[1:]}
+	least_error = 1e6
+	best_lam = 0.01
 
-    overall_df_inner = source_df.loc[train_ix]
-    best_params_global[outer_loop_iteration] = {}
-    for num_iterations_cv in range(100, 1400, 600):
-        for num_season_factors_cv in range(2, 5, 2):
-            for num_home_factors_cv in range(3, 6, 2):
-                pred_inner = {}
-                for train_inner, test_inner in inner_kf.split(overall_df_inner):
-                    train_ix_inner = overall_df_inner.index[train_inner]
-                    test_ix_inner = overall_df_inner.index[test_inner]
+	overall_df_inner = source_df.loc[train_ix]
+	best_params_global[outer_loop_iteration] = {}
+	for num_iterations_cv in range(100, 1400, 600):
+		for num_season_factors_cv in range(2, 5, 2):
+			for num_home_factors_cv in range(3, 6, 2):
+				for lam_cv in [1e-10, 1e-8, 1e-6,  1e-3]:
+					pred_inner = {}
+					for train_inner, test_inner in inner_kf.split(overall_df_inner):
+						train_ix_inner = overall_df_inner.index[train_inner]
+						test_ix_inner = overall_df_inner.index[test_inner]
 
-                    train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
-                    df_t_inner, dfc_t_inner = source_df.loc[train_test_ix_inner], source_dfc.loc[train_test_ix_inner]
-                    tensor_inner = get_tensor(df_t_inner)
-                    tensor_copy_inner = tensor_inner.copy()
-                    # First n
-                    tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
-                    H, A, T, Hs, As, HATs, costs = learning_pca(case, tensor_copy_inner, num_home_factors_cv,
-                                                                num_season_factors_cv, num_iter=num_iterations_cv, lr=1,
-                                                                dis=False, cost_function='abs', random_seed=0,
-                                                                eps=1e-8, lam=lam)
-                    HAT = multiply_case(H, A, T, case)
-                    for appliance in APPLIANCES_ORDER:
-                        if appliance not in pred_inner:
-                            pred_inner[appliance] = []
+						train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
+						df_t_inner, dfc_t_inner = source_df.loc[train_test_ix_inner], source_dfc.loc[
+							train_test_ix_inner]
+						tensor_inner = get_tensor(df_t_inner)
+						tensor_copy_inner = tensor_inner.copy()
+						# First n
+						tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
+						H, A, T, Hs, As, HATs, costs = learning_pca(case, tensor_copy_inner, num_home_factors_cv,
+						                                            num_season_factors_cv, num_iter=num_iterations_cv,
+						                                            lr=1,
+						                                            dis=False, cost_function='abs', random_seed=0,
+						                                            eps=1e-8, lam=lam_cv)
+						HAT = multiply_case(H, A, T, case)
+						for appliance in APPLIANCES_ORDER:
+							if appliance not in pred_inner:
+								pred_inner[appliance] = []
 
-                        pred_inner[appliance].append(
-                            pd.DataFrame(HAT[:len(test_ix_inner), appliance_index[appliance], :],
-                                         index=test_ix_inner))
+							pred_inner[appliance].append(
+								pd.DataFrame(HAT[:len(test_ix_inner), appliance_index[appliance], :],
+								             index=test_ix_inner))
 
-                err = {}
-                appliance_to_weight = []
-                for appliance in APPLIANCES_ORDER[1:]:
-                    pred_inner[appliance] = pd.DataFrame(pd.concat(pred_inner[appliance]))
+					err = {}
+					appliance_to_weight = []
+					for appliance in APPLIANCES_ORDER[1:]:
+						pred_inner[appliance] = pd.DataFrame(pd.concat(pred_inner[appliance]))
 
-                    try:
-                        if appliance == "hvac":
-                            err[appliance] = \
-                                compute_rmse_fraction(appliance, pred_inner[appliance][range(4, 10)], source)[2]
-                        else:
-                            err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], source)[2]
-                        appliance_to_weight.append(appliance)
-                    except Exception, e:
-                        # This appliance does not have enough samples. Will not be
-                        # weighed
-                        print(e)
-                        print(appliance)
-                        sys.stdout.flush()
-                print("Error weighted on: {}".format(appliance_to_weight))
-                print(sys.stdout.flush())
-                err_weight = {}
-                for appliance in appliance_to_weight:
-                    err_weight[appliance] = err[appliance] * contri[source][appliance]
-                mean_err = pd.Series(err_weight).sum()
-                if mean_err < least_error:
-                    best_num_iterations = num_iterations_cv
-                    best_num_season_factors = num_season_factors_cv
-                    best_num_home_factors = num_home_factors_cv
-                    least_error = mean_err
-                    best_appliance_wise_err = err
-                print(mean_err, least_error, num_iterations_cv, num_home_factors_cv, num_season_factors_cv)
-                sys.stdout.flush()
-    best_params_global[outer_loop_iteration] = {'Iterations': best_num_iterations,
-                                                "Appliance Train Error": best_appliance_wise_err,
-                                                'Num season factors': best_num_season_factors,
-                                                'Num home factors': best_num_home_factors,
-                                                "Least Train Error": least_error}
+						try:
+							if appliance == "hvac":
+								err[appliance] = \
+									compute_rmse_fraction(appliance, pred_inner[appliance][range(4, 10)], source)[2]
+							else:
+								err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], source)[2]
+							appliance_to_weight.append(appliance)
+						except Exception, e:
+							# This appliance does not have enough samples. Will not be
+							# weighed
+							#print(e)
+							#print(appliance)
+							pass
+							sys.stdout.flush()
+					#print("Error weighted on: {}".format(appliance_to_weight))
+					#print(sys.stdout.flush())
+					err_weight = {}
+					for appliance in appliance_to_weight:
+						err_weight[appliance] = err[appliance] * contri[source][appliance]
+					mean_err = pd.Series(err_weight).sum()
+					if mean_err < least_error:
+						best_num_iterations = num_iterations_cv
+						best_num_season_factors = num_season_factors_cv
+						best_num_home_factors = num_home_factors_cv
+						least_error = mean_err
+						best_appliance_wise_err = err
+						best_lam = lam_cv
+					print(mean_err, least_error, num_iterations_cv, num_home_factors_cv, num_season_factors_cv, lam_cv)
+					sys.stdout.flush()
+best_params_global[outer_loop_iteration] = {'Iterations': best_num_iterations,
+                                            "Appliance Train Error": best_appliance_wise_err,
+                                            'Num season factors': best_num_season_factors,
+                                            'Num home factors': best_num_home_factors,
+                                            "Least Train Error": least_error}
 
-    print("******* BEST PARAMS *******")
-    print(best_params_global[outer_loop_iteration])
-    print("******* BEST PARAMS *******")
-    sys.stdout.flush()
+print("******* BEST PARAMS *******")
+print(best_params_global[outer_loop_iteration])
+print("******* BEST PARAMS *******")
+sys.stdout.flush()
 
-    num_test = len(test_ix)
-    train_test_ix = np.concatenate([test_ix, train_ix])
-    df_t, dfc_t = source_df.loc[train_test_ix], source_dfc.loc[train_test_ix]
-    tensor = get_tensor(df_t)
-    tensor_copy = tensor.copy()
-    # First n
-    tensor_copy[:num_test, 1:, :] = np.NaN
-    H, A, T, Hs, As, HATs, costs = learning_pca(case, tensor_copy, best_num_home_factors, best_num_season_factors,
-                                                num_iter=best_num_iterations, lr=1, dis=False, cost_function='abs',
-                                                random_seed=0, eps=1e-8, lam=lam)
-    HAT = multiply_case(H, A, T, case)
-    for appliance in APPLIANCES_ORDER:
-        pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
+num_test = len(test_ix)
+train_test_ix = np.concatenate([test_ix, train_ix])
+df_t, dfc_t = source_df.loc[train_test_ix], source_dfc.loc[train_test_ix]
+tensor = get_tensor(df_t)
+tensor_copy = tensor.copy()
+# First n
+tensor_copy[:num_test, 1:, :] = np.NaN
+H, A, T, Hs, As, HATs, costs = learning_pca(case, tensor_copy, best_num_home_factors, best_num_season_factors,
+                                            num_iter=best_num_iterations, lr=1, dis=False, cost_function='abs',
+                                            random_seed=0, eps=1e-8, lam=best_lam)
+HAT = multiply_case(H, A, T, case)
+for appliance in APPLIANCES_ORDER:
+	pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
 
 for appliance in APPLIANCES_ORDER:
-    pred[appliance] = pd.DataFrame(pd.concat(pred[appliance]))
-name = "{}-{}-{}-{}-{}".format(source, static_fac,  random_seed, train_percentage, cost)
+	pred[appliance] = pd.DataFrame(pd.concat(pred[appliance]))
+name = "{}-{}-{}-{}-{}".format(source, static_fac, random_seed, train_percentage, cost)
 directory = os.path.expanduser('~/aaai2017/pca-normal_{}_{}/'.format(source, cost))
 if not os.path.exists(directory):
 	os.makedirs(directory)
 filename = os.path.expanduser('~/aaai2017/pca-normal_{}_{}/'.format(source, cost) + name + '.pkl')
 
 out = {'Predictions': pred, 'Learning Params': best_params_global}
-
 
 with open(filename, 'wb') as f:
 	pickle.dump(out, f, pickle.HIGHEST_PROTOCOL)
