@@ -11,7 +11,8 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 
 import os
 import pickle
-source = 'SanDiego'
+source = 'Austin'
+target = 'SanDiego'
 out = {}
 
 for train_percentage in range(10, 110, 20):
@@ -33,7 +34,7 @@ for train_percentage in range(10, 110, 20):
 				if appliance == "hvac":
 					prediction = prediction[range(4, 10)]
 				out[train_percentage][random_seed][appliance]= \
-			compute_rmse_fraction(appliance, prediction, source)[2]
+			compute_rmse_fraction(appliance, prediction, target)[2]
 			print("Computed for: {}".format(name))
 
 		except Exception, e:
@@ -42,4 +43,4 @@ for train_percentage in range(10, 110, 20):
 
 	out[train_percentage] = pd.DataFrame(out[train_percentage]).mean(axis=1)
 
-pickle.dump(out, open("predictions/{}-graph-normal-cv.pkl".format(source),"w"))
+pickle.dump(out, open("predictions/{}-graph-normal-cv.pkl".format(target),"w"))
