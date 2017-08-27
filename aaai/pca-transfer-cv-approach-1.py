@@ -338,7 +338,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 						                                                     num_iter=num_iterations_cv, lr=1,
 						                                                     dis=False,
 						                                                     cost_function=cost,
-						                                                     A_known=A_source, penalty_coeff=0)
+						                                                     A_known=A_source, penalty_coeff=0, non_neg=False)
 
 						HAT = multiply_case(H, A, T, case)
 						for appliance in APPLIANCES_ORDER:
@@ -404,7 +404,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	                                                     best_num_season_factors,
 	                                                     num_iter=best_num_iterations, lr=1, dis=False,
 	                                                     cost_function=cost,
-	                                                     A_known=A_source, penalty_coeff=0)
+	                                                     A_known=A_source, penalty_coeff=0, non_neg=False)
 
 	HAT = multiply_case(H, A, T, case)
 	for appliance in APPLIANCES_ORDER:
