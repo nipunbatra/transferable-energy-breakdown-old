@@ -405,7 +405,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	                                                     num_iter=best_num_iterations, lr=1, dis=False,
 	                                                     cost_function=cost,
 	                                                     A_known=A_source, penalty_coeff=0)
-	
+
 	HAT = multiply_case(H, A, T, case)
 	for appliance in APPLIANCES_ORDER:
 		pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
