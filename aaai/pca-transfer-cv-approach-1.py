@@ -30,10 +30,10 @@ case = 2
 
 source, target, static_fac, lam, random_seed, train_percentage, cost = sys.argv[1:]
 name = "{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, random_seed, train_percentage, cost)
-directory = os.path.expanduser('~/aaai2017/pca-transfer_{}_{}_{}/'.format(source, target, cost))
+directory = os.path.expanduser('~/aaai2017/approach-1-pca-transfer_{}_{}_{}/'.format(source, target, cost))
 if not os.path.exists(directory):
 	os.makedirs(directory)
-filename = os.path.expanduser('~/aaai2017/pca-transfer_{}_{}_{}/'.format(source, target, cost) + name + '.pkl')
+filename = os.path.expanduser('~/aaai2017/approach-1-pca-transfer_{}_{}_{}/'.format(source, target, cost) + name + '.pkl')
 
 if os.path.exists(filename):
 	print("File already exists. Quitting.")
@@ -103,7 +103,7 @@ from wpca import WPCA
 
 
 def learning_pca(case, tensor, num_home_f, num_season_f, num_iter=2000, lr=0.1, dis=False, cost_function='abs',
-                 random_seed=0, eps=1e-8, lam=0.0, A_known=None, eta=None):
+                 random_seed=0, eps=1e-8, lam=0.0, A_known=None):
 	def find_season_basis(tensor, n_components=2):
 		data = tensor.reshape(tensor.shape[0] * 7, 12)
 		weights = np.ones_like(data)
@@ -128,8 +128,7 @@ def learning_pca(case, tensor, num_home_f, num_season_f, num_iter=2000, lr=0.1, 
 		return np.sqrt((error ** 2).mean()) + lam * error_2
 
 	T = find_season_basis(tensor, num_season_f).components_.T
-	if eta is None:
-		eta = find_home_basis(tensor, num_home_f).components_.T
+	eta = find_home_basis(tensor, num_home_f).components_.T
 
 	cost = cost_abs
 	mg = multigrad(cost, argnums=[0, 1])
@@ -333,12 +332,13 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 						tensor_copy_inner = tensor_inner.copy()
 						# First n
 						tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
-						H, A, T, Hs, As, HATs, costs = learning_pca_known_A(case, tensor_copy_inner, num_home_factors_cv,
-						                                            num_season_factors_cv, num_iter=num_iterations_cv,
-						                                            A_known=A_source,
-						                                            lr=1,
-						                                            dis=False, cost_function='abs', random_seed=0,
-						                                            eps=1e-8,lam=0)
+						H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy_inner,
+						                                                     num_home_factors_cv,
+						                                                     num_season_factors_cv,
+						                                                     num_iter=num_iterations_cv, lr=1,
+						                                                     dis=False,
+						                                                     cost_function=cost,
+						                                                     A_known=A_source, penalty_coeff=0, non_neg=False)
 
 						HAT = multiply_case(H, A, T, case)
 						for appliance in APPLIANCES_ORDER:
@@ -400,12 +400,11 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	tensor_copy = tensor.copy()
 	# First n
 	tensor_copy[:num_test, 1:, :] = np.NaN
-	H, A, T, Hs, As, HATs, costs = learning_pca_known_A(case, tensor_copy, best_num_home_factors,
-	                                                    best_num_season_factors, num_iter=best_num_iterations,
-	                                                    A_known=A_source,
-	                                                    lr=1,
-	                                                    dis=False, cost_function='abs', random_seed=0,
-	                                                    eps=1e-8, lam=0)
+	H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad(case, tensor_copy, best_num_home_factors,
+	                                                     best_num_season_factors,
+	                                                     num_iter=best_num_iterations, lr=1, dis=False,
+	                                                     cost_function=cost,
+	                                                     A_known=A_source, penalty_coeff=0, non_neg=False)
 
 	HAT = multiply_case(H, A, T, case)
 	for appliance in APPLIANCES_ORDER:

@@ -30,10 +30,10 @@ case = 2
 
 source, target, static_fac, lam, random_seed, train_percentage, cost = sys.argv[1:]
 name = "{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, random_seed, train_percentage, cost)
-directory = os.path.expanduser('~/aaai2017/pca-transfer_{}_{}_{}/'.format(source, target, cost))
+directory = os.path.expanduser('~/aaai2017/approach-2-pca-transfer_{}_{}_{}/'.format(source, target, cost))
 if not os.path.exists(directory):
 	os.makedirs(directory)
-filename = os.path.expanduser('~/aaai2017/pca-transfer_{}_{}_{}/'.format(source, target, cost) + name + '.pkl')
+filename = os.path.expanduser('~/aaai2017/approach-2-pca-transfer_{}_{}_{}/'.format(source, target, cost) + name + '.pkl')
 
 if os.path.exists(filename):
 	print("File already exists. Quitting.")
@@ -102,22 +102,25 @@ import autograd.numpy as np
 from wpca import WPCA
 
 
+def find_season_basis(tensor, n_components=2):
+	data = tensor.reshape(tensor.shape[0] * 7, 12)
+	weights = np.ones_like(data)
+	weights[np.isnan(data)] = 0
+	pca = WPCA(n_components=n_components).fit(data, weights=weights)
+	return pca
+
+
+def find_home_basis(tensor, n_components=2):
+	data = np.sum(tensor, axis=2)
+
+	weights = np.ones_like(data)
+	weights[np.isnan(data)] = 0
+	pca = WPCA(n_components=n_components).fit(data, weights=weights)
+	return pca
+
+
 def learning_pca(case, tensor, num_home_f, num_season_f, num_iter=2000, lr=0.1, dis=False, cost_function='abs',
                  random_seed=0, eps=1e-8, lam=0.0, A_known=None, eta=None):
-	def find_season_basis(tensor, n_components=2):
-		data = tensor.reshape(tensor.shape[0] * 7, 12)
-		weights = np.ones_like(data)
-		weights[np.isnan(data)] = 0
-		pca = WPCA(n_components=n_components).fit(data, weights=weights)
-		return pca
-
-	def find_home_basis(tensor, n_components=2):
-		data = np.sum(tensor, axis=2)
-
-		weights = np.ones_like(data)
-		weights[np.isnan(data)] = 0
-		pca = WPCA(n_components=n_components).fit(data, weights=weights)
-		return pca
 
 	def cost_abs(H, A, T, eta, tensor, case, lam):
 		HAT = multiply_case(H, A, T, case)
@@ -312,10 +315,11 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	overall_df_inner = target_df.loc[train_ix]
 
 	best_params_global[outer_loop_iteration] = {}
+	max_num_iterations = 1300
 	for num_iterations_cv in range(100, 1400, 600):
 		for num_season_factors_cv in range(2, 5, 2):
 			for num_home_factors_cv in range(3, 6, 2):
-				for lam_cv in [1e-10, 1e-8, 1e-6, 1e-3]:
+				for lam_cv in [1e-10, 1e-8]:
 					pred_inner = {}
 					for train_inner, test_inner in inner_kf.split(overall_df_inner):
 
@@ -333,12 +337,12 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 						tensor_copy_inner = tensor_inner.copy()
 						# First n
 						tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
-						H, A, T, Hs, As, HATs, costs = learning_pca_known_A(case, tensor_copy_inner, num_home_factors_cv,
+						eta_source = find_home_basis(source_tensor, num_home_factors_cv).components_.T
+						H, A, T, Hs, As, HATs, costs = learning_pca(case, tensor_copy_inner, num_home_factors_cv,
 						                                            num_season_factors_cv, num_iter=num_iterations_cv,
-						                                            A_known=A_source,
 						                                            lr=1,
 						                                            dis=False, cost_function='abs', random_seed=0,
-						                                            eps=1e-8,lam=0)
+						                                            eps=1e-8, lam=lam_cv, eta=eta_source)
 
 						HAT = multiply_case(H, A, T, case)
 						for appliance in APPLIANCES_ORDER:
@@ -400,12 +404,12 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	tensor_copy = tensor.copy()
 	# First n
 	tensor_copy[:num_test, 1:, :] = np.NaN
-	H, A, T, Hs, As, HATs, costs = learning_pca_known_A(case, tensor_copy, best_num_home_factors,
-	                                                    best_num_season_factors, num_iter=best_num_iterations,
-	                                                    A_known=A_source,
-	                                                    lr=1,
-	                                                    dis=False, cost_function='abs', random_seed=0,
-	                                                    eps=1e-8, lam=0)
+	eta_source =  find_home_basis(source_tensor, best_num_home_factors).components_.T
+	H, A, T, Hs, As, HATs, costs = learning_pca(case, tensor_copy, best_num_home_factors,
+	                                           best_num_season_factors, num_iter=best_num_iterations,
+	                                            lr=1,
+	                                            dis=False, cost_function='abs', random_seed=0,
+	                                            eps=1e-8, lam=best_lam, eta=eta_source)
 
 	HAT = multiply_case(H, A, T, case)
 	for appliance in APPLIANCES_ORDER:

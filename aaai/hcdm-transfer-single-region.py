@@ -21,8 +21,8 @@ MAX_NUM_MY_JOBS = 150
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-source = 'SanDiego'
-target = 'Austin'
+source = 'Austin'
+target = 'SanDiego'
 cost = 'l21'
 for static_fac in ['None']:
 	for lam in [0]:

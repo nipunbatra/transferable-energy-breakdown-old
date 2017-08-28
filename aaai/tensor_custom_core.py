@@ -194,7 +194,7 @@ def learn_HAT_multiple_source_adagrad(case, source_1_energy, source_2_energy, a,
 
 
 def learn_HAT_adagrad(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False, cost_function='abs', H_known=None,
-                      A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0):
+                      A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0, non_neg=True):
 
 
 	def cost_l12(H, A, T, E_np_masked, case, lam=0.1):
@@ -338,9 +338,10 @@ def learn_HAT_adagrad(case, E_np_masked, a, b, num_iter=2000, lr=0.1, dis=False,
 		if T_known is not None:
 			T = set_known(T, T_known)
 		# Projection to non-negative space
-		H[H < 0] = 1e-8
-		A[A < 0] = 1e-8
-		T[T < 0] = 1e-8
+		if non_neg:
+			H[H < 0] = 1e-8
+			A[A < 0] = 1e-8
+			T[T < 0] = 1e-8
 
 		As.append(A.copy())
 		Ts.append(T.copy())
