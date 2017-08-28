@@ -235,7 +235,7 @@ source_L = get_L(source_static)
 target_L = get_L(target_static)
 
 
-name = "{}-{}".format(random_seed, train_percentage)
+name = "{}-{}-{}-{}".format(source, target, random_seed, train_percentage)
 directory = os.path.expanduser('~/git/pred_graph/transfer/')
 if not os.path.exists(directory):
     os.makedirs(directory)
