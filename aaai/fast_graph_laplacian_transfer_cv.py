@@ -219,13 +219,10 @@ def learn_HAT_adagrad_graph_A_transfer(case, E_np_masked, L, a, b, num_iter=2000
     return H, A, T, Hs, As, Ts, HATs, costs
 
 
-random_seed, train_percentage = sys.argv[1:]
+source, target, random_seed, train_percentage = sys.argv[1:]
 train_percentage = float(train_percentage)
 random_seed = int(random_seed)
 
-
-source = 'Austin'
-target = 'SanDiego'
 
 
 A_store = pickle.load(open('predictions/graph_{}_As.pkl'.format(source), 'r'))
