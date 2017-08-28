@@ -26,8 +26,8 @@ target = 'SanDiego'
 cost = 'l21'
 for static_fac in ['None']:
 	for lam in [0]:
-		for random_seed in range(5):
+		for random_seed in range(3):
 			for train_percentage in range(10, 110, 10):
-				CMD = 'python pca-transfer-cv.py {} {} {} {} {} {} {}  &> {}_{}_{}_{}.out &'.format(source, target, static_fac, lam, random_seed, train_percentage, cost, source, target, random_seed, train_percentage)
+				CMD = 'python pca-transfer-cv-approach-2.py {} {} {} {} {} {} {}  &> approach-2-{}_{}_{}_{}.out &'.format(source, target, static_fac, lam, random_seed, train_percentage, cost, source, target, random_seed, train_percentage)
 				print CMD
 

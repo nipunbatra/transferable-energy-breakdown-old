@@ -20,20 +20,19 @@ MAX_NUM_MY_JOBS = 360
 # Delay between jobs when we exceed the max. number of jobs we want on the cluster
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
-
 source = 'Austin'
 target = 'SanDiego'
-for random_seed in [0]:
-	for train_percentage in range(50, 100, 20):
-		for outer_loop_iteration in range(10):
+for random_seed in [3]:
+	for train_percentage in [10]:
+		for outer_loop_iteration in [9]:
 			OFILE = "{}/{}_{}_{}_{}_{}_graph_transfer.out".format(SLURM_OUT, source, target, random_seed, train_percentage, outer_loop_iteration)
 			EFILE = "{}/{}_{}_{}_{}_{}_graph_transfer.err".format(SLURM_OUT, source, target, random_seed, train_percentage, outer_loop_iteration )
 			SLURM_SCRIPT = "{}/{}_{}_{}_{}_{}_graph_transfer.pbs".format('pbs_files', source, target, random_seed, train_percentage, outer_loop_iteration)
-			CMD = 'python transfer_graph_laplacian_outer_parallel_cv.py {} {} {} {} {}'.format(source, target, random_seed, train_percentage, outer_loop_iteration)
+			CMD = 'python transfer_test.py {} {} {} {} {}'.format(source, target, random_seed, train_percentage, outer_loop_iteration)
 			lines = []
 			lines.append("#!/bin/sh\n")
 			lines.append('#SBATCH --time=1-16:0:00\n')
-			lines.append('#SBATCH --mem=32\n')
+			lines.append('#SBATCH --mem=16\n')
 			lines.append('#SBATCH -c 16')
 			lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
 			lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
