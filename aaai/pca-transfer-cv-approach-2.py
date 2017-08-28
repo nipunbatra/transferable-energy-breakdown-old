@@ -315,10 +315,11 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	overall_df_inner = target_df.loc[train_ix]
 
 	best_params_global[outer_loop_iteration] = {}
+	max_num_iterations = 1300
 	for num_iterations_cv in range(100, 1400, 600):
 		for num_season_factors_cv in range(2, 5, 2):
 			for num_home_factors_cv in range(3, 6, 2):
-				for lam_cv in [1e-10, 1e-8, 1e-6]:
+				for lam_cv in [1e-10, 1e-8]:
 					pred_inner = {}
 					for train_inner, test_inner in inner_kf.split(overall_df_inner):
 
@@ -404,11 +405,11 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	# First n
 	tensor_copy[:num_test, 1:, :] = np.NaN
 	eta_source =  find_home_basis(source_tensor, best_num_home_factors).components_.T
-	H, A, T, Hs, As, HATs, costs = learning_pca(case, tensor_copy_inner, num_home_factors_cv,
-	                                            num_season_factors_cv, num_iter=num_iterations_cv,
+	H, A, T, Hs, As, HATs, costs = learning_pca(case, tensor_copy, best_num_home_factors,
+	                                           best_num_season_factors, num_iter=best_num_iterations,
 	                                            lr=1,
 	                                            dis=False, cost_function='abs', random_seed=0,
-	                                            eps=1e-8, lam=lam_cv, eta=eta_source)
+	                                            eps=1e-8, lam=best_lam, eta=eta_source)
 
 	HAT = multiply_case(H, A, T, case)
 	for appliance in APPLIANCES_ORDER:
