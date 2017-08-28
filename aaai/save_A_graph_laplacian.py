@@ -161,18 +161,13 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, 
 	return H, A, T, Hs, As, Ts, HATs, costs
 
 
-random_seed, train_percentage = sys.argv[1:]
-train_percentage = float(train_percentage)
-random_seed = int(random_seed)
+
 
 source = 'Austin'
-target = 'SanDiego'
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
-target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year)
 
 # # using cosine similarity to compute L
 source_L = get_L(source_static)
-target_L = get_L(target_static)
 
 pred = {}
 n_splits = 10
@@ -184,9 +179,7 @@ cost = 'l21'
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = []
 best_params_global = {}
-np.random.seed(random_seed)
 A_store = {}
-import datetime
 
 max_num_iterations = 1300
 for num_season_factors_cv in range(2, 5):
