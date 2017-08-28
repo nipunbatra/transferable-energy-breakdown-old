@@ -15,6 +15,8 @@ from scipy.spatial.distance import pdist, squareform
 import datetime
 
 
+
+
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
@@ -54,11 +56,11 @@ def get_L_NN(X):
     n_sample, n_feature = X.shape
     W = np.zeros((n_sample, n_sample))
     for i in range(n_sample):
-        if distances[i][4] == 0:
+        if distances[i, 4] == 0:
             continue
         for j in indices[i]:
-            W[i][j] = 1
-            W[j][i] = 1
+            W[i, j] = 1
+            W[j, i] = 1
     K = np.dot(W, np.ones((n_sample, n_sample)))
     D = np.diag(np.diag(K))
     return D - W
@@ -156,6 +158,67 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, 
     return H, A, T, Hs, As, Ts, HATs, costs
 
 
+def learn_HAT_adagrad_graph_A_transfer(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, dis=False, lam=1, H_known=None,
+                            A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0):
+    np.random.seed(random_seed)
+    cost = cost_graph_laplacian
+    mg = multigrad(cost, argnums=[0, 2])
+
+    params = {}
+    params['M'], params['N'], params['O'] = E_np_masked.shape
+    params['a'] = a
+    params['b'] = b
+    H_dim_chars = list(cases[case]['HA'].split(",")[0].strip())
+    H_dim = tuple(params[x] for x in H_dim_chars)
+
+    T_dim_chars = list(cases[case]['HAT'].split(",")[1].split("-")[0].strip())
+    T_dim = tuple(params[x] for x in T_dim_chars)
+
+    H = np.random.rand(*H_dim)
+    A = A_known
+    T = np.random.rand(*T_dim)
+
+
+    sum_square_gradients_H = np.zeros_like(H)
+    sum_square_gradients_T = np.zeros_like(T)
+
+    Hs = [H.copy()]
+    As = [A]
+    Ts = [T.copy()]
+
+    costs = [cost(H, A, T, L, E_np_masked, lam, case)]
+
+    HATs = [multiply_case(H, A, T, case)]
+
+    # GD procedure
+    for i in range(num_iter):
+        del_h, del_t = mg(H, A, T, L, E_np_masked, lam, case)
+        sum_square_gradients_H += eps + np.square(del_h)
+        sum_square_gradients_T += eps + np.square(del_t)
+
+        lr_h = np.divide(lr, np.sqrt(sum_square_gradients_H))
+        lr_t = np.divide(lr, np.sqrt(sum_square_gradients_T))
+
+        H -= lr_h * del_h
+        T -= lr_t * del_t
+
+        H[H < 0] = 1e-8
+        #A[A < 0] = 1e-8
+        T[T < 0] = 1e-8
+
+        #As.append(A.copy())
+        Ts.append(T.copy())
+        Hs.append(H.copy())
+
+        costs.append(cost(H, A, T, L, E_np_masked, lam, case))
+
+        HATs.append(multiply_case(H, A, T, case))
+        if i % 500 == 0:
+            if dis:
+                print(cost(H, A, T, L, E_np_masked, lam, case))
+    return H, A, T, Hs, As, Ts, HATs, costs
+
+
 random_seed, train_percentage = sys.argv[1:]
 train_percentage = float(train_percentage)
 random_seed = int(random_seed)
@@ -163,6 +226,9 @@ random_seed = int(random_seed)
 
 source = 'Austin'
 target = 'SanDiego'
+
+
+A_store = pickle.load(open('predictions/graph_{}_As.pkl'.format(source), 'r'))
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year)
 
@@ -250,14 +316,10 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
                 for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
                     pred_inner = {}
                     for train_inner, test_inner in inner_kf.split(overall_df_inner):
-                        print(datetime.datetime.now())
                         train_ix_inner = overall_df_inner.index[train_inner]
                         test_ix_inner = overall_df_inner.index[test_inner]
 
-                        H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
-                                                                                                        num_home_factors_cv, num_season_factors_cv, 
-                                                                                                        num_iter=num_iterations_cv, lr=1, dis=False, 
-                                                                                                        lam=lam_cv, T_known = np.ones(12).reshape(-1, 1))
+                        A_source = A_store[num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations_cv]
                         train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
                         df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[train_test_ix_inner]
                         tensor_inner = get_tensor(df_t_inner)
@@ -266,11 +328,11 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
                         tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
                         L_inner = target_L[np.ix_(np.concatenate([test_inner, train_inner]), np.concatenate([test_inner, train_inner]))]
 
-                        H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner, L_inner, 
+                        H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_A_transfer(case, tensor_copy_inner, L_inner,
                                                                                     num_home_factors_cv, num_season_factors_cv, 
                                                                                     num_iter=num_iterations_cv, lr=1, dis=False, 
                                                                                     lam=lam_cv, A_known = A_source,
-                                                                                    T_known = np.ones(12).reshape(-1, 1))
+                                                                                    )
 
                         HAT = multiply_case(H, A, T, case)
                         for appliance in APPLIANCES_ORDER:
@@ -319,14 +381,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     print("******* BEST PARAMS *******")
     # Now we will be using the best parameter set obtained to compute the predictions
 
-
-
-    H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
-                                                                                    best_num_home_factors, best_num_season_factors, 
-                                                                                    num_iter=best_num_iterations, lr=1, dis=False, 
-                                                                                    lam=best_lam, T_known = np.ones(12).reshape(-1, 1))
-
-    print A_source
+    A_source = A_store[best_num_season_factors][best_num_home_factors][best_lam][best_num_iterations]
     num_test = len(test_ix)
     train_test_ix = np.concatenate([test_ix, train_ix])
     df_t, dfc_t = target_df.loc[train_test_ix], target_dfc.loc[train_test_ix]
@@ -337,11 +392,10 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
     L = target_L[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
 
-    H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, 
+    H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph_A_transfer(case, tensor_copy, L,
                                                                 best_num_home_factors, best_num_season_factors, 
                                                                 num_iter=best_num_iterations, lr=1, dis=False, 
-                                                                lam=best_lam, A_known = A_source,
-                                                                T_known = np.ones(12).reshape(-1, 1))
+                                                                lam=best_lam, A_known = A_source)
 
     HAT = multiply_case(H, A, T, case)
     for appliance in APPLIANCES_ORDER:
