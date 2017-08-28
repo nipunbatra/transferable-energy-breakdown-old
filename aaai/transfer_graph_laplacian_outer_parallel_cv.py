@@ -365,10 +365,10 @@ for appliance in APPLIANCES_ORDER:
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
 name = "{}-{}-{}".format(random_seed, train_percentage, outer_loop_iteration)
-directory = os.path.expanduser('~/git/pred_graph/transfer/')
+directory = os.path.expanduser('~/git/pred_graph/{}_to_{}/transfer/'.format(source, target))
 if not os.path.exists(directory):
     os.makedirs(directory)
-filename = os.path.expanduser('~/git/pred_graph/transfer/'+ name + '.pkl')
+filename = os.path.expanduser('~/git/pred_graph/{}_to_{}/transfer/'.format(source, target) + name + '.pkl')
 
 if os.path.exists(filename):
     print("File already exists. Quitting.")
