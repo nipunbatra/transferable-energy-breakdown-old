@@ -172,7 +172,7 @@ source_L = get_L(source_static)
 target_L = get_L(target_static)
 
 
-def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv):
+def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv, A_source):
     # overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv = param
     print num_iterations_cv, num_season_factors_cv,num_home_factors_cv,lam_cv
     inner_kf = KFold(n_splits=2)
@@ -182,10 +182,10 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
         train_ix_inner = overall_df_inner.index[train_inner]
         test_ix_inner = overall_df_inner.index[test_inner]
 
-        H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
-                                                                                        num_home_factors_cv, num_season_factors_cv, 
-                                                                                        num_iter=num_iterations_cv, lr=1, dis=False, 
-                                                                                        lam=lam_cv, T_known = np.ones(12).reshape(-1, 1))
+        # H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
+        #                                                                                 num_home_factors_cv, num_season_factors_cv, 
+        #                                                                                 num_iter=num_iterations_cv, lr=1, dis=False, 
+        #                                                                                 lam=lam_cv, T_known = np.ones(12).reshape(-1, 1))
 
         train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
         df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[train_test_ix_inner]
@@ -198,8 +198,7 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
         H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner, L_inner, 
                                                                     num_home_factors_cv, num_season_factors_cv, 
                                                                     num_iter=num_iterations_cv, lr=1, dis=False, 
-                                                                    lam=lam_cv, A_known = A_source,
-                                                                    T_known = np.ones(12).reshape(-1, 1))
+                                                                    lam=lam_cv, A_known = A_source)
 
         HAT = multiply_case(H, A, T, case)
         for appliance in APPLIANCES_ORDER:
@@ -291,6 +290,7 @@ overall_df_inner = target_df.loc[train_ix]
 best_params_global[outer_loop_iteration] = {}
 params = {}
 count = 0
+A_store = pickle.load(open('predictions/graph_{}_As.pkl'.format(source), 'r'))
 
 ##############################################################
 # Parallel part
@@ -301,8 +301,9 @@ for num_iterations_cv in [1300, 100, 900, 500]:
     for num_season_factors_cv in range(2, 5):
         for num_home_factors_cv in range(3, 6):
             for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
+                A_source = A_store[num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations_cv]
                 params[count] = []
-                params[count].extend((overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv))
+                params[count].extend((overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv, A_source))
                 count += 1
 
 for i in range(count): 
@@ -319,7 +320,7 @@ for result in results:
     error.append(result.get())
 # get the parameters for the best setting
 best_idx = np.argmin(error)
-overall_df_inner, best_num_iterations, best_num_season_factors, best_num_home_factors, best_lam = params[best_idx]
+overall_df_inner, best_num_iterations, best_num_season_factors, best_num_home_factors, best_lam, A = params[best_idx]
 least_error = error[best_idx]
 
 
@@ -333,13 +334,12 @@ print("******* BEST PARAMS *******")
 print(best_params_global[outer_loop_iteration])
 print("******* BEST PARAMS *******")
 # Now we will be using the best parameter set obtained to compute the predictions
+A_source = A_store[best_num_season_factors][best_num_home_factors][best_lam][best_num_iterations]
 
-
-H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
-                                                                                best_num_home_factors, best_num_season_factors, 
-                                                                                num_iter=best_num_iterations, lr=1, dis=False, 
-                                                                                lam=best_lam, T_known = np.ones(12).reshape(-1, 1))
-
+# H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
+#                                                                                 best_num_home_factors, best_num_season_factors, 
+#                                                                                 num_iter=best_num_iterations, lr=1, dis=False, 
+#                                                                                 lam=best_lam)
 # print A_source
 num_test = len(test_ix)
 train_test_ix = np.concatenate([test_ix, train_ix])
@@ -354,8 +354,7 @@ L = target_L[np.ix_(np.concatenate([test, train]), np.concatenate([test, train])
 H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, 
                                                             best_num_home_factors, best_num_season_factors, 
                                                             num_iter=best_num_iterations, lr=1, dis=False, 
-                                                            lam=best_lam, A_known = A_source,
-                                                            T_known = np.ones(12).reshape(-1, 1))
+                                                            lam=best_lam, A_known = A_source)
 
 HAT = multiply_case(H, A, T, case)
 for appliance in APPLIANCES_ORDER:
@@ -365,10 +364,10 @@ for appliance in APPLIANCES_ORDER:
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
 name = "{}-{}-{}".format(random_seed, train_percentage, outer_loop_iteration)
-directory = os.path.expanduser('~/git/pred_graph/{}_to_{}/transfer/'.format(source, target))
+directory = os.path.expanduser('~/git/pred_graph/{}_to_{}/'.format(source, target))
 if not os.path.exists(directory):
     os.makedirs(directory)
-filename = os.path.expanduser('~/git/pred_graph/{}_to_{}/transfer/'.format(source, target) + name + '.pkl')
+filename = os.path.expanduser('~/git/pred_graph/{}_to_{}/'.format(source, target) + name + '.pkl')
 
 if os.path.exists(filename):
     print("File already exists. Quitting.")

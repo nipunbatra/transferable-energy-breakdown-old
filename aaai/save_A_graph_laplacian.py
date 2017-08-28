@@ -163,7 +163,7 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, 
 
 
 
-source = 'Austin'
+source = 'SanDiego'
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
 
 # # using cosine similarity to compute L

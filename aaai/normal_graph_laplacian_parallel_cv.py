@@ -154,7 +154,7 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, 
 
 
 global case
-global source_df, source_dfc, source_tensor, source_static
+global source, source_df, source_dfc, source_tensor, source_static
 global source_L
 case = 2
 
@@ -190,8 +190,8 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
 		H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner, L_inner, 
 																	num_home_factors_cv, num_season_factors_cv, 
 																	num_iter=num_iterations_cv, lr=1, dis=False, 
-																	lam=lam_cv
-														)
+																	lam=lam_cv)
+														
 
 
 		HAT = multiply_case(H, A, T, case)
@@ -349,10 +349,10 @@ for appliance in APPLIANCES_ORDER:
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
 name = "{}-{}".format(random_seed, train_percentage)
-directory = os.path.expanduser('~/git/pred_graph/{}/normal/'.format(source))
+directory = os.path.expanduser('~/git/pred_graph/{}'.format(source))
 if not os.path.exists(directory):
 	os.makedirs(directory)
-filename = os.path.expanduser('~/git/pred_graph/{}/normal/'.format(source)+ name + '.pkl')
+filename = os.path.expanduser('~/git/pred_graph/{}'.format(source)+ name + '.pkl')
 
 if os.path.exists(filename):
 	print("File already exists. Quitting.")

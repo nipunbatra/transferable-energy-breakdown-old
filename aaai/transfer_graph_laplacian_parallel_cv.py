@@ -154,9 +154,9 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, 
 
 
 global case
-global source_df, source_dfc, source_tensor, source_static
+global source, source_df, source_dfc, source_tensor, source_static
 global source_L, target_L
-global target_df, target_dfc, target_tensor, target_static
+global target, target_df, target_dfc, target_tensor, target_static
 case = 2
 
 source, target, random_seed, train_percentage = sys.argv[1:]
@@ -171,7 +171,7 @@ source_L = get_L(source_static)
 target_L = get_L(target_static)
 
 
-def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv):
+def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv, A_source):
     # overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv = param
     print num_iterations_cv, num_season_factors_cv,num_home_factors_cv,lam_cv
     inner_kf = KFold(n_splits=2)
@@ -181,10 +181,10 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
         train_ix_inner = overall_df_inner.index[train_inner]
         test_ix_inner = overall_df_inner.index[test_inner]
 
-        H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
-                                                                                        num_home_factors_cv, num_season_factors_cv, 
-                                                                                        num_iter=num_iterations_cv, lr=1, dis=False, 
-                                                                                        lam=lam_cv, T_known = np.ones(12).reshape(-1, 1))
+        # H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
+        #                                                                                 num_home_factors_cv, num_season_factors_cv, 
+        #                                                                                 num_iter=num_iterations_cv, lr=1, dis=False, 
+        #                                                                                 lam=lam_cv, T_known = np.ones(12).reshape(-1, 1))
 
         train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
         df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[train_test_ix_inner]
@@ -197,8 +197,7 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
         H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner, L_inner, 
                                                                     num_home_factors_cv, num_season_factors_cv, 
                                                                     num_iter=num_iterations_cv, lr=1, dis=False, 
-                                                                    lam=lam_cv, A_known = A_source,
-                                                                    T_known = np.ones(12).reshape(-1, 1))
+                                                                    lam=lam_cv, A_known = A_source)
 
         HAT = multiply_case(H, A, T, case)
         for appliance in APPLIANCES_ORDER:
@@ -214,9 +213,9 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
 
         try:
             if appliance =="hvac":
-                err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance][range(4, 10)], 'SanDiego')[2]
+                err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance][range(4, 10)], target)[2]
             else:
-                err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], 'SanDiego')[2]
+                err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], target)[2]
             appliance_to_weight.append(appliance)
         except Exception, e:
             # This appliance does not have enough samples. Will not be
@@ -238,6 +237,7 @@ n_splits = 10
 
 algo = 'adagrad'
 cost = 'l21'
+A_store = pickle.load(open('predictions/graph_{}_As.pkl'.format(source), 'r'))
 
 for appliance in APPLIANCES_ORDER:
     pred[appliance] = []
@@ -299,12 +299,13 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     results = []
     cpus = mp.cpu_count()
     pool = mp.Pool()
-    for num_iterations_cv in [100]:
+    for num_iterations_cv in [100, 500, 900, 1300]:
         for num_season_factors_cv in range(2, 5):
             for num_home_factors_cv in range(3, 6):
                 for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
+                    A_source = A_store[num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations_cv]
                     params[count] = []
-                    params[count].extend((overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv))
+                    params[count].extend((overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv, A_source))
                     count += 1
 
     for i in range(count): 
@@ -321,7 +322,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
         error.append(result.get())
     # get the parameters for the best setting
     best_idx = np.argmin(error)
-    overall_df_inner, best_num_iterations, best_num_season_factors, best_num_home_factors, best_lam = params[best_idx]
+    overall_df_inner, best_num_iterations, best_num_season_factors, best_num_home_factors, best_lam, A = params[best_idx]
     least_error = error[best_idx]
 
     best_params_global[outer_loop_iteration] = {'Iterations':best_num_iterations,
@@ -333,14 +334,18 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     print("******* BEST PARAMS *******")
     print(best_params_global[outer_loop_iteration])
     print("******* BEST PARAMS *******")
+    raw_input("Enter to get stored A_source")
     # Now we will be using the best parameter set obtained to compute the predictions
+    A_source = A_store[best_num_season_factors][best_num_home_factors][best_lam][best_num_iterations]
+    print A_source
 
-
+    raw_input("Enter to get learned A_source")
     H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
                                                                                     best_num_home_factors, best_num_season_factors, 
                                                                                     num_iter=best_num_iterations, lr=1, dis=False, 
-                                                                                    lam=best_lam, T_known = np.ones(12).reshape(-1, 1))
-
+                                                                                    lam=best_lam)
+    print A_source
+    raw_input("Enter to get learned A_source")
     # print A_source
     num_test = len(test_ix)
     train_test_ix = np.concatenate([test_ix, train_ix])
@@ -355,8 +360,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, 
                                                                 best_num_home_factors, best_num_season_factors, 
                                                                 num_iter=best_num_iterations, lr=1, dis=False, 
-                                                                lam=best_lam, A_known = A_source,
-                                                                T_known = np.ones(12).reshape(-1, 1))
+                                                                lam=best_lam, A_known = A_source)
 
     HAT = multiply_case(H, A, T, case)
     for appliance in APPLIANCES_ORDER:
@@ -368,10 +372,10 @@ for appliance in APPLIANCES_ORDER:
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
 name = "{}-{}".format(random_seed, train_percentage)
-directory = os.path.expanduser('~/git/pred_graph/transfer/')
+directory = os.path.expanduser('~/git/pred_graph/{}_to_{}/'.format(source, target))
 if not os.path.exists(directory):
     os.makedirs(directory)
-filename = os.path.expanduser('~/git/pred_graph/transfer/'+ name + '.pkl')
+filename = os.path.expanduser('~/git/pred_graph/{}_to_{}/'.format(source, target) + name + '.pkl')
 
 if os.path.exists(filename):
     print("File already exists. Quitting.")
