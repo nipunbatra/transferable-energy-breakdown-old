@@ -21,9 +21,9 @@ MAX_NUM_MY_JOBS = 360
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-source = 'SanDiego'
-for random_seed in range(5):
-	for train_percentage in range(10, 100, 20):
+source = 'Austin'
+for random_seed in [1]:
+	for train_percentage in [70]:
 		OFILE = "{}/{}_{}_{}_graph_normal.out".format(SLURM_OUT, source, random_seed, train_percentage )
 		EFILE = "{}/{}_{}_{}_graph_normal.err".format(SLURM_OUT, source, random_seed, train_percentage )
 		SLURM_SCRIPT = "{}/{}_{}_{}_graph_normal.pbs".format('pbs_files', source, random_seed, train_percentage)
@@ -32,7 +32,7 @@ for random_seed in range(5):
 		lines.append("#!/bin/sh\n")
 		lines.append('#SBATCH --time=1-16:0:00\n')
 		lines.append('#SBATCH --mem=16\n')
-		lines.append('#SBATCH -c 32')
+		lines.append('#SBATCH -c 16')
 		lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
 		lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
 		lines.append(CMD + '\n')
