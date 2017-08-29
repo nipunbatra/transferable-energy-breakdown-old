@@ -14,7 +14,7 @@ import pickle
 source = sys.argv[1]
 out = {}
 
-for train_percentage in range(10, 110, 20):
+for train_percentage in [10, 30, 50, 70,90]:
 
 	out[train_percentage] ={}
 	for random_seed in range(5):

@@ -12,37 +12,34 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 import os
 import pickle
 source, target = sys.argv[1:]
-cost = 'l21'
 out = {}
-for static_fac in ['None']:
-	out[static_fac] = {}
-	for lam in [0]:
-		out[static_fac][lam] = {}
-		for train_percentage in range(10, 110, 10):
 
-			out[static_fac][lam][train_percentage] ={}
-			for random_seed in range(5):
-				out[static_fac][lam][train_percentage][random_seed] = {}
-				name = "{}-{}-{}-{}-{}-{}-{}".format(source, target, static_fac, lam, random_seed, train_percentage,
-				                                     cost)
-				directory = os.path.expanduser('~/aaai2017/transfer_{}_{}_{}/'.format(source, target, cost))
+for train_percentage in [10, 30, 50, 70,90]:
 
-				filename = os.path.join(directory, name + '.pkl')
-				try:
-					pr = pickle.load(open(filename, 'r'))
-					pred = pr['Predictions']
-					for appliance in APPLIANCES_ORDER[1:]:
-						prediction = pred[appliance]
-						if appliance == "hvac":
-							prediction = prediction[range(4, 10)]
-						out[static_fac][lam][train_percentage][random_seed][appliance]= \
-					compute_rmse_fraction(appliance, prediction, target)[2]
-					print("Computed for: {}".format(name))
+	out[train_percentage] ={}
+	for random_seed in range(5):
+		out[train_percentage][random_seed] = {}
+		name = "{}-{}".format(random_seed, float(train_percentage))
 
-				except Exception, e:
-					print(e)
-					print("Exception")
+		directory = os.path.expanduser('~/git/pred_graph/{}_to_{}/'.format(source, target))
 
-			out[static_fac][lam][train_percentage] = pd.DataFrame(out[static_fac][lam][train_percentage]).mean(axis=1)
+		filename = os.path.expanduser('~/git/pred_graph/{}_to_{}/'.format(source, target) + name + '.pkl')
 
-pickle.dump(out, open("predictions/{}-{}-sparse-transfer-cv.pkl".format(source, target),"w"))
+		try:
+			pr = pickle.load(open(filename, 'r'))
+			pred = pr['Predictions']
+			for appliance in APPLIANCES_ORDER[1:]:
+				prediction = pred[appliance]
+				if appliance == "hvac":
+					prediction = prediction[range(4, 10)]
+				out[train_percentage][random_seed][appliance]= \
+			compute_rmse_fraction(appliance, prediction, target)[2]
+			print("Computed for: {}".format(name))
+
+		except Exception, e:
+			print(e)
+			print("Exception")
+
+	out[train_percentage] = pd.DataFrame(out[train_percentage]).mean(axis=1)
+
+pickle.dump(out, open("predictions/{}-{}-graph-transfer-cv.pkl".format(source, target),"w"))
