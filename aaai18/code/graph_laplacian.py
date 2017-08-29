@@ -64,7 +64,7 @@ else:
 	name = "{}-{}-{}".format(target, random_seed, train_percentage)
 
 
-directory = '../predictions/TF/{}/case-{}/{}'.format(setting, case, static_use)
+directory = os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/TF/{}/case-{}/{}'.format(setting, case, static_use))
 if not os.path.exists(directory):
 	os.makedirs(directory)
 filename = os.path.join(directory, name + '.pkl')
