@@ -1,14 +1,8 @@
-import sys
-import pickle
-from sklearn.model_selection import KFold
-from create_matrix import *
 from sklearn.model_selection import train_test_split, KFold
-from common import compute_rmse_fraction, contri
-from tensor_custom_core import *
+
+from aaai18.common import compute_rmse_fraction, contri
 from create_matrix import *
 from tensor_custom_core import *
-
-from degree_days import dds
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 
@@ -17,8 +11,6 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 
 year = 2014
-
-import os
 
 
 def un_normalize(x, maximum, minimum):
@@ -217,7 +209,6 @@ res.update(err)
 
 #posts.insert_one(res)
 
-import sqlite3
 from sqlalchemy import create_engine
 disk_engine = create_engine('sqlite:///predictions/transfer-cv-{}-{}-{}.db'.format(source_1, source_2, target))
 

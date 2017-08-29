@@ -1,15 +1,8 @@
-
-import sys
-
-from sklearn.model_selection import KFold
-
-from create_matrix import *
 from sklearn.model_selection import train_test_split, KFold
-from common import compute_rmse_fraction, contri
-from tensor_custom_core import *
+
+from aaai18.common import compute_rmse_fraction, contri
 from create_matrix import *
 from tensor_custom_core import *
-from degree_days import dds
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 

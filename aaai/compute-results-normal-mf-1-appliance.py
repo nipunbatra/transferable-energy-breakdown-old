@@ -1,7 +1,9 @@
-from common import  compute_rmse_fraction
 import os
 import pickle
+
 import pandas as pd
+
+from aaai18.common import compute_rmse_fraction
 
 region = "SanDiego"
 target = region

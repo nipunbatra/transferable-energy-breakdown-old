@@ -1,6 +1,6 @@
 from sklearn.model_selection import KFold, train_test_split
 
-from common import compute_rmse_fraction
+from aaai18.common import compute_rmse_fraction
 from create_matrix import *
 from degree_days import dds
 from mf_core import *

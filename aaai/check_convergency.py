@@ -1,15 +1,11 @@
-import numpy as np
-import pandas as pd
-from sklearn.model_selection import KFold
 from create_matrix import *
-from tensor_custom_core import *
-from create_matrix import *
-from tensor_custom_core import *
-from degree_days import dds
 import os
-from sklearn.model_selection import train_test_split, KFold
 import pickle
-from common import compute_rmse
+
+from create_matrix import *
+from degree_days import dds
+from tensor_custom_core import *
+
 
 def un_normalize(x, maximum, minimum):
     return (maximum - minimum) * x + minimum

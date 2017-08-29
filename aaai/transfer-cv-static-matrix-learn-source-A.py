@@ -1,14 +1,5 @@
-import sys
-import pickle
-from sklearn.model_selection import KFold
-from create_matrix import *
-from sklearn.model_selection import train_test_split, KFold
-from common import compute_rmse_fraction, contri
-from tensor_custom_core import *
 from create_matrix import *
 from tensor_custom_core import *
-
-from degree_days import dds
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 
@@ -18,8 +9,6 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 
 year = 2014
-
-import os
 
 
 def learn_HAT_adagrad_static(case, E_np_masked, K, a, b, num_iter=2000, lr=0.1, dis=False,
