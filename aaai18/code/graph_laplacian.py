@@ -1,5 +1,5 @@
 """
-This module comutes results for transfer learning
+This module computes results for transfer learning
 
 >>>python graph_laplacian.py setting case static_use source target random_seed train_percentage
 setting: transfer or normal

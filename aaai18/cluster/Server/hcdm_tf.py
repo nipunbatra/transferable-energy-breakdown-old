@@ -2,8 +2,8 @@
 Run all the code on HCDM
 
 """
-source = "Austin"
-target = "SanDiego"
+source = "SanDiego"
+target = "Austin"
 shell_script = "{}_{}.sh".format(source, target)
 f = open(shell_script, 'w')
 for case in [2, 4]:
