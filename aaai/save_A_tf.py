@@ -1,18 +1,8 @@
-import pandas as pd
 from create_matrix import *
-from tensor_custom_core import *
-from create_matrix import *
-from tensor_custom_core import *
-from degree_days import dds
-import os
-from degree_days import dds
-import autograd.numpy as np
-from sklearn.model_selection import train_test_split, KFold
-from common import compute_rmse_fraction, contri
 from sklearn.neighbors import NearestNeighbors
-import pickle
-from scipy.spatial.distance import pdist, squareform
 
+from create_matrix import *
+from tensor_custom_core import *
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']

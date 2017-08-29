@@ -1,15 +1,9 @@
-import matplotlib.pyplot as plt
-from sklearn.model_selection import KFold
-from create_matrix import *
 import os
-import sys
-from tensor_custom_core import *
+
+from aaai18.common import compute_rmse_fraction
 from create_matrix import *
-from tensor_custom_core import *
 from degree_days import dds
-from sklearn.model_selection import train_test_split, KFold
-from common import compute_rmse_fraction
-from common import compute_rmse
+from tensor_custom_core import *
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']

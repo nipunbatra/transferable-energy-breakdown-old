@@ -1,17 +1,10 @@
+from sklearn.model_selection import KFold, train_test_split
+
+from aaai18.common import compute_rmse_fraction, contri
+from create_matrix import *
+from degree_days import dds
 from mf_core import *
 
-import numpy as np
-import pandas as pd
-import sys
-import os
-from create_matrix import *
-from sklearn.model_selection import LeaveOneOut, KFold, train_test_split
-from sklearn.neighbors import KNeighborsRegressor
-import pickle
-from common import compute_rmse_fraction, contri
-
-
-from degree_days import dds
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']

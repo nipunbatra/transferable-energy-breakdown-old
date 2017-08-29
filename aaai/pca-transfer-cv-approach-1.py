@@ -1,14 +1,10 @@
-import sys
 import pickle
-from sklearn.model_selection import KFold
-from create_matrix import *
-from sklearn.model_selection import train_test_split, KFold
-from common import compute_rmse_fraction, contri
-from tensor_custom_core import *
-from create_matrix import *
-from tensor_custom_core import *
 
-from degree_days import dds
+from sklearn.model_selection import train_test_split, KFold
+
+from aaai18.common import compute_rmse_fraction, contri
+from create_matrix import *
+from tensor_custom_core import *
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 
@@ -19,7 +15,7 @@ APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
 
 import os
-import datetime
+
 
 def un_normalize(x, maximum, minimum):
 	return (maximum - minimum) * x + minimum

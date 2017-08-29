@@ -1,8 +1,10 @@
-import numpy as np
-import cvxpy as cvx
 from copy import deepcopy
+
+import cvxpy as cvx
+import numpy as np
 import pandas as pd
-from common import APPLIANCES_ORDER
+
+from aaai18.common import APPLIANCES_ORDER
 
 
 def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_user=None,

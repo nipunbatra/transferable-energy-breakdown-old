@@ -1,12 +1,7 @@
-from create_matrix import create_matrix_region_appliance_year
-from subprocess import Popen
-from common import compute_rmse_fraction
+from aaai18.common import compute_rmse_fraction
+
 from create_matrix import *
 
-from tensor_custom_core import *
-from create_matrix import *
-from tensor_custom_core import *
-from degree_days import dds
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 
 import os

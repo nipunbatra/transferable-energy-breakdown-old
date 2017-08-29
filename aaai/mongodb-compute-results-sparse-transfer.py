@@ -1,6 +1,5 @@
 from pymongo import MongoClient
 
-from common import compute_rmse_fraction
 from create_matrix import *
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
