@@ -1,7 +1,7 @@
 """
 This module comutes results for transfer learning
 
->>>python graph_laplacian.py case static_use source target random_seed train_percentage
+>>>python graph_laplacian.py setting case static_use source target random_seed train_percentage
 setting: transfer or normal
 case: 1, 2, 3, 4; 2 is for our proposed approach, 4 is for standard TF
 static_use: "True" or "False"- If False, we don't use static household properties 
@@ -126,6 +126,8 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 				if case == 4:
 					if num_home_factors_cv!=num_season_factors_cv:
 						print("Case 4 needs equal # dimensions. Skipping")
+						sys.stdout.flush()
+
 						continue
 				for lam_cv in lambda_cv_range:
 					pred_inner = {}
