@@ -334,18 +334,13 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     print("******* BEST PARAMS *******")
     print(best_params_global[outer_loop_iteration])
     print("******* BEST PARAMS *******")
-    raw_input("Enter to get stored A_source")
     # Now we will be using the best parameter set obtained to compute the predictions
     A_source = A_store[best_num_season_factors][best_num_home_factors][best_lam][best_num_iterations]
-    print A_source
 
-    raw_input("Enter to get learned A_source")
-    H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
-                                                                                    best_num_home_factors, best_num_season_factors, 
-                                                                                    num_iter=best_num_iterations, lr=1, dis=False, 
-                                                                                    lam=best_lam)
-    print A_source
-    raw_input("Enter to get learned A_source")
+    #H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
+    #                                                                                best_num_home_factors, best_num_season_factors, 
+    #                                                                                num_iter=best_num_iterations, lr=1, dis=False, 
+    #                                                                                lam=best_lam)
     # print A_source
     num_test = len(test_ix)
     train_test_ix = np.concatenate([test_ix, train_ix])

@@ -20,11 +20,11 @@ MAX_NUM_MY_JOBS = 360
 # Delay between jobs when we exceed the max. number of jobs we want on the cluster
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
-source = 'Austin'
-target = 'SanDiego'
-for random_seed in range(5):
-	for train_percentage in range(11, 20):
-		for outer_loop_iteration in range(10):
+source = 'SanDiego'
+target = 'Austin'
+for random_seed in [4]:
+	for train_percentage in [70]:
+		for outer_loop_iteration in [9]:
 			OFILE = "{}/{}_{}_{}_{}_{}_graph_transfer.out".format(SLURM_OUT, source, target, random_seed, train_percentage, outer_loop_iteration)
 			EFILE = "{}/{}_{}_{}_{}_{}_graph_transfer.err".format(SLURM_OUT, source, target, random_seed, train_percentage, outer_loop_iteration )
 			SLURM_SCRIPT = "{}/{}_{}_{}_{}_{}_graph_transfer.pbs".format('pbs_files', source, target, random_seed, train_percentage, outer_loop_iteration)
@@ -32,8 +32,8 @@ for random_seed in range(5):
 			lines = []
 			lines.append("#!/bin/sh\n")
 			lines.append('#SBATCH --time=1-16:0:00\n')
-			lines.append('#SBATCH --mem=16\n')
-			lines.append('#SBATCH -c 16')
+			lines.append('#SBATCH --mem=24\n')
+			lines.append('#SBATCH --nodelist=granger8')
 			lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
 			lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
 			lines.append(CMD + '\n')
