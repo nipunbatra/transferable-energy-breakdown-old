@@ -50,7 +50,7 @@ if static_use == "True":
 else:
 	lambda_cv_range = [0]
 
-A_store = pickle.load(open('../predictions/case-{}-graph_{}_As.pkl'.format(case, source), 'r'))
+A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_As.pkl'.format(case, source)), 'r'))
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year)
 
