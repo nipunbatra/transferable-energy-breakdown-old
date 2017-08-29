@@ -346,10 +346,10 @@ for appliance in APPLIANCES_ORDER:
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
 name = "{}-{}".format(random_seed, train_percentage)
-directory = os.path.expanduser('~/git/pred_tf/{}'.format(source))
+directory = os.path.expanduser('~/git/pred_tf/{}/'.format(source))
 if not os.path.exists(directory):
 	os.makedirs(directory)
-filename = os.path.expanduser('~/git/pred_tf/{}'.format(source)+ name + '.pkl')
+filename = os.path.expanduser('~/git/pred_tf/{}/'.format(source)+ name + '.pkl')
 
 if os.path.exists(filename):
 	print("File already exists. Quitting.")

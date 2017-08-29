@@ -21,12 +21,12 @@ MAX_NUM_MY_JOBS = 360
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-source = 'SanDiego'
+source = 'Austin'
 for random_seed in range(5):
 	for train_percentage in [6,8,10,12,14,16,18,20,30,40,50,60,70,80,90,100]:
-		OFILE = "{}/{}_{}_{}_graph_normal.out".format(SLURM_OUT, source, random_seed, train_percentage )
-		EFILE = "{}/{}_{}_{}_graph_normal.err".format(SLURM_OUT, source, random_seed, train_percentage )
-		SLURM_SCRIPT = "{}/{}_{}_{}_graph_normal.pbs".format('pbs_files', source, random_seed, train_percentage)
+		OFILE = "{}/{}_{}_{}_tf_normal.out".format(SLURM_OUT, source, random_seed, train_percentage )
+		EFILE = "{}/{}_{}_{}_tf_normal.err".format(SLURM_OUT, source, random_seed, train_percentage )
+		SLURM_SCRIPT = "{}/{}_{}_{}_tf_normal.pbs".format('pbs_files', source, random_seed, train_percentage)
 		CMD = 'python normal_tf_parallel_cv.py {} {} {}'.format(source, random_seed, train_percentage)
 		lines = []
 		lines.append("#!/bin/sh\n")

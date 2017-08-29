@@ -23,8 +23,8 @@ import time
 
 source = 'Austin'
 target = 'SanDiego'
-for random_seed in [0]:
-	for train_percentage in range(10, 100, 20):
+for random_seed in range(5):
+	for train_percentage in [6, 8, 10, 12, 14, 16, 18, 20, 40 ,60 ,80 ,100]:
 		OFILE = "{}/{}_{}_{}_{}_graph_transfer.out".format(SLURM_OUT, source, target, random_seed, train_percentage )
 		EFILE = "{}/{}_{}_{}_{}_graph_transfer.err".format(SLURM_OUT, source, target, random_seed, train_percentage )
 		SLURM_SCRIPT = "{}/{}_{}_{}_{}_graph_transfer.pbs".format('pbs_files', source, target, random_seed, train_percentage)

@@ -21,8 +21,8 @@ MAX_NUM_MY_JOBS = 360
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
-source = 'Austin'
-target = 'SanDiego'
+source = 'SanDiego'
+target = 'Austin'
 for random_seed in range(5):
 	for train_percentage in [6,8,10,12,14,16,18,20,30,40,50,60,70,80,90,100]:
 		OFILE = "{}/{}_{}_{}_{}_graph_transfer.out".format(SLURM_OUT, source, target, random_seed, train_percentage )
@@ -33,7 +33,7 @@ for random_seed in range(5):
 		lines.append("#!/bin/sh\n")
 		lines.append('#SBATCH --time=1-16:0:00\n')
 		lines.append('#SBATCH --mem=16\n')
-		lines.append('#SBATCH -c 24')
+		lines.append('#SBATCH -c 16')
 		lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
 		lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
 		lines.append(CMD + '\n')
