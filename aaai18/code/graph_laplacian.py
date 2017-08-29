@@ -1,8 +1,8 @@
 """
 This module comutes results for transfer learning
 
->>>python graph_laplacian_transfer.py case static_use source target random_seed train_percentage
-
+>>>python graph_laplacian.py case static_use source target random_seed train_percentage
+setting: transfer or normal
 case: 1, 2, 3, 4; 2 is for our proposed approach, 4 is for standard TF
 static_use: "True" or "False"- If False, we don't use static household properties 
 and the corresponding laplacian penalty term is set to 0
@@ -11,8 +11,18 @@ target:
 random_seed:
 train_percentage:
 
+NB: Prediction region is always called target. So, if we are doing n
+normal learning on SD, we don't care about source, but target will be SD
+
 Example:
->>> python graph_laplacian_transfer.py 2 True Austin SanDiego 0 10
+# Transfer learning from Austin -> SD, case 2, 10% data used, 0th random seed, static_data used
+>>> python graph_laplacian.py transfer 2 True Austin SanDiego 0 10
+
+# Normal training in SD, case 2, 10% data used, 0th random seed, static data used
+>>> python graph_laplacian.py normal 2 True None SanDiego 0 10
+
+TODO: mention the objective being solved here
+
 """
 
 import datetime
@@ -29,12 +39,13 @@ APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
 
 
-case, static_use, source, target, random_seed, train_percentage = sys.argv[1:]
+setting, case, static_use, source, target, random_seed, train_percentage = sys.argv[1:]
 case = int(case)
 train_percentage = float(train_percentage)
 random_seed = int(random_seed)
 
 if static_use == "True":
+	# Use non-zero value of penalty
 	lambda_cv_range = [0.001, 0.01, 0.1, 1]
 else:
 	lambda_cv_range = [0]
@@ -47,8 +58,13 @@ target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_stati
 source_L = get_L(source_static)
 target_L = get_L(target_static)
 
-name = "{}-{}-{}-{}".format(source, target, random_seed, train_percentage)
-directory = '../predictions/TF/case-{}/transfer/{}'.format(case, static_use)
+if setting=="transfer":
+	name = "{}-{}-{}-{}".format(source, target, random_seed, train_percentage)
+else:
+	name = "{}-{}-{}".format(target, random_seed, train_percentage)
+
+
+directory = '../predictions/TF/{}/case-{}/{}'.format(setting, case, static_use)
 if not os.path.exists(directory):
 	os.makedirs(directory)
 filename = os.path.join(directory, name + '.pkl')
@@ -104,9 +120,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	overall_df_inner = target_df.loc[train_ix]
 
 	best_params_global[outer_loop_iteration] = {}
-	for num_iterations_cv in [1300, 900, 500, 100]:
-		for num_season_factors_cv in range(2, 5):
-			for num_home_factors_cv in range(3, 6):
+	for num_iterations_cv in [1300, 700, 100][1:2]:
+		for num_season_factors_cv in range(2, 5)[:2]:
+			for num_home_factors_cv in range(3, 6)[:1]:
 				if case == 4:
 					if num_home_factors_cv!=num_season_factors_cv:
 						print("Case 4 needs equal # dimensions. Skipping")
@@ -117,7 +133,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 						train_ix_inner = overall_df_inner.index[train_inner]
 						test_ix_inner = overall_df_inner.index[test_inner]
 
-						A_source = A_store[num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations_cv]
+
 						train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
 						df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[
 							train_test_ix_inner]
@@ -128,6 +144,11 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 						L_inner = target_L[np.ix_(np.concatenate([test_inner, train_inner]),
 						                          np.concatenate([test_inner, train_inner]))]
 
+
+						if setting=="transfer":
+							A_source = A_store[num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations_cv]
+						else:
+							A_source = None
 						H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner,
 						                                                                      L_inner,
 						                                                                      num_home_factors_cv,
@@ -191,8 +212,10 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print("******* BEST PARAMS *******")
 	sys.stdout.flush()
 	# Now we will be using the best parameter set obtained to compute the predictions
-
-	A_source = A_store[best_num_season_factors][best_num_home_factors][best_lam][best_num_iterations]
+	if setting=="transfer":
+		A_source = A_store[best_num_season_factors][best_num_home_factors][best_lam][best_num_iterations]
+	else:
+		A_source = None
 	num_test = len(test_ix)
 	train_test_ix = np.concatenate([test_ix, train_ix])
 	df_t, dfc_t = target_df.loc[train_test_ix], target_dfc.loc[train_test_ix]

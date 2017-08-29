@@ -26,6 +26,6 @@ target = 'Boulder'
 
 for random_seed in range(4):
 	for train_percentage in range(10, 110, 10):
-		CMD = 'python graph_laplacian_transfer.py {} {} {} {} &> graph-lap-transfer-{}_{}_{}_{}.out &'.format(source, target,  random_seed, train_percentage, source, target, random_seed, train_percentage)
+		CMD = 'python graph_laplacian.py {} {} {} {} &> graph-lap-transfer-{}_{}_{}_{}.out &'.format(source, target,  random_seed, train_percentage, source, target, random_seed, train_percentage)
 		print CMD
 
