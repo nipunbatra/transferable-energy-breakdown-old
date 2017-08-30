@@ -8,7 +8,7 @@ import pickle
 import pandas as pd
 from common import APPLIANCES_ORDER, compute_rmse_fraction
 source = "Austin"
-target = "SanDiego"
+target = "Boulder"
 
 out = {}
 params = {}

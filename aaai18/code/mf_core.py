@@ -4,7 +4,36 @@ import cvxpy as cvx
 import numpy as np
 import pandas as pd
 
-from aaai18.common import APPLIANCES_ORDER
+from common import APPLIANCES_ORDER
+from create_matrix import create_matrix_single_region
+
+def create_df_dfc_static(region, year, appliance, features):
+	df, dfc = create_matrix_single_region(region, year)
+	start, stop = 1, 13
+	energy_cols = np.array(
+		[['%s_%d' % (ap, month) for month in range(start, stop)] for ap in ['aggregate', appliance]]).flatten()
+
+	static_cols = ['area', 'total_occupants', 'num_rooms']
+	static_df = df[static_cols]
+	static_df = static_df.div(static_df.max())
+
+	dfc = df.copy()
+
+	df = dfc[energy_cols]
+	col_max = df.max().max()
+	col_min = df.min().min()
+
+	X_matrix, X_normalised, matrix_max, matrix_min, appliance_cols, aggregate_cols = preprocess(df, dfc,
+                                                                                            appliance,
+                                                                                            col_max,
+                                                                                            col_min, False)
+	static_features = get_static_features(dfc, X_normalised)
+	if features == "energy":
+		feature_comb = ['None']
+	else:
+		feature_comb = ['occ', 'area', 'rooms']
+	idx_user, data_user = prepare_known_features(feature_comb, static_features, X_normalised)
+	return df, dfc, static_df, X_matrix, X_normalised, matrix_max, matrix_min, appliance_cols, aggregate_cols, idx_user, data_user
 
 
 def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_user=None,

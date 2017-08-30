@@ -1,8 +1,7 @@
 from sklearn.model_selection import KFold, train_test_split
 
-from aaai18.common import compute_rmse_fraction
+from common import compute_rmse_fraction
 from create_matrix import *
-from degree_days import dds
 from mf_core import *
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
@@ -28,7 +27,6 @@ energy_cols = np.array(
 static_cols = ['area', 'total_occupants', 'num_rooms']
 static_df = target_df[static_cols]
 static_df = static_df.div(static_df.max())
-weather_values = np.array(dds[2014][region][start - 1:stop - 1]).reshape(-1, 1)
 
 target_dfc = target_df.copy()
 
