@@ -47,7 +47,7 @@ random_seed = int(random_seed)
 
 if static_use == "True":
 	# Use non-zero value of penalty
-	lambda_cv_range = [0.001, 0.01, 0.1, 0, 1]
+	lambda_cv_range = [0.001, 0.01, 0.1]
 else:
 	lambda_cv_range = [0]
 
@@ -66,7 +66,7 @@ else:
 
 # Seasonal constant constraints
 if constant_use == 'True':
-	T_constant = np.ones(12).reshape(-1,1)
+	T_constant = np.ones(12).reshape(-1 , 1)
 else:
 	T_constant = None
 # End
@@ -128,10 +128,10 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	overall_df_inner = target_df.loc[train_ix]
 
 	best_params_global[outer_loop_iteration] = {}
-	for learning_rate_cv in [0.1, 0.5, 1, 2]:
-		for num_iterations_cv in [1300, 900, 500, 100][:]:
-			for num_season_factors_cv in range(2, 6)[:]:
-				for num_home_factors_cv in range(2, 6)[:]:
+	for learning_rate_cv in [0.1, 0.5, 1]:
+		for num_iterations_cv in [1300, 700, 100][:]:
+			for num_season_factors_cv in range(2, 5)[:]:
+				for num_home_factors_cv in range(3, 6)[:]:
 					if case == 4:
 						if num_home_factors_cv!=num_season_factors_cv:
 							print("Case 4 needs equal # dimensions. Skipping")

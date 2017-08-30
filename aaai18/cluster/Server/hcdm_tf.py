@@ -3,10 +3,10 @@ Run all the code on HCDM
 
 """
 source = "Austin"
-target = "SanDiego"
+target = "Boulder"
 shell_script = "{}_{}.sh".format(source, target)
 f = open(shell_script, 'w')
-for case in [2, 4]:
+for case in [4]:
 	for constant_use in ['True', 'False']:
 		for static_use in ['True', 'False']:
 			for setting in ['normal','transfer']:
@@ -21,5 +21,5 @@ for case in [2, 4]:
 					                                                                                                     target,
 					                                                                                                     random_seed,
 					                                                                                                     train_percentage)
-					f.write(CMD)
+						f.write(CMD)
 f.close()
