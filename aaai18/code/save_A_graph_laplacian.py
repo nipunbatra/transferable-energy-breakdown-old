@@ -47,30 +47,32 @@ best_params_global = {}
 A_store = {}
 
 max_num_iterations = 1300
-for num_season_factors_cv in range(2, 6):
+for learning_rate_cv in [0.1, 0.5, 1, 2]:
+	A_store[learning_rate_cv] = {}
+	for num_season_factors_cv in range(2, 6):
 
-	A_store[num_season_factors_cv] = {}
-	for num_home_factors_cv in range(3, 7):
-		if case == 4:
-			if num_home_factors_cv != num_season_factors_cv:
-				print("Case 4 needs equal # dimensions. Skipping")
-				continue
-		A_store[num_season_factors_cv][num_home_factors_cv] = {}
-		for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
-			A_store[num_season_factors_cv][num_home_factors_cv][lam_cv] = {}
+		A_store[learning_rate_cv][num_season_factors_cv] = {}
+		for num_home_factors_cv in range(3, 7):
+			if case == 4:
+				if num_home_factors_cv != num_season_factors_cv:
+					print("Case 4 needs equal # dimensions. Skipping")
+					continue
+			A_store[learning_rate_cv][num_season_factors_cv][num_home_factors_cv] = {}
+			for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
+				A_store[learning_rate_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = {}
 
-			H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor,
-			                                                                                source_L,
-			                                                                                num_home_factors_cv,
-			                                                                                num_season_factors_cv,
-			                                                                                num_iter=max_num_iterations,
-			                                                                                lr=1, dis=False,
-			                                                                                lam=lam_cv,
-			                                                                                T_known=T_constant)
-			
-			for num_iterations in range(100, 1400, 200):
-				A_store[num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations] = As[num_iterations]
-				print(num_season_factors_cv, num_home_factors_cv, lam_cv, num_iterations)
-				sys.stdout.flush()
+				H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor,
+				                                                                                source_L,
+				                                                                                num_home_factors_cv,
+				                                                                                num_season_factors_cv,
+				                                                                                num_iter=max_num_iterations,
+				                                                                                lr=learning_rate_cv, dis=False,
+				                                                                                lam=lam_cv,
+				                                                                                T_known=T_constant)
+				
+				for num_iterations in range(100, 1400, 200):
+					A_store[learning_rate_cv][num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations] = As[num_iterations]
+					print(learning_rate_cv, num_season_factors_cv, num_home_factors_cv, lam_cv, num_iterations)
+					sys.stdout.flush()
 
 pickle.dump(A_store, open('../predictions/case-{}-graph_{}_{}_As.pkl'.format(case, source, constant_use), 'w'))
