@@ -72,7 +72,7 @@ for learning_rate_cv in [0.1, 0.5, 1, 2]:
 				
 				for num_iterations in range(100, 1400, 200):
 					A_store[learning_rate_cv][num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations] = As[num_iterations]
-					print(learning_rate_cv, num_season_factors_cv, num_home_factors_cv, lam_cv, num_iterations)
+					print(learning_rate_cv, num_season_factors_cv, num_home_factors_cv, lam_cv, num_iterations, costs[num_iterations])
 					sys.stdout.flush()
 
 pickle.dump(A_store, open('../predictions/case-{}-graph_{}_{}_As.pkl'.format(case, source, constant_use), 'w'))

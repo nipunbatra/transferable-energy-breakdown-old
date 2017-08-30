@@ -130,8 +130,8 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	best_params_global[outer_loop_iteration] = {}
 	for learning_rate_cv in [0.1, 0.5, 1, 2]:
 		for num_iterations_cv in [1300, 900, 500, 100][:]:
-			for num_season_factors_cv in range(2, 5)[:]:
-				for num_home_factors_cv in range(3, 6)[:]:
+			for num_season_factors_cv in range(2, 6)[:]:
+				for num_home_factors_cv in range(2, 6)[:]:
 					if case == 4:
 						if num_home_factors_cv!=num_season_factors_cv:
 							print("Case 4 needs equal # dimensions. Skipping")
