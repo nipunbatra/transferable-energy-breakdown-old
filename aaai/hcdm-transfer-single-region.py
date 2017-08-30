@@ -22,12 +22,12 @@ DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
 source = 'Austin'
-target = 'SanDiego'
+target = 'Bou'
 cost = 'l21'
 for static_fac in ['None']:
 	for lam in [0]:
-		for random_seed in range(5):
-			for train_percentage in range(10, 110, 10):
+		for random_seed in range(4):
+			for train_percentage in range(10, 110, 20):
 				CMD = 'python sparse-transfer-cv.py {} {} {} {} {} {} {}  &> {}_{}_{}_{}.out &'.format(source, target, static_fac, lam, random_seed, train_percentage, cost, source, target, random_seed, train_percentage)
 				print CMD
 
