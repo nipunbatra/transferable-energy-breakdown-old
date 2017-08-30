@@ -16,6 +16,7 @@ It can be run as:
 from common import create_region_df_dfc_static
 from create_matrix import *
 from tensor_custom_core import *
+import datetime
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
@@ -59,6 +60,10 @@ for learning_rate_cv in [0.1, 0.5, 1, 2]:
 					continue
 			A_store[learning_rate_cv][num_season_factors_cv][num_home_factors_cv] = {}
 			for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
+				print("-"*80)
+				print(datetime.datetime.now())
+				print("-" * 80)
+				sys.stdout.flush()
 				A_store[learning_rate_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = {}
 
 				H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor,
