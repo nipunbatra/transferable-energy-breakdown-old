@@ -1,8 +1,17 @@
 from create_matrix import *
 from sklearn.neighbors import NearestNeighbors
-
+from scipy.spatial.distance import pdist, squareform
 from create_matrix import *
 from tensor_custom_core import *
+from degree_days import dds
+import multiprocessing as mp
+import os
+import pickle
+
+import autograd.numpy as np
+from scipy.spatial.distance import pdist, squareform
+from sklearn.model_selection import train_test_split, KFold
+
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
@@ -166,6 +175,8 @@ case = 2
 algo = 'adagrad'
 cost = 'l21'
 
+T_degree = np.array(dds[2014]['Austin']).reshape(-1, 1)
+
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = []
 best_params_global = {}
@@ -177,7 +188,7 @@ for num_season_factors_cv in range(2, 5):
 	A_store[num_season_factors_cv] = {}
 	for num_home_factors_cv in range(3, 6):
 		A_store[num_season_factors_cv][num_home_factors_cv] = {}
-		for lam_cv in [0]:
+		for lam_cv in [0.001, 0.01, 0.1, 0, 1]:
 			A_store[num_season_factors_cv][num_home_factors_cv][lam_cv] = {}
 
 			H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor,
@@ -186,9 +197,11 @@ for num_season_factors_cv in range(2, 5):
 			                                                                                num_season_factors_cv,
 			                                                                                num_iter=max_num_iterations,
 			                                                                                lr=1, dis=False,
-			                                                                                lam=lam_cv)
+			                                                                                lam=lam_cv,
+			                                                                                T_known = T_degree
+			                                                                                )
 			for num_iterations in range(100, 1400, 200):
 				A_store[num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations] = As[num_iterations]
 				print(num_season_factors_cv, num_home_factors_cv, lam_cv, num_iterations)
 
-pickle.dump(A_store, open('predictions/tf_{}_As.pkl'.format(source), 'w'))
+pickle.dump(A_store, open('predictions/tf_{}_degree_As.pkl'.format(source), 'w'))

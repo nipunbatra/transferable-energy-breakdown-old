@@ -194,7 +194,7 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
         H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner, L_inner, 
                                                                     num_home_factors_cv, num_season_factors_cv, 
                                                                     num_iter=num_iterations_cv, lr=1, dis=False, 
-                                                                    lam=lam_cv, A_known = A_source)
+                                                                    lam=lam_cv, A_known = A_source, T_known = T_degree)
 
         HAT = multiply_case(H, A, T, case)
         for appliance in APPLIANCES_ORDER:
@@ -234,7 +234,8 @@ n_splits = 10
 
 algo = 'adagrad'
 cost = 'l21'
-A_store = pickle.load(open('predictions/graph_{}_As.pkl'.format(source), 'r'))
+A_store = pickle.load(open('predictions/tf_{}_degree_As.pkl'.format(source), 'r'))
+T_degree = np.array(dds[2014][target]).reshape(-1, 1)
 
 for appliance in APPLIANCES_ORDER:
     pred[appliance] = []
@@ -352,7 +353,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, 
                                                                 best_num_home_factors, best_num_season_factors, 
                                                                 num_iter=best_num_iterations, lr=1, dis=False, 
-                                                                lam=best_lam, A_known = A_source)
+                                                                lam=best_lam, A_known = A_source, T_known = T_degree)
 
     HAT = multiply_case(H, A, T, case)
     for appliance in APPLIANCES_ORDER:
@@ -364,10 +365,10 @@ for appliance in APPLIANCES_ORDER:
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
 name = "{}-{}".format(random_seed, train_percentage)
-directory = os.path.expanduser('~/git/pred_graph/{}_to_{}/'.format(source, target))
+directory = os.path.expanduser('~/git/pred_graph/degree/{}_to_{}/'.format(source, target))
 if not os.path.exists(directory):
     os.makedirs(directory)
-filename = os.path.expanduser('~/git/pred_graph/{}_to_{}/'.format(source, target) + name + '.pkl')
+filename = os.path.expanduser('~/git/pred_graph/degree/{}_to_{}/'.format(source, target) + name + '.pkl')
 
 if os.path.exists(filename):
     print("File already exists. Quitting.")

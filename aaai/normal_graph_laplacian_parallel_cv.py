@@ -165,6 +165,7 @@ source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_stati
 
 # # using cosine similarity to compute L
 source_L = get_L(source_static)
+T_degree = np.array(dds[2014][source]).reshape(-1, 1)
 
 
 
@@ -187,7 +188,7 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
 		H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner, L_inner, 
 																	num_home_factors_cv, num_season_factors_cv, 
 																	num_iter=num_iterations_cv, lr=1, dis=False, 
-																	lam=lam_cv)
+																	lam=lam_cv, T_known = T_degree)
 														
 
 
@@ -330,7 +331,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 	H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, 
 																best_num_home_factors, best_num_season_factors, 
 																num_iter=best_num_iterations, lr=1, dis=False, 
-																lam=best_lam
+																lam=best_lam, T_known = T_degree
 																)
 
 
@@ -346,10 +347,10 @@ for appliance in APPLIANCES_ORDER:
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
 name = "{}-{}".format(random_seed, train_percentage)
-directory = os.path.expanduser('~/git/pred_graph/{}/'.format(source))
+directory = os.path.expanduser('~/git/pred_graph/degree/{}/'.format(source))
 if not os.path.exists(directory):
 	os.makedirs(directory)
-filename = os.path.expanduser('~/git/pred_graph/{}/'.format(source)+ name + '.pkl')
+filename = os.path.expanduser('~/git/pred_graph/degree/{}/'.format(source)+ name + '.pkl')
 
 if os.path.exists(filename):
 	print("File already exists. Quitting.")
