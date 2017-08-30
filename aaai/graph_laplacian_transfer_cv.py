@@ -8,7 +8,7 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.neighbors import NearestNeighbors
 
-from aaai18.common import compute_rmse_fraction, contri
+from common import compute_rmse_fraction, contri
 from create_matrix import *
 from tensor_custom_core import *
 
@@ -108,7 +108,8 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, 
     Hs = [H.copy()]
     As = [A.copy()]
     Ts = [T.copy()]
-    
+
+
     costs = [cost(H, A, T, L, E_np_masked, lam, case)]
 
     HATs = [multiply_case(H, A, T, case)]
@@ -255,6 +256,8 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
                                                                                                         num_home_factors_cv, num_season_factors_cv, 
                                                                                                         num_iter=num_iterations_cv, lr=1, dis=False, 
                                                                                                         lam=lam_cv, T_known = np.ones(12).reshape(-1, 1))
+                        
+                        
                         train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
                         df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[train_test_ix_inner]
                         tensor_inner = get_tensor(df_t_inner)
@@ -304,6 +307,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
                         best_lam = lam_cv
                         least_error = mean_err
                     print(mean_err, least_error, num_iterations_cv, num_home_factors_cv, num_season_factors_cv, lam_cv)
+                    raw_input('Enter to continue')
     best_params_global[outer_loop_iteration] = {'Iterations':best_num_iterations,
                                                 "Appliance Train Error": err,
                                                 'Num season factors':best_num_season_factors,

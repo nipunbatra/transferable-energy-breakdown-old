@@ -6,6 +6,7 @@ setting: transfer or normal
 case: 1, 2, 3, 4; 2 is for our proposed approach, 4 is for standard TF
 static_use: "True" or "False"- If False, we don't use static household properties 
 and the corresponding laplacian penalty term is set to 0
+constant_use: "True" or "False" - If True, we add the constraint that one column of seasonal factors to be 1.
 source:
 target:
 random_seed:
@@ -39,18 +40,18 @@ APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
 
 
-setting, case, static_use, source, target, random_seed, train_percentage = sys.argv[1:]
+setting, case, constant_use, static_use, source, target, random_seed, train_percentage = sys.argv[1:]
 case = int(case)
 train_percentage = float(train_percentage)
 random_seed = int(random_seed)
 
 if static_use == "True":
 	# Use non-zero value of penalty
-	lambda_cv_range = [0.001, 0.01, 0.1, 1]
+	lambda_cv_range = [0.001, 0.01, 0.1, 0, 1]
 else:
 	lambda_cv_range = [0]
 
-A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_As.pkl'.format(case, source)), 'r'))
+A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_As.pkl'.format(case, source, constant_use)), 'r'))
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year)
 
@@ -63,8 +64,14 @@ if setting=="transfer":
 else:
 	name = "{}-{}-{}".format(target, random_seed, train_percentage)
 
+# Seasonal constant constraints
+if constant_use == 'True':
+	T_constant = np.ones(12).reshape(-1,1)
+else:
+	T_constant = None
+# End
 
-directory = os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/TF/{}/case-{}/{}'.format(setting, case, static_use))
+directory = os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/TF/{}/case-{}/{}/{}'.format(setting, case, static_use, constant_use))
 if not os.path.exists(directory):
 	os.makedirs(directory)
 filename = os.path.join(directory, name + '.pkl')
@@ -120,7 +127,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	overall_df_inner = target_df.loc[train_ix]
 
 	best_params_global[outer_loop_iteration] = {}
-	for num_iterations_cv in [1300, 700, 100][:]:
+	for num_iterations_cv in [1300, 900, 500, 100][:]:
 		for num_season_factors_cv in range(2, 5)[:]:
 			for num_home_factors_cv in range(3, 6)[:]:
 				if case == 4:
@@ -144,23 +151,23 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 						# First n
 						tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
 						L_inner = target_L[np.ix_(np.concatenate([test_inner, train_inner]),
-						                          np.concatenate([test_inner, train_inner]))]
+												  np.concatenate([test_inner, train_inner]))]
 
 
 						if setting=="transfer":
 							A_source = A_store[num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations_cv]
 						else:
 							A_source = None
+						
 						H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner,
-						                                                                      L_inner,
-						                                                                      num_home_factors_cv,
-						                                                                      num_season_factors_cv,
-						                                                                      num_iter=num_iterations_cv,
-						                                                                      lr=1, dis=False,
-						                                                                      lam=lam_cv,
-						                                                                      A_known=A_source,
-						                                                                      )
-
+																							  L_inner,
+																							  num_home_factors_cv,
+																							  num_season_factors_cv,
+																							  num_iter=num_iterations_cv,
+																							  lr=1, dis=False,
+																							  lam=lam_cv,
+																							  A_known=A_source,
+																							  T_known=T_constant)
 						HAT = multiply_case(H, A, T, case)
 						for appliance in APPLIANCES_ORDER:
 							if appliance not in pred_inner:
@@ -168,7 +175,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
 							pred_inner[appliance].append(
 								pd.DataFrame(HAT[:len(test_ix_inner), appliance_index[appliance], :],
-								             index=test_ix_inner))
+											 index=test_ix_inner))
 
 					err = {}
 					appliance_to_weight = []
@@ -203,11 +210,11 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 					print(mean_err, least_error, num_iterations_cv, num_home_factors_cv, num_season_factors_cv, lam_cv)
 					sys.stdout.flush()
 	best_params_global[outer_loop_iteration] = {'Iterations': best_num_iterations,
-	                                            "Appliance Train Error": err,
-	                                            'Num season factors': best_num_season_factors,
-	                                            'Num home factors': best_num_home_factors,
-	                                            'Lambda': best_lam,
-	                                            "Least Train Error": least_error}
+												"Appliance Train Error": err,
+												'Num season factors': best_num_season_factors,
+												'Num home factors': best_num_home_factors,
+												'Lambda': best_lam,
+												"Least Train Error": least_error}
 
 	print("******* BEST PARAMS *******")
 	print(best_params_global[outer_loop_iteration])
@@ -229,10 +236,10 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	L = target_L[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
 
 	H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L,
-	                                                                      best_num_home_factors,
-	                                                                      best_num_season_factors,
-	                                                                      num_iter=best_num_iterations, lr=1, dis=False,
-	                                                                      lam=best_lam, A_known=A_source)
+																		  best_num_home_factors,
+																		  best_num_season_factors,
+																		  num_iter=best_num_iterations, lr=1, dis=False,
+																		  lam=best_lam, A_known=A_source, T_known=T_constant)
 
 	HAT = multiply_case(H, A, T, case)
 	for appliance in APPLIANCES_ORDER:
