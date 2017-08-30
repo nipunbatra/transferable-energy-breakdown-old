@@ -52,7 +52,7 @@ for learning_rate_cv in [0.1, 0.5, 1, 2]:
 	for num_season_factors_cv in range(2, 6):
 
 		A_store[learning_rate_cv][num_season_factors_cv] = {}
-		for num_home_factors_cv in range(3, 7):
+		for num_home_factors_cv in range(2, 6):
 			if case == 4:
 				if num_home_factors_cv != num_season_factors_cv:
 					print("Case 4 needs equal # dimensions. Skipping")
