@@ -20,7 +20,7 @@ if not os.path.exists(SLURM_OUT):
 	os.makedirs(SLURM_OUT)
 
 # Max. num running processes you want. This is to prevent hogging the cluster
-MAX_NUM_MY_JOBS = 150
+MAX_NUM_MY_JOBS = 250
 # Delay between jobs when we exceed the max. number of jobs we want on the cluster
 DELAY_NUM_JOBS_EXCEEDED = 10
 import time
@@ -32,7 +32,7 @@ target = "SanDiego"
 for case in [4]:
 	# for constant_use in ['True', 'False']:
 	for constant_use in ['False']:
-		for static_use in ['True']:
+		for static_use in ['False']:
 			for setting in ['transfer', 'normal']:
 				# for setting in ['normal','transfer']:
 				for train_percentage in [6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]:

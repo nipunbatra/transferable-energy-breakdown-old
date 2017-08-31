@@ -18,6 +18,7 @@ HCDM3: Our TF (2), constant = False, static = True, setting = transfer, normal, 
 Austin to SD
 HCDM5: Our TF (2), constant = True, static = True, setting = transfer, Austin to Sd
 CS cluster: STF (4), constant = False, static = True, setting = normal, transfer, Austin to SD
+CS cluster: STF (4), constant = False, static = False, setting = normal, transfer, Austin to SD
 
 
 
