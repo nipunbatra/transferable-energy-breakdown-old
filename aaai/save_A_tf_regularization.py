@@ -7,6 +7,8 @@ from degree_days import dds
 import multiprocessing as mp
 import os
 import pickle
+from autograd.numpy import linalg as LA
+
 
 import autograd.numpy as np
 from scipy.spatial.distance import pdist, squareform
@@ -77,15 +79,19 @@ def get_L(X):
 
 
 def cost_graph_laplacian(H, A, T, L, E_np_masked, lam, case):
-	HAT = multiply_case(H, A, T, case)
-	mask = ~np.isnan(E_np_masked)
-	error_1 = (HAT - E_np_masked)[mask].flatten()
+    HAT = multiply_case(H, A, T, case)
+    mask = ~np.isnan(E_np_masked)
+    error_1 = (HAT - E_np_masked)[mask].flatten()
+    
+    HTL = np.dot(H.T, L)
+    HTLH = np.dot(HTL, H)
+    error_2 = np.trace(HTLH)
 
-	HTL = np.dot(H.T, L)
-	HTLH = np.dot(HTL, H)
-	error_2 = np.trace(HTLH)
-
-	return np.sqrt((error_1 ** 2).mean()) + lam * error_2
+    error_3 = LA.norm(H)
+    error_4 = LA.norm(A)
+    error_5 = LA.norm(T)
+    
+    return np.sqrt((error_1**2).mean()) + lam * error_2 + 0.5 * error_3 + 0.5 * error_4 + 0.5 * error_5
 
 
 def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, dis=False, lam=1, H_known=None,
@@ -206,4 +212,4 @@ for num_season_factors_cv in range(2, 5):
 				A_store[num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations] = As[num_iterations]
 				print(num_season_factors_cv, num_home_factors_cv, lam_cv, num_iterations)
 
-pickle.dump(A_store, open('predictions/tf_{}_both_As.pkl'.format(source), 'w'))
+pickle.dump(A_store, open('predictions/tf_{}_graph_regularization_As.pkl'.format(source), 'w'))

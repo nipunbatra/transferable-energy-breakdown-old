@@ -3,6 +3,7 @@ import os
 import pickle
 
 import autograd.numpy as np
+from autograd.numpy import linalg as LA
 from scipy.spatial.distance import pdist, squareform
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.neighbors import NearestNeighbors
@@ -74,8 +75,12 @@ def cost_graph_laplacian(H, A, T, L, E_np_masked, lam, case):
     HTL = np.dot(H.T, L)
     HTLH = np.dot(HTL, H)
     error_2 = np.trace(HTLH)
+
+    error_3 = LA.norm(H)
+    error_4 = LA.norm(A)
+    error_5 = LA.norm(T)
     
-    return np.sqrt((error_1**2).mean()) + lam * error_2
+    return np.sqrt((error_1**2).mean()) + lam * error_2 + 0.5 * error_3 + 0.5 * error_4 + 0.5 * error_5
 
 def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, dis=False, lam = 1, H_known=None,A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0):
 
@@ -234,10 +239,10 @@ n_splits = 10
 
 algo = 'adagrad'
 cost = 'l21'
-A_store = pickle.load(open('predictions/tf_{}_both_As.pkl'.format(source), 'r'))
+A_store = pickle.load(open('predictions/tf_{}_graph_regularization_As.pkl'.format(source), 'r'))
 #T_degree = np.array(dds[2014][target]).reshape(-1, 1)
-#T_degree = np.ones(12).reshape(-1, 1)
-T_degree = np.c_[np.array(dds[2014]['Austin']).reshape(-1,1), np.ones(12).reshape(-1, 1)]
+T_degree = np.ones(12).reshape(-1, 1)
+# T_degree = np.c_[np.array(dds[2014]['Austin']).reshape(-1,1), np.ones(12).reshape(-1, 1)]
 for appliance in APPLIANCES_ORDER:
     pred[appliance] = []
 best_params_global = {}
@@ -366,10 +371,10 @@ for appliance in APPLIANCES_ORDER:
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
 name = "{}-{}".format(random_seed, train_percentage)
-directory = os.path.expanduser('~/git/pred_graph/both/{}_to_{}/'.format(source, target))
+directory = os.path.expanduser('~/git/pred_graph/regularization/{}_to_{}/'.format(source, target))
 if not os.path.exists(directory):
     os.makedirs(directory)
-filename = os.path.expanduser('~/git/pred_graph/both/{}_to_{}/'.format(source, target) + name + '.pkl')
+filename = os.path.expanduser('~/git/pred_graph/regularization/{}_to_{}/'.format(source, target) + name + '.pkl')
 
 if os.path.exists(filename):
     print("File already exists. Quitting.")
