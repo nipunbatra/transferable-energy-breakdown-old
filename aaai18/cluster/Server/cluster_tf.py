@@ -4,7 +4,7 @@ Run all the code on HCDM
 """
 
 from subprocess import Popen
-import os
+import os, sys
 # region = "Austin"
 # year = 2014
 import delegator
@@ -63,4 +63,5 @@ for case in [4, 2]:
 
 						delegator.run(command, block=False)
 						print SLURM_SCRIPT
+						sys.stdout.flush()
 
