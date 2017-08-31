@@ -286,10 +286,10 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     ### Inner CV loop to find the optimum set of params. In this case: the number of iterations
     inner_kf = KFold(n_splits=2)
 
-    best_num_iterations = 0
-    best_num_season_factors = 0
-    best_num_home_factors = 0
-    best_lam = 0
+    best_num_iterations = 1300
+    best_num_season_factors = 4
+    best_num_home_factors = 5
+    best_lam = 0.001
     least_error = 1e6
 
     overall_df_inner = target_df.loc[train_ix]
