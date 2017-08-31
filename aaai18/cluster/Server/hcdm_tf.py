@@ -9,7 +9,7 @@ target = "SanDiego"
 for case in [2]:
 	#for constant_use in ['True', 'False']:
 	for constant_use in ['True']:
-		for static_use in [ 'True']:
+		for static_use in [ 'False']:
 			for setting in ['transfer']:
 			#for setting in ['normal','transfer']:
 				for train_percentage in [6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]:

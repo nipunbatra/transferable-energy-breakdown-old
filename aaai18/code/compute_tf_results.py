@@ -4,11 +4,11 @@ Run all the code on HCDM
 """
 
 import os
+import sys
 import pickle
 import pandas as pd
 from common import APPLIANCES_ORDER, compute_rmse_fraction
-source = "Austin"
-target = "Boulder"
+source, target = sys.argv[1:]
 
 out = {}
 params = {}
