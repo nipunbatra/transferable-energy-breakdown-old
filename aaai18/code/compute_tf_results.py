@@ -4,11 +4,11 @@ Run all the code on HCDM
 """
 
 import os
+import sys
 import pickle
 import pandas as pd
 from common import APPLIANCES_ORDER, compute_rmse_fraction
-source = "Austin"
-target = "Boulder"
+source, target = sys.argv[1:]
 
 out = {}
 params = {}
@@ -24,8 +24,8 @@ for case in [2, 4]:
 			for setting in ['normal','transfer']:
 				out[case][constant_use][static_use][setting] = {}
 				params[case][constant_use][static_use][setting] = {}
-				for train_percentage in [10., 30.,
-				                         50.,  70.,  90.]:
+				for train_percentage in [6., 7., 8., 9., 10., 20.,30.,40.,
+				                         50., 60., 70.,80.,  90., 100.]:
 					out[case][constant_use][static_use][setting][train_percentage] = {}
 					params[case][constant_use][static_use][setting][train_percentage] = {}
 					for random_seed in range(4):
