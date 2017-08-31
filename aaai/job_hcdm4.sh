@@ -13,3 +13,15 @@ time python normal_graph_laplacian_parallel_cv.py SanDiego 1 90
 time python normal_graph_laplacian_parallel_cv.py SanDiego 2 10 
 time python normal_graph_laplacian_parallel_cv.py SanDiego 2 30 
 time python normal_graph_laplacian_parallel_cv.py SanDiego 2 50 
+time python normal_graph_laplacian_parallel_cv.py SanDiego 2 70 
+time python normal_graph_laplacian_parallel_cv.py SanDiego 2 90 
+time python normal_graph_laplacian_parallel_cv.py SanDiego 3 10 
+time python normal_graph_laplacian_parallel_cv.py SanDiego 3 30 
+time python normal_graph_laplacian_parallel_cv.py SanDiego 3 50 
+time python normal_graph_laplacian_parallel_cv.py SanDiego 3 70 
+time python normal_graph_laplacian_parallel_cv.py SanDiego 3 90 
+time python normal_graph_laplacian_parallel_cv.py SanDiego 4 10 
+time python normal_graph_laplacian_parallel_cv.py SanDiego 4 30 
+time python normal_graph_laplacian_parallel_cv.py SanDiego 4 50 
+time python normal_graph_laplacian_parallel_cv.py SanDiego 4 70 
+time python normal_graph_laplacian_parallel_cv.py SanDiego 4 90 

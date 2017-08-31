@@ -7,10 +7,10 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.neighbors import NearestNeighbors
 
-from aaai18.common import compute_rmse_fraction, contri
+from common import compute_rmse_fraction, contri
 from create_matrix import *
 from tensor_custom_core import *
-
+from degree_days import dds
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
@@ -234,9 +234,10 @@ n_splits = 10
 
 algo = 'adagrad'
 cost = 'l21'
-A_store = pickle.load(open('predictions/tf_{}_degree_As.pkl'.format(source), 'r'))
-T_degree = np.array(dds[2014][target]).reshape(-1, 1)
-
+A_store = pickle.load(open('predictions/tf_{}_both_As.pkl'.format(source), 'r'))
+#T_degree = np.array(dds[2014][target]).reshape(-1, 1)
+#T_degree = np.ones(12).reshape(-1, 1)
+T_degree = np.c_[np.array(dds[2014]['Austin']).reshape(-1,1), np.ones(12).reshape(-1, 1)]
 for appliance in APPLIANCES_ORDER:
     pred[appliance] = []
 best_params_global = {}
@@ -365,10 +366,10 @@ for appliance in APPLIANCES_ORDER:
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
 name = "{}-{}".format(random_seed, train_percentage)
-directory = os.path.expanduser('~/git/pred_graph/degree/{}_to_{}/'.format(source, target))
+directory = os.path.expanduser('~/git/pred_graph/both/{}_to_{}/'.format(source, target))
 if not os.path.exists(directory):
     os.makedirs(directory)
-filename = os.path.expanduser('~/git/pred_graph/degree/{}_to_{}/'.format(source, target) + name + '.pkl')
+filename = os.path.expanduser('~/git/pred_graph/both/{}_to_{}/'.format(source, target) + name + '.pkl')
 
 if os.path.exists(filename):
     print("File already exists. Quitting.")

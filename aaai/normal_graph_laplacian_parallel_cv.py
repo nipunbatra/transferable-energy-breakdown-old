@@ -7,10 +7,10 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.neighbors import NearestNeighbors
 
-from aaai18.common import compute_rmse_fraction, contri
+from common import compute_rmse_fraction, contri
 from create_matrix import *
 from tensor_custom_core import *
-
+from degree_days import dds
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
@@ -165,8 +165,8 @@ source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_stati
 
 # # using cosine similarity to compute L
 source_L = get_L(source_static)
-T_degree = np.array(dds[2014][source]).reshape(-1, 1)
-
+#T_degree = np.array(dds[2014][source]).reshape(-1, 1)
+T_degree = np.ones(12).reshape(-1, 1)
 
 
 def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv):
@@ -347,10 +347,10 @@ for appliance in APPLIANCES_ORDER:
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
 name = "{}-{}".format(random_seed, train_percentage)
-directory = os.path.expanduser('~/git/pred_graph/degree/{}/'.format(source))
+directory = os.path.expanduser('~/git/pred_graph/constant/{}/'.format(source))
 if not os.path.exists(directory):
 	os.makedirs(directory)
-filename = os.path.expanduser('~/git/pred_graph/degree/{}/'.format(source)+ name + '.pkl')
+filename = os.path.expanduser('~/git/pred_graph/constant/{}/'.format(source)+ name + '.pkl')
 
 if os.path.exists(filename):
 	print("File already exists. Quitting.")

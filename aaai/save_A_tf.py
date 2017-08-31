@@ -175,7 +175,9 @@ case = 2
 algo = 'adagrad'
 cost = 'l21'
 
-T_degree = np.array(dds[2014]['Austin']).reshape(-1, 1)
+#T_degree = np.array(dds[2014]['Austin']).reshape(-1, 1)
+#T_degree = np.ones(12).reshape(-1, 1)
+T_degree = np.c_[np.array(dds[2014]['Austin']).reshape(-1,1), np.ones(12).reshape(-1, 1)]
 
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = []
@@ -204,4 +206,4 @@ for num_season_factors_cv in range(2, 5):
 				A_store[num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations] = As[num_iterations]
 				print(num_season_factors_cv, num_home_factors_cv, lam_cv, num_iterations)
 
-pickle.dump(A_store, open('predictions/tf_{}_degree_As.pkl'.format(source), 'w'))
+pickle.dump(A_store, open('predictions/tf_{}_both_As.pkl'.format(source), 'w'))
