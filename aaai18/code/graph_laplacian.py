@@ -47,7 +47,7 @@ random_seed = int(random_seed)
 
 if static_use == "True":
 	# Use non-zero value of penalty
-	lambda_cv_range = [0.001, 0.01, 0.1]
+	lambda_cv_range = [0, 0.001, 0.01, 0.1]
 else:
 	lambda_cv_range = [0]
 
