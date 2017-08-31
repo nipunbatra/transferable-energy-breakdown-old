@@ -45,8 +45,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 		train_ix = target_df.index[train]
 		# print("Train set {}".format(train_ix.values))
 		test_ix = target_df.index[test]
-		a = target_df.loc[train_ix]
-		count_condition_violation = 0
+
 
 	print("-" * 80)
 
