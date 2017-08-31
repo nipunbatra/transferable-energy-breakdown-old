@@ -166,7 +166,9 @@ source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_stati
 # # using cosine similarity to compute L
 source_L = get_L(source_static)
 #T_degree = np.array(dds[2014][source]).reshape(-1, 1)
-T_degree = np.ones(12).reshape(-1, 1)
+#T_degree = np.ones(12).reshape(-1, 1)
+T_degree = np.c_[np.array(dds[2014][source]).reshape(-1,1), np.ones(12).reshape(-1, 1)]
+
 
 
 def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv):
@@ -347,10 +349,10 @@ for appliance in APPLIANCES_ORDER:
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
 name = "{}-{}".format(random_seed, train_percentage)
-directory = os.path.expanduser('~/git/pred_graph/constant/{}/'.format(source))
+directory = os.path.expanduser('~/git/pred_graph/both/{}/'.format(source))
 if not os.path.exists(directory):
 	os.makedirs(directory)
-filename = os.path.expanduser('~/git/pred_graph/constant/{}/'.format(source)+ name + '.pkl')
+filename = os.path.expanduser('~/git/pred_graph/both/{}/'.format(source)+ name + '.pkl')
 
 if os.path.exists(filename):
 	print("File already exists. Quitting.")
