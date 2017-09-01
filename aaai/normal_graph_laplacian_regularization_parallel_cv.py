@@ -222,8 +222,6 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
 			# weighed
 			print(e)
 			print(appliance)
-	print "Done ", num_iterations_cv
-	print("Error weighted on: {}".format(appliance_to_weight))
 	err_weight = {}
 	for appliance in appliance_to_weight:
 		err_weight[appliance] = err[appliance] * contri[source][appliance]
@@ -270,9 +268,10 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(source_df)):
 
 	### Inner CV loop to find the optimum set of params. In this case: the number of iterations
 	
-	best_num_iterations = 0
-	best_num_season_factors = 0
-	best_num_home_factors = 0
+	best_num_iterations = 1300
+	best_num_season_factors = 4
+	best_num_home_factors = 5
+	best_lam = 0.001
 	best_appliance_wise_err = {appliance: 1e6 for appliance in APPLIANCES_ORDER[1:]}
 	least_error = 1e6
 

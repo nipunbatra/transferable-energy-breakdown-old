@@ -225,8 +225,6 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
             # weighed
             print(e)
             print(appliance)
-    print "Done: ", num_iterations_cv
-    print("Error weighted on: {}".format(appliance_to_weight))
     err_weight = {}
     for appliance in appliance_to_weight:
         err_weight[appliance] = err[appliance]*contri[target][appliance]
