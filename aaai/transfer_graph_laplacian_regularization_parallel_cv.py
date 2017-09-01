@@ -82,8 +82,7 @@ def cost_graph_laplacian(H, A, T, L, E_np_masked, lam, case, lambda_reg):
     
     return np.sqrt((error_1**2).mean()) + lam * error_2 + lambda_reg * error_3 + lambda_reg * error_4 + lambda_reg * error_5
 
-def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, dis=False, lam=1, H_known=None,
-                            A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0, lambda_reg = 0.0):
+def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, dis=False, lam=1, H_known=None, A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0, lambda_reg = 0.0):
     np.random.seed(random_seed)
     cost = cost_graph_laplacian
     mg = multigrad(cost, argnums=[0, 1, 2])
