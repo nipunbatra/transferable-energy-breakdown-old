@@ -17,6 +17,7 @@ from common import create_region_df_dfc_static
 from create_matrix import *
 from tensor_custom_core_test import *
 import datetime
+import pickle
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
@@ -80,4 +81,4 @@ for learning_rate_cv in [0.1, 0.5, 1, 2]:
 					print(learning_rate_cv, num_season_factors_cv, num_home_factors_cv, lam_cv, num_iterations, costs[num_iterations])
 					sys.stdout.flush()
 
-pickle.dump(A_store, open('../predictions/case-{}-graph_{}_{}_As.pkl'.format(case, source, constant_use), 'w'))
+pickle.dump(A_store, open('./predictions/case-{}-graph_{}_{}_As.pkl'.format(case, source, constant_use), 'w'))

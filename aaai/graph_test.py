@@ -34,6 +34,8 @@ from sklearn.model_selection import train_test_split, KFold
 from common import compute_rmse_fraction, contri, get_tensor, create_region_df_dfc_static
 from create_matrix import *
 from tensor_custom_core_test import *
+import pickle
+import os
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
