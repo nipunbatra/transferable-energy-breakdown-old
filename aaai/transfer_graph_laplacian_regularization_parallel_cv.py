@@ -67,7 +67,7 @@ def get_L(X):
     D = np.diag(np.diag(K))
     return D - W
 
-def cost_graph_laplacian(H, A, T, L, E_np_masked, lam, case):
+def cost_graph_laplacian(H, A, T, L, E_np_masked, lam, case, lambda_reg):
     HAT = multiply_case(H, A, T, case)
     mask = ~np.isnan(E_np_masked)
     error_1 = (HAT - E_np_masked)[mask].flatten()
@@ -80,10 +80,9 @@ def cost_graph_laplacian(H, A, T, L, E_np_masked, lam, case):
     error_4 = LA.norm(A)
     error_5 = LA.norm(T)
     
-    return np.sqrt((error_1**2).mean()) + lam * error_2 + 0.5 * error_3 + 0.5 * error_4 + 0.5 * error_5
+    return np.sqrt((error_1**2).mean()) + lam * error_2 + lambda_reg * error_3 + lambda_reg * error_4 + lambda_reg * error_5
 
-def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, dis=False, lam = 1, H_known=None,A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0):
-
+def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, dis=False, lam=1, H_known=None, A_known=None, T_known=None, random_seed=0, eps=1e-8, penalty_coeff=0.0, lambda_reg = 0.0):
     np.random.seed(random_seed)
     cost = cost_graph_laplacian
     mg = multigrad(cost, argnums=[0, 1, 2])
@@ -98,7 +97,7 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, 
     A_dim = tuple(params[x] for x in A_dim_chars)
     T_dim_chars = list(cases[case]['HAT'].split(",")[1].split("-")[0].strip())
     T_dim = tuple(params[x] for x in T_dim_chars)
-    
+
     H = np.random.rand(*H_dim)
     A = np.random.rand(*A_dim)
     T = np.random.rand(*T_dim)
@@ -110,14 +109,14 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, 
     Hs = [H.copy()]
     As = [A.copy()]
     Ts = [T.copy()]
-    
-    costs = [cost(H, A, T, L, E_np_masked, lam, case)]
+
+    costs = [cost(H, A, T, L, E_np_masked, lam, case, lambda_reg)]
 
     HATs = [multiply_case(H, A, T, case)]
 
     # GD procedure
     for i in range(num_iter):
-        del_h, del_a, del_t = mg(H, A, T, L, E_np_masked, lam, case)
+        del_h, del_a, del_t = mg(H, A, T, L, E_np_masked, lam, case, lambda_reg)
         sum_square_gradients_H += eps + np.square(del_h)
         sum_square_gradients_A += eps + np.square(del_a)
         sum_square_gradients_T += eps + np.square(del_t)
@@ -144,14 +143,13 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, 
         As.append(A.copy())
         Ts.append(T.copy())
         Hs.append(H.copy())
-        
-        costs.append(cost(H, A, T, L, E_np_masked, lam, case))
-        
+
+        costs.append(cost(H, A, T, L, E_np_masked, lam, case, lambda_reg))
 
         HATs.append(multiply_case(H, A, T, case))
         if i % 500 == 0:
             if dis:
-                print(cost(H, A, T, L, E_np_masked, lam, case))
+                print(cost(H, A, T, L, E_np_masked, lam, case, lambda_reg))
     return H, A, T, Hs, As, Ts, HATs, costs
 
 
@@ -159,9 +157,11 @@ global case
 global source, source_df, source_dfc, source_tensor, source_static
 global source_L, target_L
 global target, target_df, target_dfc, target_tensor, target_static
+global lambda_reg
 case = 2
 
-source, target, random_seed, train_percentage = sys.argv[1:]
+source, target, lambda_reg, random_seed, train_percentage = sys.argv[1:]
+lambda_reg = float(lambda_reg)
 train_percentage = float(train_percentage)
 random_seed = int(random_seed)
 
@@ -199,7 +199,7 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
         H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner, L_inner, 
                                                                     num_home_factors_cv, num_season_factors_cv, 
                                                                     num_iter=num_iterations_cv, lr=1, dis=False, 
-                                                                    lam=lam_cv, A_known = A_source, T_known = T_degree)
+                                                                    lam=lam_cv, A_known = A_source, T_known = T_degree, lambda_reg = lambda_reg)
 
         HAT = multiply_case(H, A, T, case)
         for appliance in APPLIANCES_ORDER:
@@ -224,8 +224,6 @@ def compute_inner_error(overall_df_inner, num_iterations_cv, num_season_factors_
             # weighed
             print(e)
             print(appliance)
-    print "Done: ", num_iterations_cv
-    print("Error weighted on: {}".format(appliance_to_weight))
     err_weight = {}
     for appliance in appliance_to_weight:
         err_weight[appliance] = err[appliance]*contri[target][appliance]
@@ -239,7 +237,7 @@ n_splits = 10
 
 algo = 'adagrad'
 cost = 'l21'
-A_store = pickle.load(open('predictions/tf_{}_graph_regularization_As.pkl'.format(source), 'r'))
+A_store = pickle.load(open('predictions/tf_{}_graph_regularization_{}_As.pkl'.format(source, lambda_reg), 'r'))
 #T_degree = np.array(dds[2014][target]).reshape(-1, 1)
 T_degree = np.ones(12).reshape(-1, 1)
 # T_degree = np.c_[np.array(dds[2014]['Austin']).reshape(-1,1), np.ones(12).reshape(-1, 1)]
@@ -359,7 +357,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L, 
                                                                 best_num_home_factors, best_num_season_factors, 
                                                                 num_iter=best_num_iterations, lr=1, dis=False, 
-                                                                lam=best_lam, A_known = A_source, T_known = T_degree)
+                                                                lam=best_lam, A_known = A_source, T_known = T_degree, lambda_reg = lambda_reg)
 
     HAT = multiply_case(H, A, T, case)
     for appliance in APPLIANCES_ORDER:
@@ -371,10 +369,10 @@ for appliance in APPLIANCES_ORDER:
 out = {'Predictions':pred, 'Learning Params':best_params_global}
 
 name = "{}-{}".format(random_seed, train_percentage)
-directory = os.path.expanduser('~/git/pred_graph/regularization/{}_to_{}/'.format(source, target))
+directory = os.path.expanduser('~/git/pred_graph/regularization/{}_to_{}/{}/'.format(source, target, lambda_reg))
 if not os.path.exists(directory):
     os.makedirs(directory)
-filename = os.path.expanduser('~/git/pred_graph/regularization/{}_to_{}/'.format(source, target) + name + '.pkl')
+filename = os.path.expanduser('~/git/pred_graph/regularization/{}_to_{}/{}/'.format(source, target, lambda_reg) + name + '.pkl')
 
 if os.path.exists(filename):
     print("File already exists. Quitting.")

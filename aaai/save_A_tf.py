@@ -17,6 +17,12 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
 
+cases = {
+    1: {'HA': 'Ma, Nb -> MNab', 'HAT': 'MNab, Oab -> MNO'},
+    2: {'HA': 'Ma, Nab -> MNb', 'HAT': 'MNb, Ob -> MNO'},
+    3: {'HA': 'Mab, Na -> MNb', 'HAT': 'MNb, Ob -> MNO'},
+    4: {'HA': 'Ma, Na -> MNa', 'HAT': 'MNa, Oa -> MNO'}
+}
 
 def un_normalize(x, maximum, minimum):
 	return (maximum - minimum) * x + minimum
@@ -162,7 +168,7 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, 
 
 
 
-source = sys.argv[1]
+source, case = sys.argv[1:]
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
 
 # # using cosine similarity to compute L
@@ -170,14 +176,14 @@ source_L = get_L(source_static)
 
 pred = {}
 n_splits = 10
-case = 2
+# case = 2
 
 algo = 'adagrad'
 cost = 'l21'
 
 #T_degree = np.array(dds[2014]['Austin']).reshape(-1, 1)
-#T_degree = np.ones(12).reshape(-1, 1)
-T_degree = np.c_[np.array(dds[2014]['Austin']).reshape(-1,1), np.ones(12).reshape(-1, 1)]
+T_degree = np.ones(12).reshape(-1, 1)
+# T_degree = np.c_[np.array(dds[2014]['Austin']).reshape(-1,1), np.ones(12).reshape(-1, 1)]
 
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = []
@@ -206,4 +212,4 @@ for num_season_factors_cv in range(2, 5):
 				A_store[num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations] = As[num_iterations]
 				print(num_season_factors_cv, num_home_factors_cv, lam_cv, num_iterations)
 
-pickle.dump(A_store, open('predictions/tf_{}_both_As.pkl'.format(source), 'w'))
+pickle.dump(A_store, open('predictions/tf_{}_case{}_As.pkl'.format(source, case), 'w'))
