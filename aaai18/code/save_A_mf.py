@@ -23,7 +23,7 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
 
-source = sys.argv[1:]
+source = sys.argv[1]
 
 n_splits = 10
 
@@ -50,7 +50,7 @@ for appliance in APPLIANCES_ORDER[1:]:
 				                                                                                            source_matrix_min,
 				                                                                                            False)
 
-				static_features = get_static_features(source_df, X_normalised)
+				static_features = get_static_features(source_dfc, X_normalised)
 				if features == "energy":
 					feature_comb = ['None']
 				else:
@@ -69,4 +69,6 @@ for appliance in APPLIANCES_ORDER[1:]:
 				                         idx_item=None, data_item=None, MAX_ITERS=iterations,
 				                         cost='absolute')
 				X_store[appliance][features][iterations][lat] = X
+				print(appliance, features, iterations, lat)
+pickle.dump(X_store, open('../predictions/{}-X.pkl'.format(source), 'w'))
 
