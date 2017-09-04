@@ -9,7 +9,7 @@ import delegator
 username = 'yj9xs'
 
 # Location of .out and .err files
-SLURM_OUT = "../../slurm_out"
+SLURM_OUT = "~/git/slurm_out"
 
 # Create the SLURM out directory if it does not exist
 if not os.path.exists(SLURM_OUT):
@@ -23,21 +23,22 @@ import time
 
 
 for setting in ['normal', 'transfer']:
-	for case in [2]:
-		for constant_use in ['True']:
-			for static_use in ['True','False']:
+	for case in [4]:
+		for constant_use in ['False']:
+			for static_use in ['False']:
 				for source in ['Austin']:
 					for target in ['SanDiego']:
-						for random_seed in range(5):
+						for random_seed in [3]:
 							for train_percentage in [6,7,8,9,10,15,20,30,40,50,60,70,80,90,100]:
-								OFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}.out".format(SLURM_OUT, setting, case, constant_use, static_use, source, target, random_sedd, train_percentage)
-								EFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}.err".format(SLURM_OUT, setting, case, constant_use, static_use, source, target, random_sedd, train_percentage)
-								SLURM_SCRIPT = "{}/{}-{}-{}-{}-{}-{}-{}-{}.pbs".format('pbs_files', setting, case, constant_use, static_use, source, target, random_sedd, train_percentage)
-								CMD = 'python graph_laplacian_parallel.py {} {} {} {} {} {} {} {}'.format(setting, case, constant_use, static_use, source, target, random_sedd, train_percentage)
+								OFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}.out".format(SLURM_OUT, setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
+								EFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}.err".format(SLURM_OUT, setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
+								SLURM_SCRIPT = "{}/{}-{}-{}-{}-{}-{}-{}-{}.pbs".format('pbs_files', setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
+								CMD = 'python graph_laplacian_parallel.py {} {} {} {} {} {} {} {}'.format(setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
 								lines = []
 								lines.append("#!/bin/sh\n")
 								lines.append('#SBATCH --time=1-16:0:00\n')
 								lines.append('#SBATCH --mem=16\n')
+								lines.append('#SBATCH -c 24')
 								lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
 								lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
 								lines.append(CMD + '\n')

@@ -210,7 +210,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	results = []
 	cpus = mp.cpu_count()
 	pool = mp.Pool()
-	for learning_rate_cv in [0.1]:
+	for learning_rate_cv in [0.1,0.5, 1]:
 		for num_iterations_cv in [1300, 700, 100][:]:
 			for num_season_factors_cv in range(2, 5)[:]:
 				for num_home_factors_cv in range(3, 6)[:]:
@@ -257,7 +257,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print("******* BEST PARAMS *******")
 	print(best_params_global[outer_loop_iteration])
 	print("******* BEST PARAMS *******")
-	raw_input('Enter to Continue')
 	sys.stdout.flush()
 	# Now we will be using the best parameter set obtained to compute the predictions
 	if setting=="transfer":
