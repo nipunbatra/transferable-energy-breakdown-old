@@ -87,6 +87,8 @@ for appliance in APPLIANCES_ORDER:
 best_params_global = {}
 kf = KFold(n_splits=n_splits)
 
+origin_train_percentage = train_percentage
+
 for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	# Just a random thing
 	np.random.seed(10 * random_seed + 7 * outer_loop_iteration)
@@ -96,6 +98,14 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print(datetime.datetime.now())
 	sys.stdout.flush()
 	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
+
+	
+
+	if train_percentage == 0:
+		train_percentage = 10
+	print origin_train_percentage
+	raw_input('Enter to continue')
+
 	if train_percentage == 100:
 		train = train_max
 		train_ix = target_df.index[train]
@@ -109,6 +119,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 		train_ix = target_df.index[train]
 		test_ix = target_df.index[test]
 
+	print train_ix
 
 	print("-" * 80)
 	print("Test set {}".format(test_ix.values))
@@ -128,8 +139,8 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	overall_df_inner = target_df.loc[train_ix]
 
 	best_params_global[outer_loop_iteration] = {}
-	for learning_rate_cv in [0.1, 0.5, 1]:
-		for num_iterations_cv in [1300, 700, 100][:]:
+	for learning_rate_cv in [0.1]:
+		for num_iterations_cv in [100][:]:
 			for num_season_factors_cv in range(2, 5)[:]:
 				for num_home_factors_cv in range(3, 6)[:]:
 					if case == 4:
@@ -235,7 +246,14 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	tensor = get_tensor(df_t)
 	tensor_copy = tensor.copy()
 	# First n
-	tensor_copy[:num_test, 1:, :] = np.NaN
+	if origin_train_percentage == 0:
+		tensor_copy[:num_test, 1:, :] = np.NaN
+		tensor_copy[num_test:, :, :] = np.NaN
+	else:
+		tensor_copy[:num_test, 1:, :] = np.NaN
+
+	print tensor_copy
+	raw_input('Enter to continue')
 
 	L = target_L[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
 
@@ -248,6 +266,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	HAT = multiply_case(H, A, T, case)
 	for appliance in APPLIANCES_ORDER:
 		pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
+
+	print HAT
+	raw_input('Enter to continue')
 
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = pd.DataFrame(pd.concat(pred[appliance]))

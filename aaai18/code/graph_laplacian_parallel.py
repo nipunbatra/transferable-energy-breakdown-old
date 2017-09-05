@@ -160,6 +160,9 @@ for appliance in APPLIANCES_ORDER:
 best_params_global = {}
 kf = KFold(n_splits=n_splits)
 
+origin_train_percentage = train_percentage
+
+
 for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	# Just a random thing
 	np.random.seed(10 * random_seed + 7 * outer_loop_iteration)
@@ -169,6 +172,11 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print(datetime.datetime.now())
 	sys.stdout.flush()
 	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
+
+	if train_percentage == 0:
+		train_percentage = 10
+
+
 	if train_percentage == 100:
 		train = train_max
 		train_ix = target_df.index[train]
@@ -269,7 +277,12 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	tensor = get_tensor(df_t)
 	tensor_copy = tensor.copy()
 	# First n
-	tensor_copy[:num_test, 1:, :] = np.NaN
+	# Add the zero training data part
+	if origin_train_percentage == 0:
+		tensor_copy[:num_test, 1:, :] = np.NaN
+		tensor_copy[num_test:, :, :] = np.NaN
+	else:
+		tensor_copy[:num_test, 1:, :] = np.NaN
 
 	L = target_L[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
 
