@@ -3,8 +3,8 @@ from sklearn.metrics import mean_squared_error
 from create_matrix import *
 
 
-def get_tensor(df):
-	start, stop = 1, 13
+def get_tensor(df, start=1, stop=13):
+	# start, stop = 1, 13
 	energy_cols = np.array(
 		[['%s_%d' % (appliance, month) for month in range(start, stop)] for appliance in APPLIANCES_ORDER]).flatten()
 
@@ -16,9 +16,9 @@ def get_tensor(df):
 	return tensor
 
 
-def create_region_df_dfc_static(region, year):
+def create_region_df_dfc_static(region, year, start=1, stop=13):
 	df, dfc = create_matrix_single_region(region, year)
-	tensor = get_tensor(df)
+	tensor = get_tensor(df, start, stop)
 	static_region = df[['area', 'total_occupants', 'num_rooms']].copy()
 	static_region['area'] = static_region['area'].div(4000)
 	static_region['total_occupants'] = static_region['total_occupants'].div(8)
@@ -63,13 +63,14 @@ def compute_rmse(appliance, pred_df, region='Austin', year=2014):
 	return gt_df, pred_df, rms, (gt_df - pred_df).abs()
 
 
-def compute_rmse_fraction(appliance, pred_df, region='Austin', year=2014):
+def compute_rmse_fraction(appliance, pred_df, region='Austin', start=1, stop=13, year=2014):
 	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
 
 	if appliance == "hvac":
 		start, stop = 5, 11
-	else:
-		start, stop = 1, 13
+	# else:
+	# 	start, stop = 1, 13
+	# print "in compute_rmse_fraction"
 	pred_df = pred_df.copy()
 	pred_df.columns = [['%s_%d' % (appliance, month) for month in range(start, stop)]]
 	gt_df = appliance_df[pred_df.columns].ix[pred_df.index]

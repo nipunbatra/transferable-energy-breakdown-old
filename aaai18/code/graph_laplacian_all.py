@@ -31,7 +31,8 @@ import datetime
 
 from sklearn.model_selection import train_test_split, KFold
 
-from common import compute_rmse_fraction, contri, get_tensor, create_region_df_dfc_static
+from common import contri, get_tensor, create_region_df_dfc_static
+# from common import compute_rmse_fraction, contri, get_tensor, create_region_df_dfc_static
 from create_matrix import *
 from tensor_custom_core_all import *
 
@@ -39,11 +40,53 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
 
+def compute_rmse_fraction(appliance, pred_df, region='Austin', start=1, stop=13, year=2014):
+	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
 
-setting, case, constant_use, static_use, source, target, random_seed, train_percentage = sys.argv[1:]
+	# if appliance == "hvac":
+	# 	start, stop = 5, 11
+	# else:
+	# 	start, stop = 1, 13
+	print "in compute_rmse_fraction"
+	raw_input('enter')
+	print start, stop
+	pred_df = pred_df.copy()
+	print pred_df
+	pred_df.columns = [['%s_%d' % (appliance, month) for month in range(start, stop)]]
+	print pred_df
+	gt_df = appliance_df[pred_df.columns].ix[pred_df.index]
+
+
+	aggregate_df = appliance_df.ix[pred_df.index][['aggregate_%d' % month for month in range(start, stop)]]
+
+	aggregate_df.columns = gt_df.columns
+	rows, cols = np.where((aggregate_df < 100))
+	for r, c in zip(rows, cols):
+		r_i, c_i = aggregate_df.index[r], aggregate_df.columns[c]
+		aggregate_df.loc[r_i, c_i] = np.NaN
+
+	gt_fraction = gt_df.div(aggregate_df) * 100
+	pred_fraction = pred_df.div(aggregate_df) * 100
+	# Capping it to 100%
+	pred_fraction[pred_fraction > 100] = 100.
+
+	gt_fraction_dropna = gt_fraction.unstack().dropna()
+	pred_fraction_dropna = pred_fraction.unstack().dropna()
+	index_intersection = gt_fraction_dropna.index.intersection(pred_fraction_dropna.index)
+	gt_fraction_dropna = gt_fraction_dropna.ix[index_intersection]
+	pred_fraction_dropna = pred_fraction_dropna.ix[index_intersection]
+	difference_error = (gt_fraction_dropna - pred_fraction_dropna).abs()
+
+	rms = np.sqrt(mean_squared_error(gt_fraction_dropna, pred_fraction_dropna))
+	return gt_fraction_dropna, pred_fraction_dropna, rms, difference_error
+
+
+setting, case, constant_use, static_use, source, target, random_seed, train_percentage, start, stop = sys.argv[1:]
 case = int(case)
 train_percentage = float(train_percentage)
 random_seed = int(random_seed)
+start = int(start)
+stop = int(stop)
 
 if static_use == "True":
 	# Use non-zero value of penalty
@@ -52,8 +95,10 @@ else:
 	lambda_cv_range = [0]
 
 A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_all_As.pkl'.format(case, source, constant_use)), 'r'))
-source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
-target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year)
+source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year, start, stop)
+target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year, start, stop)
+print source_tensor.shape
+print target_tensor.shape
 
 # # using cosine similarity to compute L
 source_L = get_L(source_static)
@@ -182,6 +227,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 																								  A_known=A_source,
 																								  T_known=T_constant)
 							HAT = multiply_case(H, A, T, case)
+							print HAT.shape
 							for appliance in APPLIANCES_ORDER:
 								if appliance not in pred_inner:
 									pred_inner[appliance] = []
@@ -196,11 +242,14 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 							pred_inner[appliance] = pd.DataFrame(pd.concat(pred_inner[appliance]))
 
 							try:
-								if appliance == "hvac":
-									err[appliance] = \
-										compute_rmse_fraction(appliance, pred_inner[appliance][range(4, 10)], target)[2]
+								if target == 'Boulder':
+									print 'here'
+									err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], target, start, stop)[2]
 								else:
-									err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], target)[2]
+									if appliance =="hvac":
+										err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance][range(4, 10)], target, 4, 10)[2]
+									else:
+										err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], target)[2]
 								appliance_to_weight.append(appliance)
 							except Exception, e:
 								# This appliance does not have enough samples. Will not be
@@ -210,6 +259,8 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 								sys.stdout.flush()
 						print("Error weighted on: {}".format(appliance_to_weight))
 						sys.stdout.flush()
+
+						raw_input('Enter')
 						err_weight = {}
 						for appliance in appliance_to_weight:
 							err_weight[appliance] = err[appliance] * contri[target][appliance]

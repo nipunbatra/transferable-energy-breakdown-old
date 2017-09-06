@@ -50,10 +50,14 @@ for case in [2, 4]:
 							params[case][constant_use][static_use][setting][train_percentage][random_seed] = parameter_data
 							for appliance in APPLIANCES_ORDER[1:]:
 								prediction = pred[appliance]
-								if appliance == "hvac":
-									prediction = prediction[range(4, 10)]
-								out[case][constant_use][static_use][setting][train_percentage][random_seed][appliance] = \
+								if target == 'Boulder':
+									out[case][constant_use][static_use][setting][train_percentage][random_seed][appliance] = \
 									compute_rmse_fraction(appliance, prediction, target)[2]
+								else:
+									if appliance == "hvac":
+										prediction = prediction[range(4, 10)]
+									out[case][constant_use][static_use][setting][train_percentage][random_seed][appliance] = \
+										compute_rmse_fraction(appliance, prediction, target)[2]
 							print("Computed for: {}".format(name))
 
 						except Exception, e:
