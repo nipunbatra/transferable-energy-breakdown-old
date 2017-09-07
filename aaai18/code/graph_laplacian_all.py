@@ -218,7 +218,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 							else:
 								A_source = None
 
-							print "tensro:", tensor_copy_inner.shape
+							# print "tensro:", tensor_copy_inner.shape
 							
 							H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner,
 																								  L_inner,
@@ -230,7 +230,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 																								  A_known=A_source,
 																								  T_known=T_constant)
 							HAT = multiply_case(H, A, T, case)
-							print "shape", HAT.shape
+							# print "shape", HAT.shape
 							for appliance in APPLIANCES_ORDER:
 								if appliance not in pred_inner:
 									pred_inner[appliance] = []
@@ -260,7 +260,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 						print("Error weighted on: {}".format(appliance_to_weight))
 						sys.stdout.flush()
 
-						raw_input('Enter')
+						# raw_input('Enter')
 						err_weight = {}
 						for appliance in appliance_to_weight:
 							err_weight[appliance] = err[appliance] * contri[target][appliance]
@@ -294,17 +294,17 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	num_test = len(test_ix)
 	train_test_ix = np.concatenate([test_ix, train_ix])
 	df_t, dfc_t = target_df.loc[train_test_ix], target_dfc.loc[train_test_ix]
-	tensor = get_tensor(df_t)
+	tensor = get_tensor(df_t, start, stop)
 	tensor_copy = tensor.copy()
 	# First n
-	if origin_train_percentage == 0:
-		tensor_copy[:num_test, 1:, :] = np.NaN
-		tensor_copy[num_test:, :, :] = np.NaN
-	else:
-		tensor_copy[:num_test, 1:, :] = np.NaN
+	# if origin_train_percentage == 0:
+	# 	tensor_copy[:num_test, 1:, :] = np.NaN
+	# 	tensor_copy[num_test:, :, :] = np.NaN
+	# else:
+	# 	tensor_copy[:num_test, 1:, :] = np.NaN
 
-	print tensor_copy
-	raw_input('Enter to continue')
+	# print tensor_copy
+	# raw_input('Enter to continue')
 
 	L = target_L[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
 

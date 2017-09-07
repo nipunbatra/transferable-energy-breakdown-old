@@ -277,7 +277,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	num_test = len(test_ix)
 	train_test_ix = np.concatenate([test_ix, train_ix])
 	df_t, dfc_t = target_df.loc[train_test_ix], target_dfc.loc[train_test_ix]
-	tensor = get_tensor(df_t)
+	tensor = get_tensor(df_t, start, stop)
 	tensor_copy = tensor.copy()
 	# First n
 	tensor_copy[:num_test, 1:, :] = np.NaN
