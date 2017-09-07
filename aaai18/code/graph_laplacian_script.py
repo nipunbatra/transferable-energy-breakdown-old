@@ -23,13 +23,13 @@ import time
 
 
 for setting in ['normal', 'transfer']:
-	for case in [2]:
-		for constant_use in ['False']:
-			for static_use in ['False']:
+	for case in [4, 2]:
+		for constant_use in ['True', 'False']:
+			for static_use in ['True', 'False']:
 				for source in ['Austin']:
 					for target in ['SanDiego']:
-						for random_seed in [5, 6, 7, 8,9]:
-							for train_percentage in [6,7,8,9,10,15,20,30,40,50,60,70,80,90,100]:
+						for random_seed in range(10):
+							for train_percentage in [0]:
 								OFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}.out".format(SLURM_OUT, setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
 								EFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}.err".format(SLURM_OUT, setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
 								SLURM_SCRIPT = "{}/{}-{}-{}-{}-{}-{}-{}-{}.pbs".format('pbs_files', setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
