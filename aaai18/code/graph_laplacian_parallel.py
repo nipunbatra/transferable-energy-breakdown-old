@@ -75,7 +75,7 @@ else:
 
 # Seasonal constant constraints
 if constant_use == 'True':
-	T_constant = np.ones(12).reshape(-1 , 1)
+	T_constant = np.ones(stop-start).reshape(-1 , 1)
 else:
 	T_constant = None
 # End
@@ -106,7 +106,7 @@ def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, n
 
 		train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
 		df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[train_test_ix_inner]
-		tensor_inner = get_tensor(df_t_inner)
+		tensor_inner = get_tensor(df_t_inner, start, stop)
 		tensor_copy_inner = tensor_inner.copy()
 		# First n
 		tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
@@ -178,9 +178,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print(datetime.datetime.now())
 	sys.stdout.flush()
 	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
-
-	if train_percentage == 0:
-		
 
 
 	if train_percentage == 100:

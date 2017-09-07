@@ -17,12 +17,6 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
 
-cases = {
-    1: {'HA': 'Ma, Nb -> MNab', 'HAT': 'MNab, Oab -> MNO'},
-    2: {'HA': 'Ma, Nab -> MNb', 'HAT': 'MNb, Ob -> MNO'},
-    3: {'HA': 'Mab, Na -> MNb', 'HAT': 'MNb, Ob -> MNO'},
-    4: {'HA': 'Ma, Na -> MNa', 'HAT': 'MNa, Oa -> MNO'}
-}
 
 def un_normalize(x, maximum, minimum):
 	return (maximum - minimum) * x + minimum
@@ -168,7 +162,7 @@ def learn_HAT_adagrad_graph(case, E_np_masked, L, a, b, num_iter=2000, lr=0.01, 
 
 
 
-source, case = sys.argv[1:]
+source, case = sys.argv[1]
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
 
 # # using cosine similarity to compute L
