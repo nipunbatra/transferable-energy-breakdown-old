@@ -70,7 +70,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	overall_df_inner = target_df.loc[train_ix]
 
 	best_params_global[outer_loop_iteration] = {}
-	for num_iterations_cv in range(10, 20, 2):
+	for num_iterations_cv in range(10, 20, 4):
 	#for num_iterations_cv in [10]:
 		for num_latent_factors_cv in range(3, 8):
 			pred_inner = {}
