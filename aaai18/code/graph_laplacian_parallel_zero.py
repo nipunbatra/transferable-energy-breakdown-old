@@ -216,12 +216,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	### Inner CV loop to find the optimum set of params. In this case: the number of iterations
 	inner_kf = KFold(n_splits=2)
 
-	best_learning_rate = 0.1
-	best_num_iterations = 1300
-	best_num_season_factors = 2
-	best_num_home_factors = 3
-	best_lam = 0
-	least_error = 1e6
 
 	overall_df_inner = target_df.loc[train_ix]
 	best_params_global[outer_loop_iteration] = {}
@@ -230,7 +224,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	count = 0
 
 	print("******* BEST PARAMS *******")
-	print(best_params_global[outer_loop_iteration])
 	print("******* BEST PARAMS *******")
 	sys.stdout.flush()
 	# Now we will be using the best parameter set obtained to compute the predictions
@@ -255,7 +248,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 																		  lam=best_lam, A_known=A_source, T_known=T_constant)
 
 	HAT = multiply_case(H, A, T, case)
-	print HAT
 	for appliance in APPLIANCES_ORDER:
 		pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
 
