@@ -58,11 +58,20 @@ if static_use == "True":
 else:
 	lambda_cv_range = [0]
 
-A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_{}_{}_As.pkl'.format(case, source, constant_use, start, stop)), 'r'))
-error_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_{}_{}_errs.pkl'.format(case, source, constant_use, start, stop)), 'r'))
+# A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_{}_{}_As.pkl'.format(case, source, constant_use, start, stop)), 'r'))
+# error_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_{}_{}_errs.pkl'.format(case, source, constant_use, start, stop)), 'r'))
 
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year, start, stop)
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year, start, stop)
+
+## Only use top-40 homes from target domin
+target_df = target_df.head(40)
+target_dfc = target_dfc.head(40)
+target_tensor = get_tensor(target_df)
+target_static = target_static[:40]
+## End
+
+
 
 # # using cosine similarity to compute L
 source_L = get_L(source_static)
@@ -167,21 +176,7 @@ for appliance in APPLIANCES_ORDER:
 best_params_global = {}
 kf = KFold(n_splits=n_splits)
 
-minimun = 10000
 
-for key_1, nested_1 in error_store.items():
-    for key_2, nested_2 in nested_1.items():
-        for key_3, nested_3 in nested_2.items():
-            for key_4, nested_4 in nested_3.items():
-                for key_5, nested_5 in nested_4.items():
-                    if nested_5 < minimun:
-                        minimun = nested_5
-                        best_learning_rate = key_1
-                        best_num_season_factors = key_2
-                        best_num_home_factors = key_3
-                        best_lam = key_4
-                        best_num_iterations = key_5
-    
 
 for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	# Just a random thing
@@ -213,6 +208,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print("-" * 80)
 	print("Current Error, Least Error, #Iterations")
 
+	raw_input('Enter to continue')
 	### Inner CV loop to find the optimum set of params. In this case: the number of iterations
 	inner_kf = KFold(n_splits=2)
 
@@ -228,6 +224,56 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
 	params = {}
 	count = 0
+
+
+	##############################################################
+	# Parallel part
+	results = []
+	cpus = mp.cpu_count()
+	pool = mp.Pool()
+	for learning_rate_cv in [0.1,0.5, 1]:
+		for num_iterations_cv in [1300, 700, 100][:]:
+			for num_season_factors_cv in range(2, 5)[:]:
+				for num_home_factors_cv in range(3, 6)[:]:
+					if case == 4:
+						if num_home_factors_cv!=num_season_factors_cv:
+							print("Case 4 needs equal # dimensions. Skipping")
+							sys.stdout.flush()
+
+							continue
+					for lam_cv in lambda_cv_range:
+						if setting == 'transfer':
+							A_source = A_store[learning_rate_cv][num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations_cv]
+						else: 
+							A_source = None
+
+						
+						params[count] = []
+						params[count].extend((overall_df_inner, learning_rate_cv, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv, A_source))
+						count += 1
+	for i in range(count): 
+		result = pool.apply_async(compute_inner_error, params[i])
+		results.append(result)
+	pool.close()
+	pool.join()
+	# End of parallel part
+	###############################################################
+
+	# get the results of all processes
+	error = []
+	for result in results:
+		error.append(result.get())
+	# get the parameters for the best setting
+	best_idx = np.argmin(error)
+	overall_df_inner, best_learning_rate, best_num_iterations, best_num_season_factors, best_num_home_factors, best_lam, A = params[best_idx]
+	least_error = error[best_idx]
+
+	best_params_global[outer_loop_iteration] = {'Learning Rate': best_learning_rate,
+												'Iterations': best_num_iterations,
+												'Num season factors': best_num_season_factors,
+												'Num home factors': best_num_home_factors,
+												'Lambda': best_lam,
+												'Least Train Error': least_error}
 
 	print("******* BEST PARAMS *******")
 	print(best_params_global[outer_loop_iteration])
@@ -255,7 +301,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 																		  lam=best_lam, A_known=A_source, T_known=T_constant)
 
 	HAT = multiply_case(H, A, T, case)
-	print HAT
 	for appliance in APPLIANCES_ORDER:
 		pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
 
