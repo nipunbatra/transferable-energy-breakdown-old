@@ -144,12 +144,9 @@ def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, n
 	mean_err = pd.Series(err_weight).sum()
 	# error[num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = mean_err
 	return mean_err
-
-pred = {}
 n_splits = 10
 
-for appliance in APPLIANCES_ORDER:
-	pred[appliance] = []
+
 best_params_global = {}
 kf = KFold(n_splits=n_splits)
 
@@ -158,15 +155,19 @@ count = 0
 error = []
 params = {}
 H_factors = {}
-
-for learning_rate_cv in [0.1, 0.5, 1]:
+result = {}
+for learning_rate_cv in [0.1, 0.5, 1, 2]:
 	H_factors[learning_rate_cv] = {}
+	result[learning_rate_cv] = {}
 	for num_iterations_cv in [1300, 700, 100][:]:
 		H_factors[learning_rate_cv][num_iterations_cv] = {}
+		result[learning_rate_cv][num_iterations_cv] = {}
 		for num_season_factors_cv in range(2, 5)[:]:
 			H_factors[learning_rate_cv][num_iterations_cv][num_season_factors_cv] = {}
+			result[learning_rate_cv][num_iterations_cv][num_season_factors_cv] = {}
 			for num_home_factors_cv in range(3, 6)[:]:
 				H_factors[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv] = {}
+				result[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv] = {}
 				if case == 4:
 					if num_home_factors_cv!=num_season_factors_cv:
 						print("Case 4 needs equal # dimensions. Skipping")
@@ -175,6 +176,7 @@ for learning_rate_cv in [0.1, 0.5, 1]:
 						continue
 				for lam_cv in lambda_cv_range:
 					H_factors[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = []
+					# result[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = []
 					if setting == 'transfer':
 						A_source = A_store[learning_rate_cv][num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations_cv]
 					else: 
@@ -184,6 +186,10 @@ for learning_rate_cv in [0.1, 0.5, 1]:
 					# params[count] = []
 					# params[count].extend((overall_df_inner, learning_rate_cv, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv, A_source))
 					# count += 1
+					pred = {}
+
+					for appliance in APPLIANCES_ORDER:
+						pred[appliance] = []
 					for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 						# Just a random thing
 						print num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv
@@ -235,7 +241,7 @@ for learning_rate_cv in [0.1, 0.5, 1]:
 							pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
 						H_factors[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv].append(pd.DataFrame(H[:num_test, :], index=test_ix))
 
-
+					# get the overall prediction error of all homes
 					s = pd.concat(pred[appliance]).ix[target_df.index]
 					err = {}
 					for appliance in APPLIANCES_ORDER:
@@ -256,6 +262,35 @@ for learning_rate_cv in [0.1, 0.5, 1]:
 						
 					count += 1
 
+					# get the error of each home
+					# 
+					s = pd.concat(pred[appliance]).ix[target_df.index]
+					err = {}
+
+					for appliance in APPLIANCES_ORDER:
+						if appliance=="hvac":
+							err[appliance] = compute_rmse_fraction(appliance,s[range(4, 10)], target)[3]
+						else:   
+							err[appliance] = compute_rmse_fraction(appliance, s,target)[3]
+
+					k = {}
+					for appliance in APPLIANCES_ORDER[1:]:
+					    
+					    if appliance == 'hvac':
+					        start, end = 5, 11
+					    else:
+					        start, end = 1, 13
+
+					    error_home = pd.concat([err[appliance][appliance + "_{}".format(start)], 
+					                       err[appliance][appliance + "_{}".format(start+1)]],axis=1)
+					    
+					    for i in range(start+2, end):
+					        error_home = pd.concat([error_home, err[appliance][appliance + "_{}".format(i)]], axis = 1)
+					    app = np.sqrt((error_home**2).mean(axis=1))
+					    k[appliance] = app
+					result[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = (pd.DataFrame(k).fillna(0)*pd.Series(contri[target])).sum(axis=1)
+
+
 best_idx = np.argmin(error)
 best_learning_rate, best_num_iterations, best_num_season_factors, best_num_home_factors, best_lam= params[best_idx]
 least_error = error[best_idx]
@@ -263,6 +298,7 @@ print error
 print params
 print least_error
 print params[best_idx]
+# print result[0.1][1300][2][3][0]
 
 
 
@@ -278,6 +314,20 @@ filename = os.path.join(directory, name + '.pkl')
 if os.path.exists(filename):
 	print("File already exists. Quitting.")
 
-out = {'H': H_factors, 'Learning Params': params, 'Error':error}
+# out = {'H': H_factors, 'Learning Params': params, 'Error':error}
+# 
+
 with open(filename, 'wb') as f:
-	pickle.dump(out, f, pickle.HIGHEST_PROTOCOL)
+	pickle.dump(H_factors, f, pickle.HIGHEST_PROTOCOL)
+
+filename = os.path.join(directory, name + '_params.pkl')
+with open(filename, 'wb') as f:
+	pickle.dump(params, f, pickle.HIGHEST_PROTOCOL)
+
+filename = os.path.join(directory, name + '_error.pkl')
+with open(filename, 'wb') as f:
+	pickle.dump(error, f, pickle.HIGHEST_PROTOCOL)
+
+filename = os.path.join(directory, name + '_error_home.pkl')
+with open(filename, 'wb') as f:
+	pickle.dump(result, f, pickle.HIGHEST_PROTOCOL)
