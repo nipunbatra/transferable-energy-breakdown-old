@@ -37,7 +37,22 @@ def create_df_dfc_static(region, year, appliance, features):
 
 
 def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_user=None,
-                 idx_item=None, data_item=None, MAX_ITERS=30, cost='absolute'):
+                  MAX_ITERS=30, cost='absolute', X_known=None):
+	np.random.seed(0)
+	# print idx_user, idx_item, data_user, data_item
+
+	# Generate random data matrix A.
+	m = len(A)
+	n = len(A.columns)
+	mask = A.notnull().values
+	if X_known is not None:
+		Y = cvx.Variable(m, k)
+		constraint = [Y >= 0]
+		obj = cvx.Minimize(cvx.norm(A.values[mask] - (Y * X_known)[mask], 'fro'))
+		prob = cvx.Problem(obj, constraint)
+		prob.solve(solver=cvx.SCS)
+		return X_known, Y.value, []
+
 	"""
 
 	Parameters
@@ -58,12 +73,7 @@ def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_
 
 	"""
 
-	np.random.seed(0)
 
-	# Generate random data matrix A.
-	m = len(A)
-	n = len(A.columns)
-	mask = A.notnull().values
 	one_A = cvx.Constant(1.0 / (A.values[mask] + 1e-3))
 
 	# Initialize Y randomly.
@@ -74,6 +84,7 @@ def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_
 
 	residual = np.zeros(MAX_ITERS)
 	for iter_num in xrange(1, 1 + MAX_ITERS):
+		#print "######## Iteration {}##########".format(iter_num)
 		# print iter_num
 		# At the beginning of an iteration, X and Y are NumPy
 		# array types, NOT CVXPY variables.
@@ -89,11 +100,6 @@ def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_
 				constraint.append(X[:, ap] < X[:, ap + n / 2])
 			"""
 
-			if idx_item is not None:
-				for index_item, it_name in enumerate(idx_item):
-					temp_data = np.array(data_item[it_name]).flatten()
-					temp_data = temp_data.reshape((1, len(temp_data)))
-					constraint.append(X[index_item, :] == temp_data)
 
 		# For even iterations, treat X constant, optimize over Y.
 		else:
@@ -107,10 +113,14 @@ def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_
 				for index_feature, fe_name in enumerate(idx_user):
 					constraint.append(Y[:, index_feature][idx_user[fe_name]] == data_user[fe_name])
 				# return constraint
-
+		#print(constraint)
+		#print "----------X--------"
+		#print X
+		#print "----------Y--------"
+		#print Y
+		#print "######## Iteration ##########"
 
 				# Y.value[0]=f
-		Temp = Y * X
 
 		if cost == 'absolute':
 			error = A.values[mask] - (Y * X)[mask]
@@ -165,8 +175,9 @@ def transform_2(pred_df, appliance, matrix_max, matrix_min, normalisation=False)
 				'%s_%d' % (appliance, month)]
 	else:
 		for month in range(start, stop):
-			pred_df_copy['%s_%d' % (appliance, month)] = (matrix_max * 1. - matrix_min * 1.) * pred_df[
-			'%s_%d' % (appliance, month)] * 1. + matrix_min * 1.
+			pass
+			#pred_df_copy['%s_%d' % (appliance, month)] = (matrix_max * 1. - matrix_min * 1.) * pred_df[
+			#'%s_%d' % (appliance, month)] * 1. + matrix_min * 1.
 
 
 	return pred_df_copy
@@ -225,8 +236,8 @@ def preprocess(df, dfc, appliance, matrix_max=None, matrix_min=None, use_all=Tru
 	X_normalised = X_matrix.copy()
 	# for col in X_matrix.columns:
 	#    X_normalised[col] = (X_matrix[col]-col_min[col])/(col_max[col]-col_min[col])
-	for col in X_matrix.columns:
-		X_normalised[col] = (X_matrix[col] - matrix_min) / (matrix_max - matrix_min)
+	#for col in X_matrix.columns:
+	#	X_normalised[col] = (X_matrix[col] - matrix_min) / (matrix_max - matrix_min)
 	df = pd.DataFrame(X_normalised)
 	return X_matrix, X_normalised, matrix_max, matrix_min, appliance_cols, aggregate_cols
 

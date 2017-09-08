@@ -21,7 +21,8 @@ target_df, target_dfc, target_static_df, target_X_matrix, target_X_normalised, t
 
 year = 2014
 
-X_store = pickle.load(open('../predictions/{}-X.pkl'.format(source), 'r'))
+import os
+X_store = pickle.load(open(os.path.expanduser("~/git/scalable-nilm/aaai18/predictions/{}-X.pkl".format(source)), 'r'))
 
 
 kf = KFold(n_splits=n_splits)
@@ -69,8 +70,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	overall_df_inner = target_df.loc[train_ix]
 
 	best_params_global[outer_loop_iteration] = {}
-	for num_iterations_cv in range(5, 10):
-		for num_latent_factors_cv in range(3, 9):
+	for num_iterations_cv in range(10, 20, 2):
+	#for num_iterations_cv in [10]:
+		for num_latent_factors_cv in range(3, 8):
 			pred_inner = {}
 			for train_inner, test_inner in inner_kf.split(overall_df_inner):
 
@@ -81,19 +83,13 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
 
 				if setting == 'transfer':
-					X_source = X_store[appliance][features][num_iterations_cv][num_latent_factors_cv]
-					from collections import OrderedDict
+					X_known = X_store[appliance][features][num_iterations_cv][num_latent_factors_cv]
 
-					data_items = OrderedDict()
-					idx_items = OrderedDict()
 
-					for count in range(X_source.shape[0]):
-						data_items['lat_%d' % count] = np.array(X_source[count]).flatten()
-						idx_items['lat_%d' % count] = np.array(range(X_source[count].size))
+
 				else:
 
-					data_items = None
-					idx_items = None
+					X_known = None
 				X_matrix, X_normalised, matrix_max, matrix_min, appliance_cols, aggregate_cols = preprocess(df_t_inner,
 				                                                                                            dfc_t_inner,
 				                                                                                            appliance,
@@ -118,7 +114,9 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 				A = create_matrix_factorised(appliance, test_ix_inner, X_normalised)
 				X, Y, res = nmf_features(A=A, k=num_latent_factors_cv, constant=0.01, regularisation=False,
 				                         idx_user=idx_user, data_user=data_user,
-				                         idx_item=idx_items, data_item=data_items, MAX_ITERS=num_iterations_cv, cost='absolute')
+				                          MAX_ITERS=num_iterations_cv,
+				                         cost='absolute',
+				                         X_known=X_known)
 
 				pred_inner = []
 
@@ -184,24 +182,17 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 			data_user = None
 
 	if setting == 'transfer':
-		X_source = X_store[appliance][features][best_num_iterations][best_num_latent_factors]
-		from collections import OrderedDict
+		X_known = X_store[appliance][features][best_num_iterations][best_num_latent_factors]
 
-		data_items = OrderedDict()
-		idx_items = OrderedDict()
-
-		for count in range(X_source.shape[0]):
-			data_items['lat_%d' % count] = np.array(X_source[count]).flatten()
-			idx_items['lat_%d' % count] = np.array(range(X_source[count].size))
 	else:
 
-		data_items = None
-		idx_items = None
+		X_known =None
 
 	A = create_matrix_factorised(appliance, test_ix, X_normalised)
 	X, Y, res = nmf_features(A=A, k=best_num_latent_factors, constant=0.01, regularisation=False,
 	                         idx_user=idx_user, data_user=data_user,
-	                         idx_item=idx_items, data_item=data_items, MAX_ITERS=best_num_iterations, cost='absolute')
+	                         MAX_ITERS=best_num_iterations, cost='absolute'
+	                         ,X_known=X_known)
 
 	pred_df.append(create_prediction(test_ix, X, Y, X_normalised, appliance,
 	                                 target_matrix_max, target_matrix_min, appliance_cols, normalisation=True))
@@ -211,7 +202,7 @@ out = {'Prediction': pd.concat(pred_df), 'Parameters': best_params_global}
 import os
 import pickle
 name = "{}-{}-{}".format(features, random_seed, train_percentage)
-directory = os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/TF/{}/case-{}/{}/{}'.format(setting, case, static_use, constant_use))
+directory = os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/MF/{}'.format(setting))
 if not os.path.exists(directory):
 	os.makedirs(directory)
 filename = os.path.join(directory, name + '.pkl')

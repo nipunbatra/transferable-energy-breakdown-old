@@ -32,11 +32,11 @@ X_store = {}
 
 for appliance in APPLIANCES_ORDER[1:]:
 	X_store[appliance] = {}
-	for features in ['energy','energy_static']:
+	for features in ['energy']:
 		X_store[appliance][features] = {}
-		for iterations in range(10, 20, 2):
+		for iterations in range(10, 20, 4):
 			X_store[appliance][features][iterations] = {}
-			for lat in range(3, 9):
+			for lat in range(3, 8):
 
 				source_df, source_dfc, source_static_df, source_X_matrix, source_X_normalised, source_matrix_max, source_matrix_min, source_appliance_cols, source_aggregate_cols, source_idx_user, source_data_user = create_df_dfc_static(
 					source, 2014, appliance, features)
@@ -63,10 +63,10 @@ for appliance in APPLIANCES_ORDER[1:]:
 						idx_user = None
 						data_user = None
 
-				A = create_matrix_factorised(appliance, source_df.index, X_normalised)
+				A = create_matrix_factorised(appliance, [], X_normalised)
 				X, Y, res = nmf_features(A=A, k=lat, constant=0.01, regularisation=False,
 				                         idx_user=idx_user, data_user=data_user,
-				                         idx_item=None, data_item=None, MAX_ITERS=iterations,
+				                         MAX_ITERS=iterations,
 				                         cost='absolute')
 				X_store[appliance][features][iterations][lat] = X
 				print(appliance, features, iterations, lat)
