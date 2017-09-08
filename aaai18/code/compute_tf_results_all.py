@@ -8,8 +8,9 @@ import sys
 import pickle
 import pandas as pd
 from common import APPLIANCES_ORDER, compute_rmse_fraction
-source, target = sys.argv[1:]
-
+source, target, start, stop = sys.argv[1:]
+start = int(start)
+stop = int(stop)
 out = {}
 params = {}
 for case in [2, 4]:
@@ -21,6 +22,7 @@ for case in [2, 4]:
 		for static_use in ['True', 'False']:
 			out[case][constant_use][static_use] = {}
 			params[case][constant_use][static_use] = {}
+			print case, constant_use, static_use
 			for setting in ['normal','transfer']:
 				out[case][constant_use][static_use][setting] = {}
 				params[case][constant_use][static_use][setting] = {}
@@ -28,7 +30,7 @@ for case in [2, 4]:
 				                         50., 60., 70.,80.,  90., 100.]:
 					out[case][constant_use][static_use][setting][train_percentage] = {}
 					params[case][constant_use][static_use][setting][train_percentage] = {}
-					for random_seed in range(10):
+					for random_seed in range(5):
 						out[case][constant_use][static_use][setting][train_percentage]
 						params[case][constant_use][static_use][setting][train_percentage]
 						if setting == "transfer":
@@ -50,14 +52,10 @@ for case in [2, 4]:
 							params[case][constant_use][static_use][setting][train_percentage][random_seed] = parameter_data
 							for appliance in APPLIANCES_ORDER[1:]:
 								prediction = pred[appliance]
-								if target == 'Boulder':
-									out[case][constant_use][static_use][setting][train_percentage][random_seed][appliance] = \
-									compute_rmse_fraction(appliance, prediction, target)[2]
-								else:
-									if appliance == "hvac":
-										prediction = prediction[range(4, 10)]
-									out[case][constant_use][static_use][setting][train_percentage][random_seed][appliance] = \
-										compute_rmse_fraction(appliance, prediction, target)[2]
+								if appliance == 'hvac':
+									prediction = prediction[range(5-start, 11-start)]
+								out[case][constant_use][static_use][setting][train_percentage][random_seed][appliance] = \
+									compute_rmse_fraction(appliance, prediction, target, start, stop)[2]
 							print("Computed for: {}".format(name))
 
 						except Exception, e:
