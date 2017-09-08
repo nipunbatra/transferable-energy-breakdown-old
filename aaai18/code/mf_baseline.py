@@ -201,7 +201,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 out = {'Prediction': pd.concat(pred_df), 'Parameters': best_params_global}
 import os
 import pickle
-name = "{}-{}-{}".format(features, random_seed, train_percentage)
+name = "{}-{}-{}-{}".format(appliance, features, random_seed, train_percentage)
 directory = os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/MF/{}'.format(setting))
 if not os.path.exists(directory):
 	os.makedirs(directory)
