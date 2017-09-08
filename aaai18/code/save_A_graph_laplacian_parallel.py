@@ -31,7 +31,7 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
 
-c se, source, constant_use, start, stop = sys.argv[1:]
+case, source, constant_use, start, stop = sys.argv[1:]
 case = int(case)
 start = int(start)
 stop = int(stop)
