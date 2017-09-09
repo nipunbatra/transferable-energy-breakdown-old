@@ -78,7 +78,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	for num_iterations_cv in range(10, 20, 4):
 	#for num_iterations_cv in [10]:
 		for num_latent_factors_cv in range(3, 8):
-			pred_inner = {}
+			pred_inner = []
 			for train_inner, test_inner in inner_kf.split(overall_df_inner):
 
 				train_ix_inner = overall_df_inner.index[train_inner]
@@ -107,26 +107,21 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 					feature_comb = ['None']
 				else:
 					feature_comb = ['occ', 'area', 'rooms']
-				idx_user, data_user = prepare_known_features(feature_comb, static_features, X_normalised)
 
-				# Static features can only be used if we have atleast some values from the train homes
-				if idx_user is not None:
-					if min([len(x) for x in idx_user.values()])==0:
-						idx_user = None
-						data_user =None
+				try:
+					A = create_matrix_factorised(appliance, test_ix_inner, X_normalised)
+					X, Y, res = nmf_features(A=A, k=num_latent_factors_cv, constant=0.01, regularisation=False,
+
+					                          MAX_ITERS=num_iterations_cv,
+					                         cost='absolute',
+					                         X_known=X_known)
 
 
-				A = create_matrix_factorised(appliance, test_ix_inner, X_normalised)
-				X, Y, res = nmf_features(A=A, k=num_latent_factors_cv, constant=0.01, regularisation=False,
-				                         idx_user=idx_user, data_user=data_user,
-				                          MAX_ITERS=num_iterations_cv,
-				                         cost='absolute',
-				                         X_known=X_known)
 
-				pred_inner = []
-
-				pred_inner.append(create_prediction(test_ix_inner, X, Y, X_normalised, appliance,
-				                                    target_matrix_max, target_matrix_min, appliance_cols))
+					pred_inner.append(create_prediction(test_ix_inner, X, Y, X_normalised, appliance,
+					                                    target_matrix_max, target_matrix_min, appliance_cols))
+				except:
+					print "FAILED...{}-{}".format(num_latent_factors_cv, num_iterations_cv)
 
 			err = {}
 
@@ -179,12 +174,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 		feature_comb = ['None']
 	else:
 		feature_comb = ['occ', 'area', 'rooms']
-	idx_user, data_user = prepare_known_features(feature_comb, static_features, X_normalised)
-	# Static features can only be used if we have atleast some values from the train homes for each of the features
-	if idx_user is not None:
-		if min([len(x) for x in idx_user.values()]) == 0:
-			idx_user = None
-			data_user = None
 
 	if setting == 'transfer':
 		X_known = X_store[appliance][features][best_num_iterations][best_num_latent_factors]
@@ -195,7 +184,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
 	A = create_matrix_factorised(appliance, test_ix, X_normalised)
 	X, Y, res = nmf_features(A=A, k=best_num_latent_factors, constant=0.01, regularisation=False,
-	                         idx_user=idx_user, data_user=data_user,
+
 	                         MAX_ITERS=best_num_iterations, cost='absolute'
 	                         ,X_known=X_known)
 
