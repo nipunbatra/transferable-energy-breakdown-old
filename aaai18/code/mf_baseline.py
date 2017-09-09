@@ -19,6 +19,11 @@ train_percentage = float(train_percentage)
 source_df, source_dfc, source_static_df, source_X_matrix, source_X_normalised, source_matrix_max, source_matrix_min, source_appliance_cols, source_aggregate_cols, source_idx_user, source_data_user = create_df_dfc_static(source, 2014, appliance, features)
 target_df, target_dfc, target_static_df, target_X_matrix, target_X_normalised, target_matrix_max, target_matrix_min, target_appliance_cols, target_aggregate_cols, target_idx_user, target_data_user = create_df_dfc_static(target, 2014, appliance, features)
 
+if target =="Austin":
+	target_df = target_df.head(40)
+	target_dfc = target_dfc.head(40)
+	target_X_normalised = target_X_normalised.head(40)
+	target_X_matrix = target_X_matrix.head(40)
 year = 2014
 
 import os
