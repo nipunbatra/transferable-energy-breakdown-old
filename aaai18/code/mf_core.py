@@ -48,7 +48,11 @@ def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_
 	if X_known is not None:
 		Y = cvx.Variable(m, k)
 		constraint = [Y >= 0]
-		obj = cvx.Minimize(cvx.norm(A.values[mask] - (Y * X_known)[mask], 'fro'))
+		if mask is None:
+			obj = cvx.Minimize(cvx.norm(A.values - (Y * X_known), 'fro'))
+		else:
+			obj = cvx.Minimize(cvx.norm(A.values[mask] - (Y * X_known)[mask], 'fro'))
+
 		prob = cvx.Problem(obj, constraint)
 		prob.solve(solver=cvx.SCS)
 		return X_known, Y.value, []
