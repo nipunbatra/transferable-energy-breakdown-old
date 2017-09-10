@@ -26,7 +26,7 @@ for case in [2, 4]:
 			for setting in ['normal','transfer']:
 				out[case][constant_use][static_use][setting] = {}
 				params[case][constant_use][static_use][setting] = {}
-				for train_percentage in [6., 7., 8., 9., 10., 15., 20.,30.,40.,
+				for train_percentage in [0., 6., 7., 8., 9., 10., 15., 20.,30.,40.,
 				                         50., 60., 70.,80.,  90., 100.]:
 					out[case][constant_use][static_use][setting][train_percentage] = {}
 					params[case][constant_use][static_use][setting][train_percentage] = {}

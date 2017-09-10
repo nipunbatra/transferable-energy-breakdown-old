@@ -36,7 +36,7 @@ def create_df_dfc_static(region, year, appliance, features):
 	return df, dfc, static_df, X_matrix, X_normalised, matrix_max, matrix_min, appliance_cols, aggregate_cols, idx_user, data_user
 
 
-def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_user=None,
+def nmf_features(A, k, constant=0.01, regularisation=False,
                   MAX_ITERS=30, cost='absolute', X_known=None):
 	np.random.seed(0)
 	# print idx_user, idx_item, data_user, data_item
@@ -48,7 +48,11 @@ def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_
 	if X_known is not None:
 		Y = cvx.Variable(m, k)
 		constraint = [Y >= 0]
-		obj = cvx.Minimize(cvx.norm(A.values[mask] - (Y * X_known)[mask], 'fro'))
+		if mask is None:
+			obj = cvx.Minimize(cvx.norm(A.values - (Y * X_known), 'fro'))
+		else:
+			obj = cvx.Minimize(cvx.norm(A.values[mask] - (Y * X_known)[mask], 'fro'))
+
 		prob = cvx.Problem(obj, constraint)
 		prob.solve(solver=cvx.SCS)
 		return X_known, Y.value, []
@@ -106,21 +110,7 @@ def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_
 			Y = cvx.Variable(m, k)
 
 			constraint = [Y >= 0]
-			if idx_user is not None:
-				# print np.size(idx_user)
-				num_cols = len(idx_user)
-				# print num_cols
-				for index_feature, fe_name in enumerate(idx_user):
-					constraint.append(Y[:, index_feature][idx_user[fe_name]] == data_user[fe_name])
-				# return constraint
-		#print(constraint)
-		#print "----------X--------"
-		#print X
-		#print "----------Y--------"
-		#print Y
-		#print "######## Iteration ##########"
 
-				# Y.value[0]=f
 
 		if cost == 'absolute':
 			error = A.values[mask] - (Y * X)[mask]

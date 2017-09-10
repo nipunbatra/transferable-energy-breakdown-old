@@ -58,8 +58,8 @@ if static_use == "True":
 else:
 	lambda_cv_range = [0]
 
-# A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_{}_{}_As.pkl'.format(case, source, constant_use, start, stop)), 'r'))
-# error_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_{}_{}_errs.pkl'.format(case, source, constant_use, start, stop)), 'r'))
+A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_{}_{}_As.pkl'.format(case, source, constant_use, start, stop)), 'r'))
+error_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_{}_{}_errs.pkl'.format(case, source, constant_use, start, stop)), 'r'))
 
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year, start, stop)
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year, start, stop)
@@ -158,7 +158,6 @@ def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, n
 		except Exception, e:
 			# This appliance does not have enough samples. Will not be
 			# weighed
-			print 'here'
 			print(e)
 			print(appliance)
 	err_weight = {}
@@ -208,7 +207,10 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print("-" * 80)
 	print("Current Error, Least Error, #Iterations")
 
+<<<<<<< HEAD
 	# raw_input('Enter to continue')
+=======
+>>>>>>> 4b8032832f00c39c105e8705285545de524db60a
 	### Inner CV loop to find the optimum set of params. In this case: the number of iterations
 	inner_kf = KFold(n_splits=2)
 

@@ -19,6 +19,11 @@ train_percentage = float(train_percentage)
 source_df, source_dfc, source_static_df, source_X_matrix, source_X_normalised, source_matrix_max, source_matrix_min, source_appliance_cols, source_aggregate_cols, source_idx_user, source_data_user = create_df_dfc_static(source, 2014, appliance, features)
 target_df, target_dfc, target_static_df, target_X_matrix, target_X_normalised, target_matrix_max, target_matrix_min, target_appliance_cols, target_aggregate_cols, target_idx_user, target_data_user = create_df_dfc_static(target, 2014, appliance, features)
 
+if target =="Austin":
+	target_df = target_df.head(40)
+	target_dfc = target_dfc.head(40)
+	target_X_normalised = target_X_normalised.head(40)
+	target_X_matrix = target_X_matrix.head(40)
 year = 2014
 
 import os
@@ -62,9 +67,10 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	### Inner CV loop to find the optimum set of params. In this case: the number of iterations
 	inner_kf = KFold(n_splits=2)
 
-	best_num_iterations = 0
-	best_num_season_factors = 0
-	best_num_home_factors = 0
+	best_num_iterations = 10
+	best_num_season_factors = 3
+	best_num_home_factors = 3
+	best_num_latent_factors = 3
 	least_error = 1e6
 
 	overall_df_inner = target_df.loc[train_ix]
@@ -73,7 +79,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	for num_iterations_cv in range(10, 20, 4):
 	#for num_iterations_cv in [10]:
 		for num_latent_factors_cv in range(3, 8):
-			pred_inner = {}
+			pred_inner = []
 			for train_inner, test_inner in inner_kf.split(overall_df_inner):
 
 				train_ix_inner = overall_df_inner.index[train_inner]
@@ -102,51 +108,46 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 					feature_comb = ['None']
 				else:
 					feature_comb = ['occ', 'area', 'rooms']
-				idx_user, data_user = prepare_known_features(feature_comb, static_features, X_normalised)
 
-				# Static features can only be used if we have atleast some values from the train homes
-				if idx_user is not None:
-					if min([len(x) for x in idx_user.values()])==0:
-						idx_user = None
-						data_user =None
+				try:
+					A = create_matrix_factorised(appliance, test_ix_inner, X_normalised)
+					X, Y, res = nmf_features(A=A, k=num_latent_factors_cv, constant=0.01, regularisation=False,
+
+					                          MAX_ITERS=num_iterations_cv,
+					                         cost='absolute',
+					                         X_known=X_known)
 
 
-				A = create_matrix_factorised(appliance, test_ix_inner, X_normalised)
-				X, Y, res = nmf_features(A=A, k=num_latent_factors_cv, constant=0.01, regularisation=False,
-				                         idx_user=idx_user, data_user=data_user,
-				                          MAX_ITERS=num_iterations_cv,
-				                         cost='absolute',
-				                         X_known=X_known)
 
-				pred_inner = []
-
-				pred_inner.append(create_prediction(test_ix_inner, X, Y, X_normalised, appliance,
-				                                    target_matrix_max, target_matrix_min, appliance_cols))
+					pred_inner.append(create_prediction(test_ix_inner, X, Y, X_normalised, appliance,
+					                                    target_matrix_max, target_matrix_min, appliance_cols))
+				except:
+					print "FAILED...{}-{}".format(num_latent_factors_cv, num_iterations_cv)
 
 			err = {}
+			if len(pred_inner):
+				pred_inner = pd.DataFrame(pd.concat(pred_inner))
 
-			pred_inner = pd.DataFrame(pd.concat(pred_inner))
+				try:
+					if appliance == "hvac":
+						err[appliance] = \
+							compute_rmse_fraction(appliance, pred_inner[['hvac_{}'.format(month) for month in range(5, 11)]],
+							                      target)[2]
+					else:
+						err[appliance] = compute_rmse_fraction(appliance, pred_inner, target)[2]
+				except Exception, e:
+					# This appliance does not have enough samples. Will not be
+					# weighed
+					print(e)
+					print(appliance)
+				err_weight = {}
 
-			try:
-				if appliance == "hvac":
-					err[appliance] = \
-						compute_rmse_fraction(appliance, pred_inner[['hvac_{}'.format(month) for month in range(5, 11)]],
-						                      target)[2]
-				else:
-					err[appliance] = compute_rmse_fraction(appliance, pred_inner, target)[2]
-			except Exception, e:
-				# This appliance does not have enough samples. Will not be
-				# weighed
-				print(e)
-				print(appliance)
-			err_weight = {}
-
-			mean_err = pd.Series(err).sum()
-			if mean_err < least_error:
-				best_num_iterations = num_iterations_cv
-				best_num_latent_factors = num_latent_factors_cv
-				least_error = mean_err
-			print(mean_err, least_error, num_iterations_cv, num_latent_factors_cv)
+				mean_err = pd.Series(err).sum()
+				if mean_err < least_error:
+					best_num_iterations = num_iterations_cv
+					best_num_latent_factors = num_latent_factors_cv
+					least_error = mean_err
+				print(mean_err, least_error, num_iterations_cv, num_latent_factors_cv)
 	best_params_global[outer_loop_iteration] = {'Iterations': best_num_iterations,
 	                                            "Appliance Train Error": err,
 	                                            'Num latent factors': best_num_latent_factors,
@@ -174,12 +175,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 		feature_comb = ['None']
 	else:
 		feature_comb = ['occ', 'area', 'rooms']
-	idx_user, data_user = prepare_known_features(feature_comb, static_features, X_normalised)
-	# Static features can only be used if we have atleast some values from the train homes for each of the features
-	if idx_user is not None:
-		if min([len(x) for x in idx_user.values()]) == 0:
-			idx_user = None
-			data_user = None
 
 	if setting == 'transfer':
 		X_known = X_store[appliance][features][best_num_iterations][best_num_latent_factors]
@@ -190,7 +185,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
 	A = create_matrix_factorised(appliance, test_ix, X_normalised)
 	X, Y, res = nmf_features(A=A, k=best_num_latent_factors, constant=0.01, regularisation=False,
-	                         idx_user=idx_user, data_user=data_user,
+
 	                         MAX_ITERS=best_num_iterations, cost='absolute'
 	                         ,X_known=X_known)
 
@@ -201,7 +196,10 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 out = {'Prediction': pd.concat(pred_df), 'Parameters': best_params_global}
 import os
 import pickle
-name = "{}-{}-{}-{}".format(appliance, features, random_seed, train_percentage)
+if setting=="normal":
+	name = "{}-{}-{}-{}-{}".format(target, appliance, features, random_seed, train_percentage)
+else:
+	name = "{}-{}-{}-{}-{}-{}".format(source, target, appliance, features, random_seed, train_percentage)
 directory = os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/MF/{}'.format(setting))
 if not os.path.exists(directory):
 	os.makedirs(directory)
