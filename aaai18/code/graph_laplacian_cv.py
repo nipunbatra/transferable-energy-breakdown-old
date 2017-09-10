@@ -32,7 +32,7 @@ from common import compute_rmse_fraction, contri, get_tensor, create_region_df_d
 from create_matrix import *
 from tensor_custom_core_all import *
 import multiprocessing as mp
-
+import pickle
 global source, target
 global case
 global source_df, source_dfc, source_tensor, source_static
@@ -97,10 +97,10 @@ error = []
 params = {}
 H_factors = {}
 result = {}
-for learning_rate_cv in [0.1, 0.5, 1, 2]:
-	for num_iterations_cv in [1300, 700, 100][:]:
-		for num_season_factors_cv in range(2, 5)[:]:
-			for num_home_factors_cv in range(3, 6)[:]:
+for learning_rate_cv in [0.1]:
+	for num_iterations_cv in [100][:]:
+		for num_season_factors_cv in range(2, 3)[:]:
+			for num_home_factors_cv in range(3, 4)[:]:
 				if case == 4:
 					if num_home_factors_cv!=num_season_factors_cv:
 						print("Case 4 needs equal # dimensions. Skipping")
