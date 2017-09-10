@@ -36,7 +36,7 @@ def create_df_dfc_static(region, year, appliance, features):
 	return df, dfc, static_df, X_matrix, X_normalised, matrix_max, matrix_min, appliance_cols, aggregate_cols, idx_user, data_user
 
 
-def nmf_features(A, k, constant=0.01, regularisation=False,
+def nmf_features(A, k, constant=0.01, regularisation=False, idx_user=None, data_user=None,
                   MAX_ITERS=30, cost='absolute', X_known=None):
 	np.random.seed(0)
 	# print idx_user, idx_item, data_user, data_item
@@ -110,7 +110,21 @@ def nmf_features(A, k, constant=0.01, regularisation=False,
 			Y = cvx.Variable(m, k)
 
 			constraint = [Y >= 0]
+			if idx_user is not None:
+				# print np.size(idx_user)
+				num_cols = len(idx_user)
+				# print num_cols
+				for index_feature, fe_name in enumerate(idx_user):
+					constraint.append(Y[:, index_feature][idx_user[fe_name]] == data_user[fe_name])
+				# return constraint
+		#print(constraint)
+		#print "----------X--------"
+		#print X
+		#print "----------Y--------"
+		#print Y
+		#print "######## Iteration ##########"
 
+				# Y.value[0]=f
 
 		if cost == 'absolute':
 			error = A.values[mask] - (Y * X)[mask]
