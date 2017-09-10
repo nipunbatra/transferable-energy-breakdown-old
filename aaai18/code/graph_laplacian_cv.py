@@ -97,10 +97,10 @@ error = []
 params = {}
 H_factors = {}
 result = {}
-for learning_rate_cv in [0.1]:
-	for num_iterations_cv in [100][:]:
-		for num_season_factors_cv in range(2, 3)[:]:
-			for num_home_factors_cv in range(3, 4)[:]:
+for learning_rate_cv in [0.1, 0.5, 1, 2]:
+	for num_iterations_cv in [1300, 700, 100][:]:
+		for num_season_factors_cv in range(2, 5)[:]:
+			for num_home_factors_cv in range(3, 6)[:]:
 				if case == 4:
 					if num_home_factors_cv!=num_season_factors_cv:
 						print("Case 4 needs equal # dimensions. Skipping")
@@ -291,6 +291,8 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 		pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
 # print result[0.1][1300][2][3][0]
 
+for appliance in APPLIANCES_ORDER:
+	pred[appliance] = pd.DataFrame(pd.concat(pred[appliance]))
 
 if setting=="transfer":
 	name = "{}-{}-{}-{}".format(source, target, random_seed, train_percentage)
