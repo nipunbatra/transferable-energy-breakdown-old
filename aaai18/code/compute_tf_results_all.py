@@ -30,7 +30,7 @@ for case in [2, 4]:
 				                         50., 60., 70.,80.,  90., 100.]:
 					out[case][constant_use][static_use][setting][train_percentage] = {}
 					params[case][constant_use][static_use][setting][train_percentage] = {}
-					for random_seed in range(5):
+					for random_seed in range(10):
 						out[case][constant_use][static_use][setting][train_percentage]
 						params[case][constant_use][static_use][setting][train_percentage]
 						if setting == "transfer":
