@@ -2,8 +2,8 @@
 Run all the code on HCDM
 
 """
-source = "SanDiego"
-target = "Austin"
+source = "Austin"
+target = "SanDiego"
 feature = "energy"
 for appliance in ['hvac','fridge','mw','dw','oven','wm']:
 

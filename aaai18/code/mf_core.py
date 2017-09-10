@@ -45,7 +45,7 @@ def nmf_features(A, k, constant=0.01, regularisation=False,
 	m = len(A)
 	n = len(A.columns)
 	mask = A.notnull().values
-	if X_known:
+	if X_known is not None:
 		Y = cvx.Variable(m, k)
 		constraint = [Y >= 0]
 		if mask is None:
