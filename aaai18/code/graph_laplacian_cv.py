@@ -77,7 +77,10 @@ else:
 	T_constant = None
 # End
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> 4b8032832f00c39c105e8705285545de524db60a
 n_splits = 10
 
 
@@ -97,10 +100,29 @@ error = []
 params = {}
 H_factors = {}
 result = {}
+result_app = {}
 for learning_rate_cv in [0.1, 0.5, 1, 2]:
+<<<<<<< HEAD
+	H_factors[learning_rate_cv] = {}
+	result[learning_rate_cv] = {}
+	result_app[learning_rate_cv] = {}
+	for num_iterations_cv in [1300, 700, 100][:]:
+		H_factors[learning_rate_cv][num_iterations_cv] = {}
+		result[learning_rate_cv][num_iterations_cv] = {}
+		result_app[learning_rate_cv][num_iterations_cv] = {}
+		for num_season_factors_cv in range(2, 5)[:]:
+			H_factors[learning_rate_cv][num_iterations_cv][num_season_factors_cv] = {}
+			result[learning_rate_cv][num_iterations_cv][num_season_factors_cv] = {}
+			result_app[learning_rate_cv][num_iterations_cv][num_season_factors_cv] = {}
+			for num_home_factors_cv in range(3, 6)[:]:
+				H_factors[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv] = {}
+				result[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv] = {}
+				result_app[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv] = {}
+=======
 	for num_iterations_cv in [1300, 700, 100][:]:
 		for num_season_factors_cv in range(2, 5)[:]:
 			for num_home_factors_cv in range(3, 6)[:]:
+>>>>>>> 4b8032832f00c39c105e8705285545de524db60a
 				if case == 4:
 					if num_home_factors_cv!=num_season_factors_cv:
 						print("Case 4 needs equal # dimensions. Skipping")
@@ -224,6 +246,23 @@ for learning_rate_cv in [0.1, 0.5, 1, 2]:
 					#     error_home = pd.concat([err[appliance][appliance + "_{}".format(start)], 
 					#                        err[appliance][appliance + "_{}".format(start+1)]],axis=1)
 					    
+<<<<<<< HEAD
+					    for i in range(start+2, end):
+					        error_home = pd.concat([error_home, err[appliance][appliance + "_{}".format(i)]], axis = 1)
+					    app = np.sqrt((error_home**2).mean(axis=1))
+					    k[appliance] = app
+					result[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = (pd.DataFrame(k).fillna(0)*pd.Series(contri[target])).sum(axis=1)
+					result_app[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = pd.DataFrame(k).fillna(0)
+
+
+best_idx = np.argmin(error)
+best_learning_rate, best_num_iterations, best_num_season_factors, best_num_home_factors, best_lam= params[best_idx]
+least_error = error[best_idx]
+print error
+print params
+print least_error
+print params[best_idx]
+=======
 					#     for i in range(start+2, end):
 					#         error_home = pd.concat([error_home, err[appliance][appliance + "_{}".format(i)]], axis = 1)
 					#     app = np.sqrt((error_home**2).mean(axis=1))
@@ -289,6 +328,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	HAT = multiply_case(H, A, T, case)
 	for appliance in APPLIANCES_ORDER:
 		pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
+>>>>>>> 4b8032832f00c39c105e8705285545de524db60a
 # print result[0.1][1300][2][3][0]
 
 for appliance in APPLIANCES_ORDER:
@@ -311,4 +351,12 @@ if os.path.exists(filename):
 out = {'Predictions': pred, 'Learning Params': best_params_global}
 
 with open(filename, 'wb') as f:
+<<<<<<< HEAD
+	pickle.dump(result, f, pickle.HIGHEST_PROTOCOL)
+
+filename = os.path.join(directory, name + '_error_home_app.pkl')
+with open(filename, 'wb') as f:
+	pickle.dump(result_app, f, pickle.HIGHEST_PROTOCOL)
+=======
 	pickle.dump(out, f, pickle.HIGHEST_PROTOCOL)
+>>>>>>> 4b8032832f00c39c105e8705285545de524db60a

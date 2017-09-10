@@ -29,7 +29,12 @@ for setting in ['transfer', 'normal']:
 				import pickle
 				try:
 
-					name = "{}-{}-{}-{}".format(appliance, features, random_seed, train_percentage)
+					if setting == "normal":
+						name = "{}-{}-{}-{}-{}".format(target, appliance, features, random_seed, train_percentage)
+					else:
+						name = "{}-{}-{}-{}-{}-{}".format(source, target, appliance, features, random_seed,
+						                                  train_percentage)
+
 					directory = os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/MF/{}'.format(setting))
 					if not os.path.exists(directory):
 						os.makedirs(directory)
@@ -41,6 +46,9 @@ for setting in ['transfer', 'normal']:
 				except:
 					pass
 		out[setting][train_percentage] = pd.DataFrame(out[setting][train_percentage]).mean(axis=1)
+
+save_loc = os.path.expanduser("~/git/scalable-nilm/aaai18/predictions/mf-{}-{}.pkl".format(source, target))
+pickle.dump(out, open(save_loc, 'w'))
 
 pickle.dump(out, open('../../../predictions/mf-{}-{}.pkl'.format(source, target), 'w'))
 #pickle.dump(params, open('../predictions/params-lr-tf-{}-{}.pkl'.format(source, target), 'w'))

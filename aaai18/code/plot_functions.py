@@ -109,12 +109,12 @@ def latexify(fig_width=None, fig_height=None, columns=1):
 
 	params = {'backend': 'ps',
 	          'text.latex.preamble': ['\usepackage{gensymb}'],
-	          'axes.labelsize': 8,  # fontsize for x and y labels (was 10)
-	          'axes.titlesize': 8,
-	          'text.fontsize': 8,  # was 10
-	          'legend.fontsize': 8,  # was 10
-	          'xtick.labelsize': 8,
-	          'ytick.labelsize': 8,
+	          'axes.labelsize': 10,  # fontsize for x and y labels (was 10)
+	          'axes.titlesize': 10,
+	          'text.fontsize': 10,  # was 10
+	          'legend.fontsize': 10,  # was 10
+	          'xtick.labelsize': 10,
+	          'ytick.labelsize': 10,
 	          'text.usetex': True,
 	          'figure.figsize': [fig_width, fig_height],
 	          'font.family': 'serif'

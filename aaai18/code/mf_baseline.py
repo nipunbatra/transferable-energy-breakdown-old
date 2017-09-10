@@ -67,9 +67,10 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	### Inner CV loop to find the optimum set of params. In this case: the number of iterations
 	inner_kf = KFold(n_splits=2)
 
-	best_num_iterations = 0
-	best_num_season_factors = 0
-	best_num_home_factors = 0
+	best_num_iterations = 10
+	best_num_season_factors = 3
+	best_num_home_factors = 3
+	best_num_latent_factors = 3
 	least_error = 1e6
 
 	overall_df_inner = target_df.loc[train_ix]
@@ -124,29 +125,29 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 					print "FAILED...{}-{}".format(num_latent_factors_cv, num_iterations_cv)
 
 			err = {}
+			if len(pred_inner):
+				pred_inner = pd.DataFrame(pd.concat(pred_inner))
 
-			pred_inner = pd.DataFrame(pd.concat(pred_inner))
+				try:
+					if appliance == "hvac":
+						err[appliance] = \
+							compute_rmse_fraction(appliance, pred_inner[['hvac_{}'.format(month) for month in range(5, 11)]],
+							                      target)[2]
+					else:
+						err[appliance] = compute_rmse_fraction(appliance, pred_inner, target)[2]
+				except Exception, e:
+					# This appliance does not have enough samples. Will not be
+					# weighed
+					print(e)
+					print(appliance)
+				err_weight = {}
 
-			try:
-				if appliance == "hvac":
-					err[appliance] = \
-						compute_rmse_fraction(appliance, pred_inner[['hvac_{}'.format(month) for month in range(5, 11)]],
-						                      target)[2]
-				else:
-					err[appliance] = compute_rmse_fraction(appliance, pred_inner, target)[2]
-			except Exception, e:
-				# This appliance does not have enough samples. Will not be
-				# weighed
-				print(e)
-				print(appliance)
-			err_weight = {}
-
-			mean_err = pd.Series(err).sum()
-			if mean_err < least_error:
-				best_num_iterations = num_iterations_cv
-				best_num_latent_factors = num_latent_factors_cv
-				least_error = mean_err
-			print(mean_err, least_error, num_iterations_cv, num_latent_factors_cv)
+				mean_err = pd.Series(err).sum()
+				if mean_err < least_error:
+					best_num_iterations = num_iterations_cv
+					best_num_latent_factors = num_latent_factors_cv
+					least_error = mean_err
+				print(mean_err, least_error, num_iterations_cv, num_latent_factors_cv)
 	best_params_global[outer_loop_iteration] = {'Iterations': best_num_iterations,
 	                                            "Appliance Train Error": err,
 	                                            'Num latent factors': best_num_latent_factors,
