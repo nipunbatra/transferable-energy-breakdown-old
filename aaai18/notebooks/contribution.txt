@@ -2,8 +2,7 @@
 \toprule
 {} &  HVAC &  Fridge &  Micro-\textbackslashnwave &  Dish \textbackslashnWasher &  Washing\textbackslashn machine &  Oven \\
 \midrule
-Austin   &  0.76 &    0.17 &          0.02 &           0.02 &               0.01 &  0.02 \\
-SanDiego &  0.55 &    0.31 &          0.04 &           0.03 &               0.02 &  0.04 \\
-Boulder  &  0.31 &    0.44 &          0.07 &           0.05 &               0.04 &  0.09 \\
+Austin   &  0.20 &    0.09 &          0.01 &           0.01 &               0.01 &  0.02 \\
+SanDiego &  0.12 &    0.15 &          0.02 &           0.02 &               0.01 &  0.03 \\
 \bottomrule
 \end{tabular}
