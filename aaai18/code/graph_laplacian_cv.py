@@ -75,75 +75,6 @@ else:
 	T_constant = None
 # End
 
-
-
-def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, num_season_factors_cv,num_home_factors_cv, lam_cv, A_source):
-	# overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv = param
-	print num_iterations_cv, num_season_factors_cv,num_home_factors_cv,lam_cv
-	inner_kf = KFold(n_splits=2)
-	pred_inner = {}
-	for train_inner, test_inner in inner_kf.split(overall_df_inner):
-
-		train_ix_inner = overall_df_inner.index[train_inner]
-		test_ix_inner = overall_df_inner.index[test_inner]
-
-		# H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
-		#                                                                                 num_home_factors_cv, num_season_factors_cv, 
-		#                                                                                 num_iter=num_iterations_cv, lr=1, dis=False, 
-		#                                                                                 lam=lam_cv, T_known = np.ones(12).reshape(-1, 1))
-
-		train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
-		df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[train_test_ix_inner]
-		tensor_inner = get_tensor(df_t_inner)
-		tensor_copy_inner = tensor_inner.copy()
-		# First n
-		tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
-		L_inner = target_L[np.ix_(np.concatenate([test_inner, train_inner]), np.concatenate([test_inner, train_inner]))]
-
-		if setting=="transfer":
-			A_source = A_store[learning_rate_cv][num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations_cv]
-		else:
-			A_source = None
-		
-		H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner,
-																  L_inner,
-																  num_home_factors_cv,
-																  num_season_factors_cv,
-																  num_iter=num_iterations_cv,
-																  lr=learning_rate_cv, dis=False,
-																  lam=lam_cv,
-																  A_known=A_source,
-																  T_known=T_constant)
-
-		HAT = multiply_case(H, A, T, case)
-		for appliance in APPLIANCES_ORDER:
-			if appliance not in pred_inner:
-				pred_inner[appliance] = []
-
-			pred_inner[appliance].append(pd.DataFrame(HAT[:len(test_ix_inner), appliance_index[appliance], :], index=test_ix_inner))
-
-	err = {}
-	appliance_to_weight = []
-	for appliance in APPLIANCES_ORDER[1:]:
-		pred_inner[appliance] = pd.DataFrame(pd.concat(pred_inner[appliance]))
-
-		try:
-			if appliance =="hvac":
-				err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance][range(4, 10)], target)[2]
-			else:
-				err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], target)[2]
-			appliance_to_weight.append(appliance)
-		except Exception, e:
-			# This appliance does not have enough samples. Will not be
-			# weighed
-			print(e)
-			print(appliance)
-	err_weight = {}
-	for appliance in appliance_to_weight:
-		err_weight[appliance] = err[appliance]*contri[target][appliance]
-	mean_err = pd.Series(err_weight).sum()
-	# error[num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = mean_err
-	return mean_err
 n_splits = 10
 
 
@@ -156,18 +87,23 @@ error = []
 params = {}
 H_factors = {}
 result = {}
+result_app = {}
 for learning_rate_cv in [0.1, 0.5, 1, 2]:
 	H_factors[learning_rate_cv] = {}
 	result[learning_rate_cv] = {}
+	result_app[learning_rate_cv] = {}
 	for num_iterations_cv in [1300, 700, 100][:]:
 		H_factors[learning_rate_cv][num_iterations_cv] = {}
 		result[learning_rate_cv][num_iterations_cv] = {}
+		result_app[learning_rate_cv][num_iterations_cv] = {}
 		for num_season_factors_cv in range(2, 5)[:]:
 			H_factors[learning_rate_cv][num_iterations_cv][num_season_factors_cv] = {}
 			result[learning_rate_cv][num_iterations_cv][num_season_factors_cv] = {}
+			result_app[learning_rate_cv][num_iterations_cv][num_season_factors_cv] = {}
 			for num_home_factors_cv in range(3, 6)[:]:
 				H_factors[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv] = {}
 				result[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv] = {}
+				result_app[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv] = {}
 				if case == 4:
 					if num_home_factors_cv!=num_season_factors_cv:
 						print("Case 4 needs equal # dimensions. Skipping")
@@ -289,6 +225,7 @@ for learning_rate_cv in [0.1, 0.5, 1, 2]:
 					    app = np.sqrt((error_home**2).mean(axis=1))
 					    k[appliance] = app
 					result[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = (pd.DataFrame(k).fillna(0)*pd.Series(contri[target])).sum(axis=1)
+					result_app[learning_rate_cv][num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = pd.DataFrame(k).fillna(0)
 
 
 best_idx = np.argmin(error)
@@ -331,3 +268,7 @@ with open(filename, 'wb') as f:
 filename = os.path.join(directory, name + '_error_home.pkl')
 with open(filename, 'wb') as f:
 	pickle.dump(result, f, pickle.HIGHEST_PROTOCOL)
+
+filename = os.path.join(directory, name + '_error_home_app.pkl')
+with open(filename, 'wb') as f:
+	pickle.dump(result_app, f, pickle.HIGHEST_PROTOCOL)

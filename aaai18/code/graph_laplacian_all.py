@@ -98,8 +98,7 @@ else:
 A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_{}_{}_As.pkl'.format(case, source, constant_use, start, stop)), 'r'))
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year, start, stop)
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year, start, stop)
-print source_tensor.shape
-print target_tensor.shape
+
 
 # # using cosine similarity to compute L
 source_L = get_L(source_static)
@@ -238,6 +237,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 								pred_inner[appliance].append(
 									pd.DataFrame(HAT[:len(test_ix_inner), appliance_index[appliance], :],
 												 index=test_ix_inner))
+
 
 						err = {}
 						appliance_to_weight = []

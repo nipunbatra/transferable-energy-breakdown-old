@@ -238,6 +238,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	tensor_copy = tensor.copy()
 	# First n
 	tensor_copy[:num_test, 1:, :] = np.NaN
+	
 
 	L = target_L[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
 
@@ -248,8 +249,15 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 																		  lam=best_lam, A_known=A_source, T_known=T_constant)
 
 	HAT = multiply_case(H, A, T, case)
+
 	for appliance in APPLIANCES_ORDER:
 		pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
+	best_params_global[outer_loop_iteration] = {'Learning Rate': best_learning_rate,
+												'Iterations': best_num_iterations,
+												'Num season factors': best_num_season_factors,
+												'Num home factors': best_num_home_factors,
+												'Lambda': best_lam
+												}
 
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = pd.DataFrame(pd.concat(pred[appliance]))

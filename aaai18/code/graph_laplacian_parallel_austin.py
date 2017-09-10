@@ -208,7 +208,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	print("-" * 80)
 	print("Current Error, Least Error, #Iterations")
 
-	raw_input('Enter to continue')
+	# raw_input('Enter to continue')
 	### Inner CV loop to find the optimum set of params. In this case: the number of iterations
 	inner_kf = KFold(n_splits=2)
 
@@ -224,13 +224,15 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
 	params = {}
 	count = 0
+	print overall_df_inner
+	raw_input('Enter to continue')
 
 
 	##############################################################
 	# Parallel part
 	results = []
 	cpus = mp.cpu_count()
-	pool = mp.Pool()
+	pool = mp.Pool(1)
 	for learning_rate_cv in [0.1,0.5, 1]:
 		for num_iterations_cv in [1300, 700, 100][:]:
 			for num_season_factors_cv in range(2, 5)[:]:
