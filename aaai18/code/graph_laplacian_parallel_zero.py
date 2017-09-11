@@ -80,7 +80,7 @@ else:
 	T_constant = None
 # End
 
-directory = os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/TF-all/{}/case-{}/{}/{}'.format(setting, case, static_use, constant_use))
+directory = os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/zero/TF-all/{}/case-{}/{}/{}'.format(setting, case, static_use, constant_use))
 if not os.path.exists(directory):
 	os.makedirs(directory)
 filename = os.path.join(directory, name + '.pkl')
