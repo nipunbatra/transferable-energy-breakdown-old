@@ -29,11 +29,11 @@ for setting in ['normal','transfer']:
 				for source in ['Austin']:
 					for target in ['SanDiego']:
 						for random_seed in range(10):
-							for train_percentage in [0]:
+							for train_percentage in [0, 6]:
 								OFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}.out".format(SLURM_OUT, setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
 								EFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}.err".format(SLURM_OUT, setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
 								SLURM_SCRIPT = "{}/{}-{}-{}-{}-{}-{}-{}-{}.pbs".format('pbs_files', setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
-								CMD = 'python graph_laplacian_cv.py {} {} {} {} {} {} {} {} 1 13'.format(setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
+								CMD = 'python graph_laplacian_parallel_zero.py {} {} {} {} {} {} {} {} 1 13'.format(setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
 								lines = []
 								lines.append("#!/bin/sh\n")
 								lines.append('#SBATCH --time=1-16:0:00\n')
