@@ -38,7 +38,7 @@ for case in [2, 4]:
 							name = "{}-{}-{}".format(target, random_seed, train_percentage)
 
 						directory = os.path.expanduser(
-							'~/git/scalable-nilm/aaai18/predictions/TF-all/{}/case-{}/{}/{}'.format(setting, case, static_use, constant_use))
+							'~/git/scalable-nilm/aaai18/predictions/zero/TF-all/{}/case-{}/{}/{}'.format(setting, case, static_use, constant_use))
 						if not os.path.exists(directory):
 							os.makedirs(directory)
 						filename = os.path.join(directory, name + '.pkl')
@@ -65,5 +65,5 @@ for case in [2, 4]:
 					out[case][constant_use][static_use][setting][train_percentage] = pd.DataFrame(out[case][constant_use][static_use][setting][train_percentage]).mean(axis=1)
 					print case, constant_use, static_use, setting, train_percentage
 					print out[case][constant_use][static_use][setting][train_percentage]
-# pickle.dump(out, open('../predictions/lr-tf-{}-{}-all.pkl'.format(source, target), 'w'))
-# pickle.dump(params, open('../predictions/params-lr-tf-{}-{}-all.pkl'.format(source, target), 'w'))
+pickle.dump(out, open('../predictions/zero/lr-tf-{}-{}-all.pkl'.format(source, target), 'w'))
+pickle.dump(params, open('../predictions/zero/params-lr-tf-{}-{}-all.pkl'.format(source, target), 'w'))
