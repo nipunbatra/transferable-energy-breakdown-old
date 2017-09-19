@@ -145,6 +145,7 @@ def learn_HAT_adagrad_graph(case, tensor, L, num_home_factors, num_season_factor
     As = [A.copy()]
     costs = [cost(H, A, T, L, tensor, lam, case)]
     HATs = [multiply_case(H, A, T, case)]
+    print multiply_case(H, A, T, case)
 
     
 
@@ -158,6 +159,10 @@ def learn_HAT_adagrad_graph(case, tensor, L, num_home_factors, num_season_factor
         #     lr_a = np.divide(lr, np.sqrt(sum_square_gradients_A))
         #     A -= lr_a * del_a
         del_h, del_a, del_t = mg(H, A, T, L, tensor, lam, case)
+        if i == 1:
+            print del_h
+            print del_a
+            print del_t
         sum_square_gradients_A += eps + np.square(del_a)
         lr_a = np.divide(lr, np.sqrt(sum_square_gradients_A))
         A -= lr_a * del_a
@@ -191,6 +196,7 @@ def learn_HAT_adagrad_graph(case, tensor, L, num_home_factors, num_season_factor
         if i % 500 == 0:
             if dis:
                 print(cost(H, A, T, L, tensor, lam, case))
+    print multiply_case(H, A, T, case)
     return H, A, T, Hs, As, Ts, HATs, costs
 
 
