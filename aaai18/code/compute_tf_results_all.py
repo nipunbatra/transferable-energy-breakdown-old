@@ -16,10 +16,10 @@ params = {}
 for case in [2, 4]:
 	out[case] = {}
 	params[case] = {}
-	for constant_use in ['True']:
+	for constant_use in ['True','False']:
 		out[case][constant_use] = {}
 		params[case][constant_use] = {}
-		for static_use in ['True']:
+		for static_use in ['True', 'False']:
 			out[case][constant_use][static_use] = {}
 			params[case][constant_use][static_use] = {}
 			print case, constant_use, static_use
