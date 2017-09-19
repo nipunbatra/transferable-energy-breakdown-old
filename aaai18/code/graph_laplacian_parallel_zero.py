@@ -89,76 +89,6 @@ if os.path.exists(filename):
 	print("File already exists. Quitting.")
 
 
-def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, num_season_factors_cv,num_home_factors_cv, lam_cv, A_source):
-	# overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv = param
-	print num_iterations_cv, num_season_factors_cv,num_home_factors_cv,lam_cv
-	inner_kf = KFold(n_splits=2)
-	pred_inner = {}
-	for train_inner, test_inner in inner_kf.split(overall_df_inner):
-
-		train_ix_inner = overall_df_inner.index[train_inner]
-		test_ix_inner = overall_df_inner.index[test_inner]
-
-		# H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
-		#                                                                                 num_home_factors_cv, num_season_factors_cv, 
-		#                                                                                 num_iter=num_iterations_cv, lr=1, dis=False, 
-		#                                                                                 lam=lam_cv, T_known = np.ones(12).reshape(-1, 1))
-
-		train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
-		df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[train_test_ix_inner]
-		tensor_inner = get_tensor(df_t_inner, start, stop)
-		tensor_copy_inner = tensor_inner.copy()
-		# First n
-		tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
-		L_inner = target_L[np.ix_(np.concatenate([test_inner, train_inner]), np.concatenate([test_inner, train_inner]))]
-
-		if setting=="transfer":
-			A_source = A_store[learning_rate_cv][num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations_cv]
-		else:
-			A_source = None
-		
-		H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner,
-																  L_inner,
-																  num_home_factors_cv,
-																  num_season_factors_cv,
-																  num_iter=num_iterations_cv,
-																  lr=learning_rate_cv, dis=False,
-																  lam=lam_cv,
-																  A_known=A_source,
-																  T_known=T_constant)
-
-		HAT = multiply_case(H, A, T, case)
-		for appliance in APPLIANCES_ORDER:
-			if appliance not in pred_inner:
-				pred_inner[appliance] = []
-
-			pred_inner[appliance].append(pd.DataFrame(HAT[:len(test_ix_inner), appliance_index[appliance], :], index=test_ix_inner))
-
-	err = {}
-	appliance_to_weight = []
-	for appliance in APPLIANCES_ORDER[1:]:
-		pred_inner[appliance] = pd.DataFrame(pd.concat(pred_inner[appliance]))
-
-		try:
-			if appliance == "hvac":
-				err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance][range(5-start, 11-start)], target, start, stop)[2]
-			else:
-				err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], target, start, stop)[2]
-			appliance_to_weight.append(appliance)
-
-		except Exception, e:
-			# This appliance does not have enough samples. Will not be
-			# weighed
-			print 'here'
-			print(e)
-			print(appliance)
-	err_weight = {}
-	for appliance in appliance_to_weight:
-		err_weight[appliance] = err[appliance]*contri[target][appliance]
-	mean_err = pd.Series(err_weight).sum()
-	# error[num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = mean_err
-	return mean_err
-
 pred = {}
 n_splits = 10
 
@@ -246,7 +176,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 																		  best_num_home_factors,
 																		  best_num_season_factors,
 																		  num_iter=best_num_iterations, lr=best_learning_rate, dis=False,
-																		  lam=best_lam, A_known=A_source, T_known=T_constant)
+																		  lam=best_lam, random_seed = random_seed, A_known=A_source, T_known=T_constant)
 
 	HAT = multiply_case(H, A, T, case)
 

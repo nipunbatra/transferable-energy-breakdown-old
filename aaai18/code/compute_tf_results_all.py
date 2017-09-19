@@ -16,18 +16,17 @@ params = {}
 for case in [2, 4]:
 	out[case] = {}
 	params[case] = {}
-	for constant_use in ['True', 'False']:
+	for constant_use in ['True']:
 		out[case][constant_use] = {}
 		params[case][constant_use] = {}
-		for static_use in ['True', 'False']:
+		for static_use in ['True']:
 			out[case][constant_use][static_use] = {}
 			params[case][constant_use][static_use] = {}
 			print case, constant_use, static_use
 			for setting in ['normal','transfer']:
 				out[case][constant_use][static_use][setting] = {}
 				params[case][constant_use][static_use][setting] = {}
-				for train_percentage in [0., 6., 7., 8., 9., 10., 15., 20.,30.,40.,
-				                         50., 60., 70.,80.,  90., 100.]:
+				for train_percentage in [0.]:
 					out[case][constant_use][static_use][setting][train_percentage] = {}
 					params[case][constant_use][static_use][setting][train_percentage] = {}
 					for random_seed in range(10):
@@ -57,11 +56,14 @@ for case in [2, 4]:
 								out[case][constant_use][static_use][setting][train_percentage][random_seed][appliance] = \
 									compute_rmse_fraction(appliance, prediction, target, start, stop)[2]
 							print("Computed for: {}".format(name))
+							print case, constant_use, static_use, setting, train_percentage, random_seed
+							print out[case][constant_use][static_use][setting][train_percentage][random_seed]
 
 						except Exception, e:
 							print(e)
 							print("Exception")
 					out[case][constant_use][static_use][setting][train_percentage] = pd.DataFrame(out[case][constant_use][static_use][setting][train_percentage]).mean(axis=1)
-
-pickle.dump(out, open('../predictions/lr-tf-{}-{}-all.pkl'.format(source, target), 'w'))
-pickle.dump(params, open('../predictions/params-lr-tf-{}-{}-all.pkl'.format(source, target), 'w'))
+					print case, constant_use, static_use, setting, train_percentage
+					print out[case][constant_use][static_use][setting][train_percentage]
+# pickle.dump(out, open('../predictions/lr-tf-{}-{}-all.pkl'.format(source, target), 'w'))
+# pickle.dump(params, open('../predictions/params-lr-tf-{}-{}-all.pkl'.format(source, target), 'w'))
