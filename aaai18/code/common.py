@@ -68,9 +68,7 @@ def compute_rmse_fraction(appliance, pred_df, region='Austin', start=1, stop=13,
 
 	if appliance == "hvac":
 		start, stop = 5, 11
-	# else:
-	# 	start, stop = 1, 13
-	# print "in compute_rmse_fraction"
+	
 	pred_df = pred_df.copy()
 	pred_df.columns = [['%s_%d' % (appliance, month) for month in range(start, stop)]]
 	gt_df = appliance_df[pred_df.columns].ix[pred_df.index]

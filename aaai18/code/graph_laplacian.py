@@ -40,10 +40,12 @@ APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
 
 
-setting, case, constant_use, static_use, source, target, random_seed, train_percentage = sys.argv[1:]
+setting, case, constant_use, static_use, source, target, random_seed, train_percentage, start, stop = sys.argv[1:]
 case = int(case)
 train_percentage = float(train_percentage)
 random_seed = int(random_seed)
+start = int(start)
+stop = int(stop)
 
 if static_use == "True":
 	# Use non-zero value of penalty
@@ -51,9 +53,9 @@ if static_use == "True":
 else:
 	lambda_cv_range = [0]
 
-A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_As.pkl'.format(case, source, constant_use)), 'r'))
-source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
-target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year)
+A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_{}_{}_As.pkl'.format(case, source, constant_use, start, stop)), 'r'))
+source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year, start, stop)
+target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year, start, stop)
 
 # # using cosine similarity to compute L
 source_L = get_L(source_static)
@@ -66,7 +68,7 @@ else:
 
 # Seasonal constant constraints
 if constant_use == 'True':
-	T_constant = np.ones(12).reshape(-1 , 1)
+	T_constant = np.ones(stop-start).reshape(-1 , 1)
 else:
 	T_constant = None
 # End
@@ -128,8 +130,8 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	overall_df_inner = target_df.loc[train_ix]
 
 	best_params_global[outer_loop_iteration] = {}
-	for learning_rate_cv in [0.1, 0.5, 1]:
-		for num_iterations_cv in [1300, 700, 100][:]:
+	for learning_rate_cv in [0.1]:
+		for num_iterations_cv in [100][:]:
 			for num_season_factors_cv in range(2, 5)[:]:
 				for num_home_factors_cv in range(3, 6)[:]:
 					if case == 4:
@@ -148,7 +150,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 							train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
 							df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[
 								train_test_ix_inner]
-							tensor_inner = get_tensor(df_t_inner)
+							tensor_inner = get_tensor(df_t_inner, start, stop)
 							tensor_copy_inner = tensor_inner.copy()
 							# First n
 							tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
@@ -171,6 +173,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 																								  A_known=A_source,
 																								  T_known=T_constant)
 							HAT = multiply_case(H, A, T, case)
+							# print "shape", HAT.shape
 							for appliance in APPLIANCES_ORDER:
 								if appliance not in pred_inner:
 									pred_inner[appliance] = []
@@ -186,10 +189,10 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
 							try:
 								if appliance == "hvac":
-									err[appliance] = \
-										compute_rmse_fraction(appliance, pred_inner[appliance][range(4, 10)], target)[2]
+									err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance][range(5-start, 11-start)], target, start, stop)[2]
 								else:
-									err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], target)[2]
+									err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], target, start, stop)[2]
+								
 								appliance_to_weight.append(appliance)
 							except Exception, e:
 								# This appliance does not have enough samples. Will not be
@@ -232,7 +235,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	num_test = len(test_ix)
 	train_test_ix = np.concatenate([test_ix, train_ix])
 	df_t, dfc_t = target_df.loc[train_test_ix], target_dfc.loc[train_test_ix]
-	tensor = get_tensor(df_t)
+	tensor = get_tensor(df_t, start, stop)
 	tensor_copy = tensor.copy()
 	# First n
 	tensor_copy[:num_test, 1:, :] = np.NaN

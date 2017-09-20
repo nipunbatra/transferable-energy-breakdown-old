@@ -104,11 +104,8 @@ def learn_HAT_adagrad_graph(case, tensor, L, num_home_factors, num_season_factor
                             lam=1, random_seed=0, eps=1e-8, A_known = None, T_known = None):
     np.random.seed(random_seed)
     cost = cost_graph_laplacian
-    if A_known is not None:
-        # Don't need to learn A
-        args_num = [0, 2]
-    else:
-        args_num = [0, 1, 2]
+    
+    args_num=[0,1,2]
     mg = multigrad(cost, argnums=args_num)
 
     params = {}
@@ -123,15 +120,12 @@ def learn_HAT_adagrad_graph(case, tensor, L, num_home_factors, num_season_factor
     T_dim = tuple(params[x] for x in T_dim_chars)
 
     H = np.random.rand(*H_dim)
-    
-    if A_known is not None:
-        A = A_known
-    else:
-        A = np.random.rand(*A_dim)
-        sum_square_gradients_A = np.zeros_like(A)
-    
+    A = np.random.rand(*A_dim)
     T = np.random.rand(*T_dim)
-    
+
+    if A_known is not None:
+        A = set_known(A, A_known)
+    sum_square_gradients_A = np.zeros_like(A)
     sum_square_gradients_H = np.zeros_like(H)
     sum_square_gradients_T = np.zeros_like(T)
     Hs = [H.copy()]
@@ -142,13 +136,11 @@ def learn_HAT_adagrad_graph(case, tensor, L, num_home_factors, num_season_factor
 
     # GD procedure
     for i in range(num_iter):
-        if A_known is not None:
-            del_h,  del_t = mg(H, A, T, L, tensor, lam, case)
-        else:
-            del_h, del_a, del_t = mg(H, A, T, L, tensor, lam, case)
-            sum_square_gradients_A += eps + np.square(del_a)
-            lr_a = np.divide(lr, np.sqrt(sum_square_gradients_A))
-            A -= lr_a * del_a
+        del_h, del_a, del_t = mg(H, A, T, L, tensor, lam, case)
+        
+        sum_square_gradients_A += eps + np.square(del_a)
+        lr_a = np.divide(lr, np.sqrt(sum_square_gradients_A))
+        A -= lr_a * del_a
         
         sum_square_gradients_H += eps + np.square(del_h)
         sum_square_gradients_T += eps + np.square(del_t)
@@ -161,6 +153,8 @@ def learn_HAT_adagrad_graph(case, tensor, L, num_home_factors, num_season_factor
 
         if T_known is not None:
             T = set_known(T, T_known)
+        if A_known is not None:
+            A = set_known(A, A_known)
 
         # Projection to non-negative space
         H[H < 0] = 1e-8
@@ -177,6 +171,7 @@ def learn_HAT_adagrad_graph(case, tensor, L, num_home_factors, num_season_factor
         if i % 500 == 0:
             if dis:
                 print(cost(H, A, T, L, tensor, lam, case))
+    
     return H, A, T, Hs, As, Ts, HATs, costs
 
 
@@ -316,3 +311,81 @@ def learn_HAT_multiple_source_adagrad(case, source_1_energy, source_2_energy, a,
                 print(cost(H_s1, A, T_s1, H_s2, T_s2, source_1_energy, source_2_energy, 2,  penalty_coeff, source_ratio))
     return H_s1, A, T_s1, H_s2, T_s2, Hs_s1, As, Ts_s1, Hs_s2,  Ts_s2, HATs_s1, HATs_s2, costs
 
+def learn_HAT_adagrad_graph_old(case, tensor, L, num_home_factors, num_season_factors, num_iter=2000, lr=0.01, dis=False,
+                            lam=1, random_seed=0, eps=1e-8, A_known = None, T_known = None):
+    np.random.seed(random_seed)
+    cost = cost_graph_laplacian
+    if A_known is not None:
+        # Don't need to learn A
+        args_num = [0, 2]
+    else:
+        args_num = [0, 1, 2]
+    mg = multigrad(cost, argnums=args_num)
+
+    params = {}
+    params['M'], params['N'], params['O'] = tensor.shape
+    params['a'] = num_home_factors
+    params['b'] = num_season_factors
+    H_dim_chars = list(cases[case]['HA'].split(",")[0].strip())
+    H_dim = tuple(params[x] for x in H_dim_chars)
+    A_dim_chars = list(cases[case]['HA'].split(",")[1].split("-")[0].strip())
+    A_dim = tuple(params[x] for x in A_dim_chars)
+    T_dim_chars = list(cases[case]['HAT'].split(",")[1].split("-")[0].strip())
+    T_dim = tuple(params[x] for x in T_dim_chars)
+
+    H = np.random.rand(*H_dim)
+    
+    if A_known is not None:
+        A = A_known
+    else:
+        A = np.random.rand(*A_dim)
+        sum_square_gradients_A = np.zeros_like(A)
+    
+    T = np.random.rand(*T_dim)
+    
+    sum_square_gradients_H = np.zeros_like(H)
+    sum_square_gradients_T = np.zeros_like(T)
+    Hs = [H.copy()]
+    Ts = [T.copy()]
+    As = [A.copy()]
+    costs = [cost(H, A, T, L, tensor, lam, case)]
+    HATs = [multiply_case(H, A, T, case)]
+
+    # GD procedure
+    for i in range(num_iter):
+        if A_known is not None:
+            del_h,  del_t = mg(H, A, T, L, tensor, lam, case)
+        else:
+            del_h, del_a, del_t = mg(H, A, T, L, tensor, lam, case)
+            sum_square_gradients_A += eps + np.square(del_a)
+            lr_a = np.divide(lr, np.sqrt(sum_square_gradients_A))
+            A -= lr_a * del_a
+        
+        sum_square_gradients_H += eps + np.square(del_h)
+        sum_square_gradients_T += eps + np.square(del_t)
+
+        lr_h = np.divide(lr, np.sqrt(sum_square_gradients_H))
+        lr_t = np.divide(lr, np.sqrt(sum_square_gradients_T))
+
+        H -= lr_h * del_h
+        T -= lr_t * del_t
+
+        if T_known is not None:
+            T = set_known(T, T_known)
+
+        # Projection to non-negative space
+        H[H < 0] = 1e-8
+        A[A < 0] = 1e-8
+        T[T < 0] = 1e-8
+
+        As.append(A.copy())
+        Ts.append(T.copy())
+        Hs.append(H.copy())
+
+        costs.append(cost(H, A, T, L, tensor, lam, case))
+
+        HATs.append(multiply_case(H, A, T, case))
+        if i % 500 == 0:
+            if dis:
+                print(cost(H, A, T, L, tensor, lam, case))
+    return H, A, T, Hs, As, Ts, HATs, costs

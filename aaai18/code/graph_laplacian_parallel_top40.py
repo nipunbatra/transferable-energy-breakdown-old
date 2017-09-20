@@ -27,60 +27,23 @@ TODO: mention the objective being solved here
 """
 
 import datetime
-
-
 from sklearn.model_selection import train_test_split, KFold
-
-# from common import contri, get_tensor, create_region_df_dfc_static
 from common import compute_rmse_fraction, contri, get_tensor, create_region_df_dfc_static
 from create_matrix import *
 from tensor_custom_core_all import *
+import multiprocessing as mp
+
+global source, target
+global case
+global source_df, source_dfc, source_tensor, source_static
+global target_df, target_dfc, target_tensor, target_static
+global source_L, target_L
+global T_constant
+global start, stop
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
-
-# def compute_rmse_fraction(appliance, pred_df, region='Austin', start=1, stop=13, year=2014):
-# 	appliance_df = create_matrix_region_appliance_year(region, year, appliance)
-
-# 	# if appliance == "hvac":
-# 	# 	start, stop = 5, 11
-# 	# else:
-# 	# 	start, stop = 1, 13
-# 	print "in compute_rmse_fraction"
-# 	raw_input('enter')
-# 	print start, stop
-# 	pred_df = pred_df.copy()
-# 	print pred_df
-# 	pred_df.columns = [['%s_%d' % (appliance, month) for month in range(start, stop)]]
-# 	print pred_df
-# 	gt_df = appliance_df[pred_df.columns].ix[pred_df.index]
-
-
-# 	aggregate_df = appliance_df.ix[pred_df.index][['aggregate_%d' % month for month in range(start, stop)]]
-
-# 	aggregate_df.columns = gt_df.columns
-# 	rows, cols = np.where((aggregate_df < 100))
-# 	for r, c in zip(rows, cols):
-# 		r_i, c_i = aggregate_df.index[r], aggregate_df.columns[c]
-# 		aggregate_df.loc[r_i, c_i] = np.NaN
-
-# 	gt_fraction = gt_df.div(aggregate_df) * 100
-# 	pred_fraction = pred_df.div(aggregate_df) * 100
-# 	# Capping it to 100%
-# 	pred_fraction[pred_fraction > 100] = 100.
-
-# 	gt_fraction_dropna = gt_fraction.unstack().dropna()
-# 	pred_fraction_dropna = pred_fraction.unstack().dropna()
-# 	index_intersection = gt_fraction_dropna.index.intersection(pred_fraction_dropna.index)
-# 	gt_fraction_dropna = gt_fraction_dropna.ix[index_intersection]
-# 	pred_fraction_dropna = pred_fraction_dropna.ix[index_intersection]
-# 	difference_error = (gt_fraction_dropna - pred_fraction_dropna).abs()
-
-# 	rms = np.sqrt(mean_squared_error(gt_fraction_dropna, pred_fraction_dropna))
-# 	return gt_fraction_dropna, pred_fraction_dropna, rms, difference_error
-
-
 
 setting, case, constant_use, static_use, source, target, random_seed, train_percentage, start, stop = sys.argv[1:]
 case = int(case)
@@ -96,8 +59,18 @@ else:
 	lambda_cv_range = [0]
 
 A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_{}_{}_As.pkl'.format(case, source, constant_use, start, stop)), 'r'))
+error_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_{}_{}_errs.pkl'.format(case, source, constant_use, start, stop)), 'r'))
+
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year, start, stop)
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year, start, stop)
+
+## Only use top-40 homes from target domin
+target_df = target_df.head(40)
+target_dfc = target_dfc.head(40)
+target_tensor = get_tensor(target_df)
+target_static = target_static[:40]
+## End
+
 
 
 # # using cosine similarity to compute L
@@ -116,13 +89,83 @@ else:
 	T_constant = None
 # End
 
-directory = os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/TF/{}/case-{}/{}/{}'.format(setting, case, static_use, constant_use))
+directory = os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/TF-all/{}/case-{}/{}/{}'.format(setting, case, static_use, constant_use))
 if not os.path.exists(directory):
 	os.makedirs(directory)
 filename = os.path.join(directory, name + '.pkl')
 
 if os.path.exists(filename):
 	print("File already exists. Quitting.")
+
+
+def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, num_season_factors_cv,num_home_factors_cv, lam_cv, A_source):
+	# overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv = param
+	print num_iterations_cv, num_season_factors_cv,num_home_factors_cv,lam_cv
+	inner_kf = KFold(n_splits=2)
+	pred_inner = {}
+	for train_inner, test_inner in inner_kf.split(overall_df_inner):
+
+		train_ix_inner = overall_df_inner.index[train_inner]
+		test_ix_inner = overall_df_inner.index[test_inner]
+
+		# H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
+		#                                                                                 num_home_factors_cv, num_season_factors_cv, 
+		#                                                                                 num_iter=num_iterations_cv, lr=1, dis=False, 
+		#                                                                                 lam=lam_cv, T_known = np.ones(12).reshape(-1, 1))
+
+		train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
+		df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[train_test_ix_inner]
+		tensor_inner = get_tensor(df_t_inner, start, stop)
+		tensor_copy_inner = tensor_inner.copy()
+		# First n
+		tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
+		L_inner = target_L[np.ix_(np.concatenate([test_inner, train_inner]), np.concatenate([test_inner, train_inner]))]
+
+		if setting=="transfer":
+			A_source = A_store[learning_rate_cv][num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations_cv]
+		else:
+			A_source = None
+		
+		H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner,
+																  L_inner,
+																  num_home_factors_cv,
+																  num_season_factors_cv,
+																  num_iter=num_iterations_cv,
+																  lr=learning_rate_cv, dis=False,
+																  lam=lam_cv,
+																  A_known=A_source,
+																  T_known=T_constant)
+
+		HAT = multiply_case(H, A, T, case)
+		for appliance in APPLIANCES_ORDER:
+			if appliance not in pred_inner:
+				pred_inner[appliance] = []
+
+			pred_inner[appliance].append(pd.DataFrame(HAT[:len(test_ix_inner), appliance_index[appliance], :], index=test_ix_inner))
+
+	err = {}
+	appliance_to_weight = []
+	for appliance in APPLIANCES_ORDER[1:]:
+		pred_inner[appliance] = pd.DataFrame(pd.concat(pred_inner[appliance]))
+
+		try:
+			if appliance == "hvac":
+				err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance][range(5-start, 11-start)], target, start, stop)[2]
+			else:
+				err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], target, start, stop)[2]
+			appliance_to_weight.append(appliance)
+
+		except Exception, e:
+			# This appliance does not have enough samples. Will not be
+			# weighed
+			print(e)
+			print(appliance)
+	err_weight = {}
+	for appliance in appliance_to_weight:
+		err_weight[appliance] = err[appliance]*contri[target][appliance]
+	mean_err = pd.Series(err_weight).sum()
+	# error[num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = mean_err
+	return mean_err
 
 pred = {}
 n_splits = 10
@@ -132,7 +175,7 @@ for appliance in APPLIANCES_ORDER:
 best_params_global = {}
 kf = KFold(n_splits=n_splits)
 
-origin_train_percentage = train_percentage
+
 
 for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	# Just a random thing
@@ -144,12 +187,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	sys.stdout.flush()
 	num_train = int((train_percentage * len(train_max) / 100) + 0.5)
 
-	
-
-	if train_percentage == 0:
-		train_percentage = 10
-	print origin_train_percentage
-	raw_input('Enter to continue')
 
 	if train_percentage == 100:
 		train = train_max
@@ -164,7 +201,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 		train_ix = target_df.index[train]
 		test_ix = target_df.index[test]
 
-	print train_ix
 
 	print("-" * 80)
 	print("Test set {}".format(test_ix.values))
@@ -182,10 +218,21 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	least_error = 1e6
 
 	overall_df_inner = target_df.loc[train_ix]
-
 	best_params_global[outer_loop_iteration] = {}
-	for learning_rate_cv in [0.1]:
-		for num_iterations_cv in [100][:]:
+
+	params = {}
+	count = 0
+	print overall_df_inner
+	raw_input('Enter to continue')
+
+
+	##############################################################
+	# Parallel part
+	results = []
+	cpus = mp.cpu_count()
+	pool = mp.Pool(1)
+	for learning_rate_cv in [0.1,0.5, 1]:
+		for num_iterations_cv in [1300, 700, 100][:]:
 			for num_season_factors_cv in range(2, 5)[:]:
 				for num_home_factors_cv in range(3, 6)[:]:
 					if case == 4:
@@ -195,88 +242,34 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
 							continue
 					for lam_cv in lambda_cv_range:
-						pred_inner = {}
-						for train_inner, test_inner in inner_kf.split(overall_df_inner):
-							train_ix_inner = overall_df_inner.index[train_inner]
-							test_ix_inner = overall_df_inner.index[test_inner]
+						if setting == 'transfer':
+							A_source = A_store[learning_rate_cv][num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations_cv]
+						else: 
+							A_source = None
 
+						
+						params[count] = []
+						params[count].extend((overall_df_inner, learning_rate_cv, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv, A_source))
+						count += 1
+	for i in range(count): 
+		result = pool.apply_async(compute_inner_error, params[i])
+		results.append(result)
+	pool.close()
+	pool.join()
+	# End of parallel part
+	###############################################################
 
-							train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
-							df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[
-								train_test_ix_inner]
-							tensor_inner = get_tensor(df_t_inner, start, stop)
-							tensor_copy_inner = tensor_inner.copy()
-							# First n
-							tensor_copy_inner[:len(test_ix_inner), 1:, :] = np.NaN
-							L_inner = target_L[np.ix_(np.concatenate([test_inner, train_inner]),
-													  np.concatenate([test_inner, train_inner]))]
+	# get the results of all processes
+	error = []
+	for result in results:
+		error.append(result.get())
+	# get the parameters for the best setting
+	best_idx = np.argmin(error)
+	overall_df_inner, best_learning_rate, best_num_iterations, best_num_season_factors, best_num_home_factors, best_lam, A = params[best_idx]
+	least_error = error[best_idx]
 
-
-							if setting=="transfer":
-								A_source = A_store[learning_rate_cv][num_season_factors_cv][num_home_factors_cv][lam_cv][num_iterations_cv]
-							else:
-								A_source = None
-
-							# print "tensro:", tensor_copy_inner.shape
-							
-							H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy_inner,
-																								  L_inner,
-																								  num_home_factors_cv,
-																								  num_season_factors_cv,
-																								  num_iter=num_iterations_cv,
-																								  lr=learning_rate_cv, dis=False,
-																								  lam=lam_cv,
-																								  A_known=A_source,
-																								  T_known=T_constant)
-							HAT = multiply_case(H, A, T, case)
-							# print "shape", HAT.shape
-							for appliance in APPLIANCES_ORDER:
-								if appliance not in pred_inner:
-									pred_inner[appliance] = []
-
-								pred_inner[appliance].append(
-									pd.DataFrame(HAT[:len(test_ix_inner), appliance_index[appliance], :],
-												 index=test_ix_inner))
-
-
-						err = {}
-						appliance_to_weight = []
-						for appliance in APPLIANCES_ORDER[1:]:
-							pred_inner[appliance] = pd.DataFrame(pd.concat(pred_inner[appliance]))
-
-							try:
-								if appliance == "hvac":
-									err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance][range(5-start, 11-start)], target, start, stop)[2]
-								else:
-									err[appliance] = compute_rmse_fraction(appliance, pred_inner[appliance], target, start, stop)[2]
-								
-								appliance_to_weight.append(appliance)
-							except Exception, e:
-								# This appliance does not have enough samples. Will not be
-								# weighed
-								print(e)
-								print(appliance)
-								sys.stdout.flush()
-						print("Error weighted on: {}".format(appliance_to_weight))
-						sys.stdout.flush()
-
-						# raw_input('Enter')
-						err_weight = {}
-						for appliance in appliance_to_weight:
-							err_weight[appliance] = err[appliance] * contri[target][appliance]
-						mean_err = pd.Series(err_weight).sum()
-						if mean_err < least_error:
-							best_learning_rate = learning_rate_cv
-							best_num_iterations = num_iterations_cv
-							best_num_season_factors = num_season_factors_cv
-							best_num_home_factors = num_home_factors_cv
-							best_lam = lam_cv
-							least_error = mean_err
-						print(mean_err, least_error, learning_rate_cv, num_iterations_cv, num_home_factors_cv, num_season_factors_cv, lam_cv)
-						sys.stdout.flush()
 	best_params_global[outer_loop_iteration] = {'Learning Rate': best_learning_rate,
 												'Iterations': best_num_iterations,
-												'Appliance Train Error': err,
 												'Num season factors': best_num_season_factors,
 												'Num home factors': best_num_home_factors,
 												'Lambda': best_lam,
@@ -297,14 +290,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	tensor = get_tensor(df_t, start, stop)
 	tensor_copy = tensor.copy()
 	# First n
-	# if origin_train_percentage == 0:
-	# 	tensor_copy[:num_test, 1:, :] = np.NaN
-	# 	tensor_copy[num_test:, :, :] = np.NaN
-	# else:
-	# 	tensor_copy[:num_test, 1:, :] = np.NaN
-
-	# print tensor_copy
-	# raw_input('Enter to continue')
+	tensor_copy[:num_test, 1:, :] = np.NaN
 
 	L = target_L[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
 
@@ -317,9 +303,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	HAT = multiply_case(H, A, T, case)
 	for appliance in APPLIANCES_ORDER:
 		pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
-
-	print HAT
-	raw_input('Enter to continue')
 
 for appliance in APPLIANCES_ORDER:
 	pred[appliance] = pd.DataFrame(pd.concat(pred[appliance]))
