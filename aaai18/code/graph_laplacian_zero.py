@@ -179,8 +179,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 																		  lam=best_lam, random_seed = random_seed, A_known=A_source, T_known=T_constant)
 
 	HAT = multiply_case(H, A, T, case)
-	print HAT
-	print tensor_copy
 
 	for appliance in APPLIANCES_ORDER:
 		pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
