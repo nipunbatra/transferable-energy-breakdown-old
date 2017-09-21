@@ -30,7 +30,7 @@ import datetime
 from sklearn.model_selection import train_test_split, KFold
 from common import compute_rmse_fraction, contri, get_tensor, create_region_df_dfc_static
 from create_matrix import *
-from tensor_custom_core_all import *
+from tensor_custom_core import *
 import multiprocessing as mp
 
 global source, target
@@ -179,6 +179,8 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 																		  lam=best_lam, random_seed = random_seed, A_known=A_source, T_known=T_constant)
 
 	HAT = multiply_case(H, A, T, case)
+	print HAT
+	print tensor_copy
 
 	for appliance in APPLIANCES_ORDER:
 		pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
