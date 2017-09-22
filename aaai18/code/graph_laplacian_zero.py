@@ -172,6 +172,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 
 	L = target_L[np.ix_(np.concatenate([test, train]), np.concatenate([test, train]))]
 
+
 	H, A, T, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy, L,
 																		  best_num_home_factors,
 																		  best_num_season_factors,
@@ -179,7 +180,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 																		  lam=best_lam, random_seed = random_seed, A_known=A_source, T_known=T_constant)
 
 	HAT = multiply_case(H, A, T, case)
-
+	print HAT
 	for appliance in APPLIANCES_ORDER:
 		pred[appliance].append(pd.DataFrame(HAT[:num_test, appliance_index[appliance], :], index=test_ix))
 	best_params_global[outer_loop_iteration] = {'Learning Rate': best_learning_rate,

@@ -119,9 +119,9 @@ def learn_HAT_adagrad_graph(case, tensor, L, num_home_factors, num_season_factor
     T_dim_chars = list(cases[case]['HAT'].split(",")[1].split("-")[0].strip())
     T_dim = tuple(params[x] for x in T_dim_chars)
 
-    H = np.random.rand(*H_dim)*10
-    A = np.random.rand(*A_dim)*10
-    T = np.random.rand(*T_dim)*10
+    H = np.random.rand(*H_dim)
+    A = np.random.rand(*A_dim)
+    T = np.random.rand(*T_dim)
 
     if A_known is not None:
         A = set_known(A, A_known)
