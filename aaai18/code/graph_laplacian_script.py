@@ -22,23 +22,23 @@ DELAY_NUM_JOBS_EXCEEDED = 10
 import time
 
 
-for setting in ['normal','transfer']:
+for setting in ['normal']:
 	for case in [4, 2]:
 		for constant_use in ['False','True']:
 			for static_use in ['False', 'True']:
-				for source in ['Austin']:
-					for target in ['SanDiego']:
+				for source in ['SanDiego']:
+					for target in ['Austin']:
 						for random_seed in range(10):
-							for train_percentage in [0]:
+							for train_percentage in [6,8,9,10,15,20,30,40,50,60,70,80,90,100]:
 								OFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}.out".format(SLURM_OUT, setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
 								EFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}.err".format(SLURM_OUT, setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
 								SLURM_SCRIPT = "{}/{}-{}-{}-{}-{}-{}-{}-{}.pbs".format('pbs_files', setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
-								CMD = 'python graph_laplacian_parallel_zero.py {} {} {} {} {} {} {} {} 1 13'.format(setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
+								CMD = 'python graph_laplacian_parallel.py {} {} {} {} {} {} {} {} 1 13'.format(setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
 								lines = []
 								lines.append("#!/bin/sh\n")
 								lines.append('#SBATCH --time=1-16:0:00\n')
 								lines.append('#SBATCH --mem=16\n')
-								lines.append('#SBATCH -c 4\n')
+								lines.append('#SBATCH -c 24\n')
 								lines.append('#SBATCH --exclude=artemis[1-5]\n')
 								lines.append('#SBATCH -o ' + '"' + OFILE + '"\n')
 								lines.append('#SBATCH -e ' + '"' + EFILE + '"\n')
