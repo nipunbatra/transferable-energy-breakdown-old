@@ -44,18 +44,19 @@ appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in
 APPLIANCES = ['fridge', 'hvac', 'wm', 'mw', 'oven', 'dw']
 year = 2014
 
-setting, case, constant_use, static_use, source, target, random_seed, train_percentage = sys.argv[1:]
+setting, case, constant_use, static_use, source, target, random_seed, train_percentage, start, stop = sys.argv[1:]
 case = int(case)
 train_percentage = float(train_percentage)
 random_seed = int(random_seed)
-
+start = int(start)
+stop = int(stop)
 if static_use == "True":
 	# Use non-zero value of penalty
 	lambda_cv_range = [0, 0.001, 0.01, 0.1]
 else:
 	lambda_cv_range = [0]
 
-A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_all_As.pkl'.format(case, source, constant_use)), 'r'))
+#A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/case-{}-graph_{}_{}_all_As.pkl'.format(case, source, constant_use)), 'r'))
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year)
 
