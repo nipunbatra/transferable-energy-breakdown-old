@@ -64,6 +64,10 @@ error_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/pr
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year, start, stop)
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year, start, stop)
 
+df = pd.DataFrame(target_static, index=target_df.index)
+idx = df.dropna(how='any').index
+
+
 # # using cosine similarity to compute L
 source_L = get_L(source_static)
 target_L = get_L(target_static)

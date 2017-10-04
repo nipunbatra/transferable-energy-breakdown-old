@@ -59,6 +59,16 @@ A_store = pickle.load(open(os.path.expanduser('~/git/scalable-nilm/aaai18/predic
 source_df, source_dfc, source_tensor, source_static = create_region_df_dfc_static(source, year)
 target_df, target_dfc, target_tensor, target_static = create_region_df_dfc_static(target, year)
 
+#Only for homes with all static features
+static_df = pd.DataFrame(target_static, index=target_df.index)
+idx = static_df.dropna(how='any').index
+target_df = target_df.loc[idx]
+target_dfc = target_dfc.loc[idx]
+target_tensor = get_tensor(target_df, start, stop)
+static_df = static_df.loc[idx]
+target_static = static_df.values
+
+
 # # using cosine similarity to compute L
 source_L = get_L(source_static)
 target_L = get_L(target_static)
