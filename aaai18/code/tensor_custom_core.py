@@ -100,6 +100,93 @@ def cost_graph_laplacian(H, A, T, L, E_np_masked, lam, case):
     return np.sqrt((error_1 ** 2).mean()) + lam * error_2
 
 
+def learn_HBAT_adagrad_graph(tensor, num_home_factors, num_season_factors, num_iter=2000, lr=0.01, dis=False,
+                             random_seed=0, eps=1e-8, A_known=None, B_known=None):
+
+
+    def multiply_HBAT(H, B, A, T):
+        return np.einsum('mh, hn, ns, st ->mnt', H, B, A, T)
+
+    def cost(H, B, A, T, tensor):
+        mask = ~np.isnan(tensor)
+        HBAT = multiply_HBAT(H, B, A, T)
+        error = (HBAT - tensor)[mask].flatten()
+        return np.sqrt((error ** 2).mean())
+
+    np.random.seed(random_seed)
+
+
+    args_num = [0, 1, 2, 3]
+    mg = multigrad(cost, argnums=args_num)
+
+    m, n, t = tensor.shape
+    h, s = num_home_factors, num_season_factors
+
+    H = np.random.rand(m, h)
+    B = np.random.rand(h, n)
+    A = np.random.rand(n, s)
+    T = np.random.rand(s, t)
+
+    if A_known is not None:
+        A = set_known(A, A_known)
+    if B_known is not None:
+        B = set_known(B, B_known)
+    sum_square_gradients_A = np.zeros_like(A)
+    sum_square_gradients_B = np.zeros_like(B)
+    sum_square_gradients_H = np.zeros_like(H)
+    sum_square_gradients_T = np.zeros_like(T)
+    Hs = [H.copy()]
+    Bs = [B.copy()]
+    Ts = [T.copy()]
+    As = [A.copy()]
+    HBATs = [multiply_HBAT(H, B, A, T)]
+    costs = [cost(H, B, A, T, tensor)]
+
+    # GD procedure
+    for i in range(num_iter):
+        del_h, del_b, del_a, del_t = mg(H, B, A, T,  tensor)
+
+        sum_square_gradients_A += eps + np.square(del_a)
+        lr_a = np.divide(lr, np.sqrt(sum_square_gradients_A))
+        A -= lr_a * del_a
+
+        sum_square_gradients_H += eps + np.square(del_h)
+        sum_square_gradients_B += eps + np.square(del_b)
+        sum_square_gradients_T += eps + np.square(del_t)
+
+        lr_h = np.divide(lr, np.sqrt(sum_square_gradients_H))
+        lr_t = np.divide(lr, np.sqrt(sum_square_gradients_T))
+
+        H -= lr_h * del_h
+        T -= lr_t * del_t
+
+
+        if A_known is not None:
+            A = set_known(A, A_known)
+        if B_known is not None:
+            B = set_known(B, B_known)
+
+        # Projection to non-negative space
+        H[H < 0] = 1e-8
+        A[A < 0] = 1e-8
+        T[T < 0] = 1e-8
+        B[B<0] = 1e-8
+
+        As.append(A.copy())
+        Ts.append(T.copy())
+        Hs.append(H.copy())
+        Bs.append(B.copy())
+
+        costs.append(cost(H, A, T,  tensor))
+
+        HBATs.append(multiply_HBAT(H, B, A, T))
+        if i % 500 == 0:
+            if dis:
+                print(cost(H, B, A, T, tensor))
+
+    return H, A, T, Hs, As, Ts, HBATs, costs
+
+
 def learn_HAT_adagrad_graph(case, tensor, L, num_home_factors, num_season_factors, num_iter=2000, lr=0.01, dis=False,
                             lam=1, random_seed=0, eps=1e-8, A_known = None, T_known = None):
     np.random.seed(random_seed)
