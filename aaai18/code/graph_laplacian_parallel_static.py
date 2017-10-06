@@ -105,7 +105,7 @@ if os.path.exists(filename):
 
 def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, num_season_factors_cv,num_home_factors_cv, lam_cv, A_source):
 	# overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv = param
-	print num_iterations_cv, num_season_factors_cv,num_home_factors_cv,lam_cv
+#	print num_iterations_cv, num_season_factors_cv,num_home_factors_cv,lam_cv
 	inner_kf = KFold(n_splits=2)
 	pred_inner = {}
 	for train_inner, test_inner in inner_kf.split(overall_df_inner):
