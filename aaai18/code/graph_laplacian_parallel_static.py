@@ -74,10 +74,6 @@ static_df = static_df.loc[idx]
 target_static = static_df.values
 #
 
-
-
-
-
 # # using cosine similarity to compute L
 source_L = get_L(source_static)
 target_L = get_L(target_static)

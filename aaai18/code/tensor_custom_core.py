@@ -101,7 +101,7 @@ def cost_graph_laplacian(H, A, T, L, E_np_masked, lam, case):
 
 
 def learn_HBAT_adagrad_graph(tensor, num_home_factors, num_season_factors, num_iter=2000, lr=0.01, dis=False,
-                             random_seed=0, eps=1e-8, A_known=None, B_known=None):
+                             random_seed=0, eps=1e-8, B_known=None, A_known=None):
 
 
     def multiply_HBAT(H, B, A, T):
@@ -184,7 +184,7 @@ def learn_HBAT_adagrad_graph(tensor, num_home_factors, num_season_factors, num_i
             if dis:
                 print(cost(H, B, A, T, tensor))
 
-    return H, B, A, T, Hs, As, Ts, HBATs, costs
+    return H, B, A, T, Hs, Bs, As, Ts, HBATs, costs
 
 
 def learn_HAT_adagrad_graph(case, tensor, L, num_home_factors, num_season_factors, num_iter=2000, lr=0.01, dis=False,
