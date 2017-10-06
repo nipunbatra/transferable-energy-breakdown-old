@@ -177,14 +177,14 @@ def learn_HBAT_adagrad_graph(tensor, num_home_factors, num_season_factors, num_i
         Hs.append(H.copy())
         Bs.append(B.copy())
 
-        costs.append(cost(H, A, T,  tensor))
+        costs.append(cost(H, B, A, T,  tensor))
 
         HBATs.append(multiply_HBAT(H, B, A, T))
-        if i % 500 == 0:
+        if i % 100 == 0:
             if dis:
                 print(cost(H, B, A, T, tensor))
 
-    return H, A, T, Hs, As, Ts, HBATs, costs
+    return H, B, A, T, Hs, As, Ts, HBATs, costs
 
 
 def learn_HAT_adagrad_graph(case, tensor, L, num_home_factors, num_season_factors, num_iter=2000, lr=0.01, dis=False,
