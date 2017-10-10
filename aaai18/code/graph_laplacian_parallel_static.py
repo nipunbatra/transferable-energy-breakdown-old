@@ -74,10 +74,6 @@ static_df = static_df.loc[idx]
 target_static = static_df.values
 #
 
-
-
-
-
 # # using cosine similarity to compute L
 source_L = get_L(source_static)
 target_L = get_L(target_static)
@@ -105,7 +101,7 @@ if os.path.exists(filename):
 
 def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, num_season_factors_cv,num_home_factors_cv, lam_cv, A_source):
 	# overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv = param
-	print num_iterations_cv, num_season_factors_cv,num_home_factors_cv,lam_cv
+#	print num_iterations_cv, num_season_factors_cv,num_home_factors_cv,lam_cv
 	inner_kf = KFold(n_splits=2)
 	pred_inner = {}
 	for train_inner, test_inner in inner_kf.split(overall_df_inner):
@@ -234,7 +230,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	# Parallel part
 	results = []
 	cpus = mp.cpu_count()
-	pool = mp.Pool()
+	pool = mp.Pool(56)
 	for learning_rate_cv in [0.1,0.5, 1]:
 		for num_iterations_cv in [1300, 700, 100][:]:
 			for num_season_factors_cv in range(2, 5)[:]:
