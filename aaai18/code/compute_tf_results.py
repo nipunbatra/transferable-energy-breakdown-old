@@ -23,7 +23,7 @@ for case in [2, 4]:
 			out[case][constant_use][static_use] = {}
 			params[case][constant_use][static_use] = {}
 			print case, constant_use, static_use
-			for setting in ['normal']:
+			for setting in ['transfer']:
 				out[case][constant_use][static_use][setting] = {}
 				params[case][constant_use][static_use][setting] = {}
 				for train_percentage in [6., 8., 10., 15., 20., 30., 40.,50.,60.,70.,80.,90.,100.]:
@@ -54,7 +54,7 @@ for case in [2, 4]:
 								if appliance == 'hvac':
 									prediction = prediction[range(5-start, 11-start)]
 								out[case][constant_use][static_use][setting][train_percentage][random_seed][appliance] = \
-									compute_rmse_fraction(appliance, prediction, target, start, stop)[2]
+										compute_rmse_fraction(appliance, prediction, target, start, stop)[2]
 							print("Computed for: {}".format(name))
 							# print case, constant_use, static_use, setting, train_percentage, random_seed
 							# print out[case][constant_use][static_use][setting][train_percentage][random_seed]

@@ -101,11 +101,11 @@ def cost_graph_laplacian(H, A, T, L, E_np_masked, lam, case):
 
 
 def learn_HBAT_adagrad_graph(tensor, num_home_factors, num_season_factors, num_iter=2000, lr=0.01, dis=False,
-                             random_seed=0, eps=1e-8, B_known=None, A_known=None):
+                             random_seed=0, eps=1e-8, B_known=None, A_known=None, T_known=None):
 
 
     def multiply_HBAT(H, B, A, T):
-        return np.einsum('mh, hn, ns, st ->mnt', H, B, A, T)
+        return np.einsum('mh, hn, ns, ts ->mnt', H, B, A, T)
 
     def cost(H, B, A, T, tensor):
         mask = ~np.isnan(tensor)
@@ -125,7 +125,7 @@ def learn_HBAT_adagrad_graph(tensor, num_home_factors, num_season_factors, num_i
     H = np.random.rand(m, h)
     B = np.random.rand(h, n)
     A = np.random.rand(n, s)
-    T = np.random.rand(s, t)
+    T = np.random.rand(t, s)
 
     if A_known is not None:
         A = set_known(A, A_known)
@@ -165,6 +165,8 @@ def learn_HBAT_adagrad_graph(tensor, num_home_factors, num_season_factors, num_i
             A = set_known(A, A_known)
         if B_known is not None:
             B = set_known(B, B_known)
+        if T_known is not None:
+            T = set_known(T, T_known)
 
         # Projection to non-negative space
         H[H < 0] = 1e-8

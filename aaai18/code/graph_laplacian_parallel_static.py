@@ -230,7 +230,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	# Parallel part
 	results = []
 	cpus = mp.cpu_count()
-	pool = mp.Pool()
+	pool = mp.Pool(56)
 	for learning_rate_cv in [0.1,0.5, 1]:
 		for num_iterations_cv in [1300, 700, 100][:]:
 			for num_season_factors_cv in range(2, 5)[:]:

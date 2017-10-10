@@ -52,12 +52,12 @@ year = 2014
 # start = int(start)
 # stop = int(stop)
 
-setting, source, target, random_seed, train_percentage, start, stop = sys.argv[1:]
+setting, constant_use, source, target, random_seed, train_percentage, start, stop = sys.argv[1:]
 random_seed = int(random_seed)
 train_percentage = float(train_percentage)
 start = int(start)
 stop = int(stop)
-constant_use = 'False'
+# constant_use = 'False'
 
 # if static_use == "True":
 #   # Use non-zero value of penalty
@@ -81,10 +81,10 @@ else:
     name = "{}-{}-{}".format(target, random_seed, train_percentage)
 
 # Seasonal constant constraints
-# if constant_use == 'True':
-#   T_constant = np.ones(stop-start).reshape(-1 , 1)
-# else:
-#   T_constant = None
+if constant_use == 'True':
+  T_constant = np.ones(stop-start).reshape(-1 , 1)
+else:
+  T_constant = None
 # End
 
 directory = os.path.expanduser('~/git/scalable-nilm/aaai18/predictions/HBAS/TF-all/{}/{}'.format(setting, constant_use))
@@ -96,11 +96,11 @@ if os.path.exists(filename):
     print("File already exists. Quitting.")
 
 def multiply_HBAT(H, B, A, T):
-        return np.einsum('mh, hn, ns, st ->mnt', H, B, A, T)
+        return np.einsum('mh, hn, ns, ts ->mnt', H, B, A, T)
 
 def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, num_season_factors_cv,num_home_factors_cv, B_source, A_source):
     # overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv = param
-    print num_iterations_cv, num_season_factors_cv,num_home_factors_cv
+    # print num_iterations_cv, num_season_factors_cv,num_home_factors_cv
     inner_kf = KFold(n_splits=2)
     pred_inner = {}
     for train_inner, test_inner in inner_kf.split(overall_df_inner):
@@ -135,8 +135,10 @@ def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, n
                                                                             num_iter = num_iterations_cv,
                                                                             lr = learning_rate_cv, 
                                                                             B_known = B_source,
-                                                                            A_known = A_source)
+                                                                            A_known = A_source,
+                                                                            T_known = T_constant)
 
+        # print "After learning"
         HBAT = multiply_HBAT(H, B, A, T)
         for appliance in APPLIANCES_ORDER:
             if appliance not in pred_inner:
@@ -166,6 +168,7 @@ def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, n
     for appliance in appliance_to_weight:
         err_weight[appliance] = err[appliance]*contri[target][appliance]
     mean_err = pd.Series(err_weight).sum()
+    # print num_home_factors_cv,num_season_factors_cv,num_iterations_cv, learning_rate_cv, mean_err
     # error[num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = mean_err
     return mean_err
 
@@ -230,7 +233,7 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
     # Parallel part
     results = []
     cpus = mp.cpu_count()
-    pool = mp.Pool()
+    pool = mp.Pool(64)
     for learning_rate_cv in [0.1,0.5, 1]:
         for num_iterations_cv in [1300, 700, 100][:]:
             for num_season_factors_cv in range(2, 5)[:]:
@@ -297,7 +300,8 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
                                                                         num_iter = best_num_iterations,
                                                                         lr = best_learning_rate, 
                                                                         B_known = B_source,
-                                                                        A_known = A_source)
+                                                                        A_known = A_source,
+                                                                        T_known = T_constant)
 
 
     HBAT = multiply_HBAT(H, B, A, T)
