@@ -103,24 +103,35 @@ L = get_L(static)
 
 # In[58]:
 
-tensor_copy = agg_tensor.copy()
-H_agg, A_agg, T_agg, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy,
-                                                            L,
+tensor_copy = agg_source.copy()
+H_source_agg, A_source_agg, T_source_agg, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy,
+                                                            source_L,
                                                           a,
                                                           b,
                                                           num_iter=3000,
                                                           lr=0.1, dis=True,
                                                           lam=0,
                                                           T_known=T_constant)
+
+tensor_copy = agg_target.copy()
+H_target_agg, A_target_agg, T_target_agg, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy,
+                                                            target_L,
+                                                          a,
+                                                          b,
+                                                          num_iter=3000,
+                                                          lr=0.1, dis=True,
+                                                          lam=0, A_known=A_source_agg,
+                                                          T_known=T_constant)
+H_agg = np.r_[H_source_agg, H_target_agg]
 
 
 # # Use all readings to learn Home factors
 
 # In[59]:
 
-tensor_copy = all_tensor.copy()
-H_all, A_all, T_all, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy,
-                                                            L,
+tensor_copy = source_tensor.copy()
+H_source_all, A_source_all, T_source_all, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy,
+                                                            source_L,
                                                           a,
                                                           b,
                                                           num_iter=3000,
@@ -128,6 +139,16 @@ H_all, A_all, T_all, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, ten
                                                           lam=0,
                                                           T_known=T_constant)
 
+tensor_copy = target_tensor.copy()
+H_target_all, A_target_all, T_target_all, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy,
+                                                            target_L,
+                                                          a,
+                                                          b,
+                                                          num_iter=3000,
+                                                          lr=0.1, dis=True,
+                                                          lam=0, A_known=A_source_all,
+                                                          T_known=T_constant)
+H_all = np.r_[H_source_all, H_target_all]
 
 # In[60]:
 
@@ -139,12 +160,12 @@ x2 = {}
 # for home factors learnt from aggregate readings
 X[0] = H_agg.copy()
 X[0] = X[0]/np.max(X[0])
-y_pred[0] = KMeans(n_clusters=5, random_state=0).fit_predict(X[0][:, :12])
+y_pred[0] = KMeans(n_clusters=10, random_state=0).fit_predict(X[0][:, :12])
 x1[0], x2[0] = (-np.var(X[0], axis=0)).argsort()[:2]
 # for home factors learnt from all readings
 X[1] = H_all.copy()
 X[1] = X[1]/np.max(X[1])
-y_pred[1] = KMeans(n_clusters=5, random_state=0).fit_predict(X[1][:, :12])
+y_pred[1] = KMeans(n_clusters=10, random_state=0).fit_predict(X[1][:, :12])
 x1[1], x2[1] = (-np.var(X[1], axis=0)).argsort()[:2]
 
 
@@ -252,7 +273,7 @@ kf = KFold(n_splits=n_splits)
 
 for random_seed in range(5):
     print "random seed: ", random_seed
-    for train_percentage in range(10, 100, 20):
+    for train_percentage in range(10, 100, 10):
         print "training percentage: ", train_percentage
         rd = 0
         for train_max, test in kf.split(target_df):
