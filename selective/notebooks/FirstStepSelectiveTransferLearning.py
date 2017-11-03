@@ -33,7 +33,7 @@ def un_normalize(x, maximum, minimum):
 
 import sys
 from degree_days import dds
-case=2
+case = 2
 a = 3
 b = 3
 source = 'Austin'
@@ -163,16 +163,12 @@ source_inter_index = list(set(source_agg_index).intersection(source_all_index))
 source_inter_sub_tensor = source_tensor[source_inter_index]
 
 
-# In[122]:
-
-print "agg subset cluster: ", target_agg_cluster
-print "all subset cluster: ", target_all_cluster
-print "agg subset size: ", len(source_agg_index)
-print "all subset size: ", len(source_all_index)
-print "intersection size: ", len(set(source_agg_index).intersection(source_all_index))
-
-
-# In[123]:
+source_agg_sub_static = source_static[source_agg_index]
+source_agg_sub_L = get_L(source_agg_sub_static)
+source_all_sub_static = source_static[source_all_index]
+source_all_sub_L = get_L(source_all_sub_static)
+source_inter_sub_static = source_static[source_inter_index]
+source_inter_sub_L = get_L(source_inter_sub_static)
 
 tensor_copy = source_tensor.copy()
 H_all, A_all, T_all, Hs_all, As_all, Ts_all, HATs_all, costs_all = learn_HAT_adagrad_graph(case, tensor_copy,
@@ -185,22 +181,7 @@ H_all, A_all, T_all, Hs_all, As_all, Ts_all, HATs_all, costs_all = learn_HAT_ada
                                                           T_known=T_constant)
 
 
-# In[79]:
-
-source_agg_sub_static = source_static[source_agg_index]
-source_agg_sub_L = get_L(source_agg_sub_static)
-source_all_sub_static = source_static[source_all_index]
-source_all_sub_L = get_L(source_all_sub_static)
-source_inter_sub_static = source_static[source_inter_index]
-source_inter_sub_L = get_L(source_inter_sub_static)
-
-
-# In[80]:
-
-
 tensor_copy = source_all_sub_tensor.copy()
-print tensor_copy.shape
-print len(source_all_index)
 H_sub_all, A_sub_all, T_sub_all, Hs_sub_all, As_sub_all, Ts_sub_all, HATs_sub_all, costs_sub_all = learn_HAT_adagrad_graph(
                                                             case, tensor_copy,
                                                             source_all_sub_L,
@@ -210,10 +191,6 @@ H_sub_all, A_sub_all, T_sub_all, Hs_sub_all, As_sub_all, Ts_sub_all, HATs_sub_al
                                                           lr=0.1, dis=True,
                                                           lam=0,
                                                           T_known=T_constant)
-
-
-
-# In[81]:
 
 
 tensor_copy = source_agg_sub_tensor.copy()
@@ -227,6 +204,7 @@ H_sub_agg, A_sub_agg, T_sub_agg, Hs_sub_agg, As_sub_agg, Ts_sub_agg, HATs_sub_ag
                                                           lam=0,
                                                           T_known=T_constant)
 
+
 tensor_copy = source_inter_sub_tensor.copy()
 H_sub_inter, A_sub_inter, T_sub_inter, Hs_sub_inter, As_sub_inter, Ts_sub_inter, HATs_sub_inter, costs_sub_inter = learn_HAT_adagrad_graph(
                                                         case, tensor_copy,
@@ -238,8 +216,6 @@ H_sub_inter, A_sub_inter, T_sub_inter, Hs_sub_inter, As_sub_inter, Ts_sub_inter,
                                                           lam=0,
                                                           T_known=T_constant)
 
-
-# In[82]:
 
 from scipy.optimize import nnls
 
@@ -406,6 +382,7 @@ for random_seed in range(5):
         out_sub_agg[random_seed][appliance] = {}
         out_sub_inter[random_seed][appliance] = {}
         for f in range(10,110,20):
+
             s = pd.concat(pred_all[random_seed][appliance][f]).loc[target_df.index]
             if appliance=="hvac":
                 out_all[random_seed][appliance][f] = compute_rmse_fraction(appliance,s[range(4, 10)],'SanDiego')[2]
@@ -431,13 +408,6 @@ for random_seed in range(5):
                 out_sub_inter[random_seed][appliance][f] = compute_rmse_fraction(appliance, s,'SanDiego')[2]
 
 
-# In[101]:
-
-mean_out_all = pd.Panel(out_all).mean(axis=0)
-mean_out_sub_all = pd.Panel(out_sub_all).mean(axis=0)
-mean_out_sub_agg = pd.Panel(out_sub_agg).mean(axis=0)
-mean_out_sub_inter = pd.Panel(out_sub_agg).mean(axis=0)
-
 import pickle
 pickle.dump(pred_all, open('./pred_all.pkl', 'w'))
 pickle.dump(pred_sub_all, open('./pred_sub_all.pkl', 'w'))
@@ -447,72 +417,3 @@ pickle.dump(out_all, open('./out_all.pkl', 'w'))
 pickle.dump(out_sub_all, open('./out_sub_all.pkl', 'w'))
 pickle.dump(out_sub_agg, open('./out_sub_agg.pkl', 'w'))
 pickle.dump(out_sub_inter, open('./out_sub_inter.pkl', 'w'))
-
-
-
-
-
-
-
-
-# mean_out_all = mean_out_all.rename(columns={'dw':'dw_all', 'fridge':'fridge_all', 'hvac':'hvac_all',
-#                                              'mw':'mw_all', 'oven':"oven_all", 'wm':'wm_all'})
-# mean_out_sub_all = mean_out_sub_all.rename(columns={'dw':'dw_sub_all', 'fridge':'fridge_sub_all', 'hvac':'hvac_sub_all',
-#                                              'mw':'mw_sub_all', 'oven':"oven_sub_all", 'wm':'wm_sub_all'})
-# mean_out_sub_agg = mean_out_sub_agg.rename(columns={'dw':'dw_sub_agg', 'fridge':'fridge_sub_agg', 'hvac':'hvac_sub_agg',
-#                                              'mw':'mw_sub_agg', 'oven':"oven_sub_agg", 'wm':'wm_sub_agg'})
-
-# all_out = pd.concat([mean_out_all, mean_out_sub_all, mean_out_sub_agg], axis=1)
-
-
-# In[104]:
-
-# fig, axes = plt.subplots(nrows=1, ncols=6, figsize=(3,18))
-# ax = axes.flatten()
-# count = 0
-
-# for appliance in APPLIANCES_ORDER[1:]:
-# #     print appliance
-# #     df1 = all_out[appliance + "_all"]
-# #     df2 = all_out[appliance + "_sub_all"]
-# #     df3 = all_out[appliance + "_sub_agg"]
-    
-
-
-#     df = pd.concat([mean_out_all[appliance], mean_out_sub_all[appliance], mean_out_sub_agg[appliance]], axis=1)
-#     pd.DataFrame(df).plot(ax=ax[count],  figsize=(18, 3), marker='o', xlim=(0, 110), color=['b', 'g', 'r'])
-#     legend = ax[count].legend(loc='best', bbox_to_anchor=(1.0, 0.5))
-# #     legend.remove()
-
-# #     major_ticks = np.arange(0, 101, 20)   
-
-#     ax[count].set_xlabel("% adaptation");
-#     ax[count].locator_params(tight=False, nbins=20, axis='x')
-#     ax[count].set_ylabel('RMSE fraction')
-#     ax[count].set_title(appliance, loc="left")
-# #     ax
-#     count += 1
-# plt.legend(['all', 'sub_all', 'sub_agg'], loc='best', bbox_to_anchor=(1.1, 1), title='Training set in Austin')
-# # plt.savefig("appliance_comparison.pdf", format='pdf')
-
-
-# # In[105]:
-
-# fig, ax = plt.subplots()
-# error = (pd.DataFrame(mean_out_all)*pd.Series(contri['SanDiego'])).sum(axis=1)
-# print pd.DataFrame(mean_out_all)*pd.Series(contri['SanDiego'])
-# error.plot(label='all', marker='o', ax=ax, linewidth=0.7,  color=['b'])
-# # error.plot(marker='.',ax=ax, legend=False, linewidth=0.6)
-
-# error = (pd.DataFrame(mean_out_sub_all)*pd.Series(contri['SanDiego'])).sum(axis=1)
-# error.plot(label='sub_all',marker='o', ax=ax, linewidth=0.7, color=['g'])
-# # error.plot(marker='.',ax=ax, legend=False, linewidth=0.6)
-
-# error = (pd.DataFrame(mean_out_sub_agg)*pd.Series(contri['SanDiego'])).sum(axis=1)
-# error.plot(label='sub_agg',marker='o', ax=ax, linewidth=0.7, color=['r'])
-
-# plt.ylabel("RMSE")
-# plt.xlabel("% adaptation")
-# plt.legend(['all', 'sub_all', 'sub_agg'], loc='best', bbox_to_anchor=(1.1, 0.5), title='Training set in Austin')
-# # plt.savefig("overall_comparison.pdf", format='pdf')
-
