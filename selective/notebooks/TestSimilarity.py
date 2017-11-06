@@ -62,44 +62,34 @@ X = X/np.max(X)
 cluster = KMeans(n_clusters=10, random_state=0).fit_predict(X)
 x1, x2 = (-np.var(X, axis=0)).argsort()[:2]
 
-x1=2 
-x2=0
 
-
-# In[4]:
-
-
-import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d import Axes3D
-
-start = len(tensor)
-fig = plt.figure()
-ax = fig.add_subplot(111)
-ax.scatter(X[:, x1], X[:, x2], c = cluster, cmap='Set2', lw=0)
-plt.xlabel("H1")
-plt.ylabel("H2")
-plt.title("home factors learnt from all readings")
-
-target_cluster_id = 4
-target_cluster_idx = [i for i, j in enumerate(cluster) if j == target_cluster_id]
-# ax.scatter(X[target_cluster_idx, x1], X[target_cluster_idx, x2], color='black', marker='o', facecolors='none')
-print len(target_cluster_idx)
+# target_cluster_id = 4
+# target_cluster_idx = [i for i, j in enumerate(cluster) if j == target_cluster_id]
+# # ax.scatter(X[target_cluster_idx, x1], X[target_cluster_idx, x2], color='black', marker='o', facecolors='none')
+# print len(target_cluster_idx)
 
 
 # In[5]:
 
 
-len(target_cluster_idx)
+# len(target_cluster_idx)
 
 
 # In[6]:
 
+validate_cluster_id = 9
+validate_cluster_idx = [i for i, j in enumerate(cluster) if j == validate_cluster_id]
+test_cluster_id = 4
+test_cluster_idx = [i for i, j in enumerate(cluster) if j == test_cluster_id]
+
+
 
 import random
 random.seed(10)
-random.shuffle(target_cluster_idx)
-test_idx = target_cluster_idx[:6]
-validate_idx = target_cluster_idx[6:12]
+random.shuffle(test_cluster_idx)
+random.shuffle(validate_cluster_idx)
+test_idx = test_cluster_idx[:6]
+validate_idx = validate_cluster_idx[:6]
 test_validate_idx = np.r_[test_idx, validate_idx]
 train_idx = list(set(list(range(533))) - set(test_validate_idx))
 
@@ -220,16 +210,16 @@ for iteration in range(num_iterations):
     
 
 import pickle
-# pickle.dump(pred, open("./results/pred_max.pkl", 'w'))
-# pickle.dump(pred_validation, open("./results/pred_validation_max.pkl", 'w'))
-# pickle.dump(H, open("./results/H_max.pkl", 'w'))
-# pickle.dump(A, open("./results/A_max.pkl", 'w'))
-# pickle.dump(T, open("./results/T_max.pkl", 'w'))
-# pickle.dump(weight_matrices, open("./results/weight_matrices_max.pkl", 'w'))
+# pickle.dump(pred, open("./results/pred_max_diff.pkl", 'w'))
+# pickle.dump(pred_validation, open("./results/pred_validation_max_diff.pkl", 'w'))
+# pickle.dump(H, open("./results/H_max_diff.pkl", 'w'))
+# pickle.dump(A, open("./results/A_max_diff.pkl", 'w'))
+# pickle.dump(T, open("./results/T_max_diff.pkl", 'w'))
+# pickle.dump(weight_matrices, open("./results/weight_matrices_max_diff.pkl", 'w'))
 
-pickle.dump(pred, open("./results/pred_min.pkl", 'w'))
-pickle.dump(pred_validation, open("./results/pred_validation_min.pkl", 'w'))
-pickle.dump(H, open("./results/H_min.pkl", 'w'))
-pickle.dump(A, open("./results/A_min.pkl", 'w'))
-pickle.dump(T, open("./results/T_min.pkl", 'w'))
-pickle.dump(weight_matrices, open("./results/weight_matrices_min.pkl", 'w'))
+pickle.dump(pred, open("./results/pred_min_diff.pkl", 'w'))
+pickle.dump(pred_validation, open("./results/pred_validation_min_diff.pkl", 'w'))
+pickle.dump(H, open("./results/H_min_diff.pkl", 'w'))
+pickle.dump(A, open("./results/A_min_diff.pkl", 'w'))
+pickle.dump(T, open("./results/T_min_diff.pkl", 'w'))
+pickle.dump(weight_matrices, open("./results/weight_matrices_min_diff.pkl", 'w'))
