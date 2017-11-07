@@ -1,14 +1,3 @@
-
-# coding: utf-8
-
-# In[2]:
-
-
-
-
-# In[1]:
-
-# from degree_days import dds
 import datetime
 from sklearn.model_selection import train_test_split, KFold
 import sys
@@ -16,6 +5,7 @@ sys.path.insert(0, '../../aaai18/code/')
 from tensor_custom_core import *
 from common import *
 from create_matrix import *
+from degree_days import dds
 
 appliance_index = {appliance: APPLIANCES_ORDER.index(appliance) for appliance in APPLIANCES_ORDER}
 
@@ -28,11 +18,26 @@ import os
 def un_normalize(x, maximum, minimum):
     return (maximum - minimum) * x + minimum
 
+def get_tensor_appliance(df, dfc, appliance):
+    start, stop = 1, 13
+    energy_cols = np.array(
+        [['%s_%d' % (appliance, month) for month in range(start, stop)] ]).flatten()
+    static_cols = ['area', 'total_occupants', 'num_rooms']
+    static_df = df[static_cols]
+    static_df = static_df.div(static_df.max())
+    weather_values = np.array(dds[2014][region][start - 1:stop - 1]).reshape(-1, 1)
 
-# In[113]:
+    dfc = df.copy()
 
-import sys
-from degree_days import dds
+    df = dfc[energy_cols]
+    col_max = df.max().max()
+    col_min = df.min().min()
+    # df = (1.0 * (df - col_min)) / (col_max - col_min)
+    tensor = df.values.reshape((len(df), 1, stop - start))
+    M, N, O = tensor.shape
+    return tensor
+
+
 case = 2
 a = 3
 b = 3
@@ -59,49 +64,9 @@ else:
     T_constant = None
 
 
-# In[5]:
-
-def get_tensor_appliance(df, dfc, appliance):
-    start, stop = 1, 13
-    energy_cols = np.array(
-        [['%s_%d' % (appliance, month) for month in range(start, stop)] ]).flatten()
-    static_cols = ['area', 'total_occupants', 'num_rooms']
-    static_df = df[static_cols]
-    static_df = static_df.div(static_df.max())
-    weather_values = np.array(dds[2014][region][start - 1:stop - 1]).reshape(-1, 1)
-
-    dfc = df.copy()
-
-    df = dfc[energy_cols]
-    col_max = df.max().max()
-    col_min = df.min().min()
-    # df = (1.0 * (df - col_min)) / (col_max - col_min)
-    tensor = df.values.reshape((len(df), 1, stop - start))
-    M, N, O = tensor.shape
-    return tensor
-
-
-# In[6]:
-
 agg_target = get_tensor_appliance(target_df, target_dfc, 'aggregate')
 agg_source = get_tensor_appliance(source_df, source_dfc, 'aggregate')
-agg_tensor = np.concatenate((agg_source, agg_target), axis=0)
 
-
-# In[7]:
-
-all_tensor = np.concatenate((source_tensor, target_tensor), axis=0)
-
-
-# In[8]:
-
-static = np.r_[source_static, target_static]
-L = get_L(static)
-
-
-# # Use aggregate readings to learn Home factors
-
-# In[58]:
 
 tensor_copy = agg_source.copy()
 H_source_agg, A_source_agg, T_source_agg, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy,
@@ -119,15 +84,13 @@ H_target_agg, A_target_agg, T_target_agg, Hs, As, Ts, HATs, costs = learn_HAT_ad
                                                           a,
                                                           b,
                                                           num_iter=3000,
-                                                          lr=0.1, dis=True,
+                                                          lr=0.1, dis=False,
                                                           lam=0, A_known=A_source_agg,
                                                           T_known=T_constant)
 H_agg = np.r_[H_source_agg, H_target_agg]
 
 
-# # Use all readings to learn Home factors
 
-# In[59]:
 
 tensor_copy = source_tensor.copy()
 H_source_all, A_source_all, T_source_all, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, tensor_copy,
@@ -135,7 +98,7 @@ H_source_all, A_source_all, T_source_all, Hs, As, Ts, HATs, costs = learn_HAT_ad
                                                           a,
                                                           b,
                                                           num_iter=3000,
-                                                          lr=0.1, dis=True,
+                                                          lr=0.1, dis=False,
                                                           lam=0,
                                                           T_known=T_constant)
 
@@ -145,7 +108,7 @@ H_target_all, A_target_all, T_target_all, Hs, As, Ts, HATs, costs = learn_HAT_ad
                                                           a,
                                                           b,
                                                           num_iter=3000,
-                                                          lr=0.1, dis=True,
+                                                          lr=0.1, dis=False,
                                                           lam=0, A_known=A_source_all,
                                                           T_known=T_constant)
 H_all = np.r_[H_source_all, H_target_all]
@@ -158,26 +121,26 @@ y_pred = {}
 x1 = {}
 x2 = {}
 # for home factors learnt from aggregate readings
-X[0] = H_agg.copy()
-X[0] = X[0]/np.max(X[0])
-y_pred[0] = KMeans(n_clusters=10, random_state=0).fit_predict(X[0][:, :12])
-x1[0], x2[0] = (-np.var(X[0], axis=0)).argsort()[:2]
+X['agg'] = H_agg.copy()
+X['agg'] = X['agg']/np.max(X['agg'])
+y_pred['agg'] = KMeans(n_clusters=10, random_state=0).fit_predict(X['agg'][:, :12])
+
 # for home factors learnt from all readings
-X[1] = H_all.copy()
-X[1] = X[1]/np.max(X[1])
-y_pred[1] = KMeans(n_clusters=10, random_state=0).fit_predict(X[1][:, :12])
-x1[1], x2[1] = (-np.var(X[1], axis=0)).argsort()[:2]
+X['all'] = H_all.copy()
+X['all'] = X['all']/np.max(X['all'])
+y_pred['all'] = KMeans(n_clusters=10, random_state=0).fit_predict(X['all'][:, :12])
+# x1[1], x2[1] = (-np.var(X[1], axis=0)).argsort()[:2]
 
 
 # import Set
 # for aggregate readings
 start_index = len(source_tensor)
-target_agg_cluster = set(y_pred[0][start_index:])
-source_agg_index = [i for i, j in enumerate(y_pred[0][:start_index]) if j in target_agg_cluster]
+target_agg_cluster = set(y_pred['agg'][start_index:])
+source_agg_index = [i for i, j in enumerate(y_pred['agg'][:start_index]) if j in target_agg_cluster]
 source_agg_sub_tensor = source_tensor[source_agg_index]
 # for all readings
-target_all_cluster = set(y_pred[1][start_index:])
-source_all_index = [i for i, j in enumerate(y_pred[1][:start_index]) if j in target_all_cluster]
+target_all_cluster = set(y_pred['all'][start_index:])
+source_all_index = [i for i, j in enumerate(y_pred['all'][:start_index]) if j in target_all_cluster]
 source_all_sub_tensor = source_tensor[source_all_index]
 # for intersection
 source_inter_index = list(set(source_agg_index).intersection(source_all_index))
@@ -197,7 +160,7 @@ H_all, A_all, T_all, Hs_all, As_all, Ts_all, HATs_all, costs_all = learn_HAT_ada
                                                           a,
                                                           b,
                                                           num_iter=3000,
-                                                          lr=0.1, dis=True,
+                                                          lr=0.1, dis=False,
                                                           lam=0,
                                                           T_known=T_constant)
 
@@ -209,7 +172,7 @@ H_sub_all, A_sub_all, T_sub_all, Hs_sub_all, As_sub_all, Ts_sub_all, HATs_sub_al
                                                           a,
                                                           b,
                                                           num_iter=3000,
-                                                          lr=0.1, dis=True,
+                                                          lr=0.1, dis=False,
                                                           lam=0,
                                                           T_known=T_constant)
 
@@ -221,7 +184,7 @@ H_sub_agg, A_sub_agg, T_sub_agg, Hs_sub_agg, As_sub_agg, Ts_sub_agg, HATs_sub_ag
                                                           a,
                                                           b,
                                                           num_iter=3000,
-                                                          lr=0.1, dis=True,
+                                                          lr=0.1, dis=False,
                                                           lam=0,
                                                           T_known=T_constant)
 
@@ -233,7 +196,7 @@ H_sub_inter, A_sub_inter, T_sub_inter, Hs_sub_inter, As_sub_inter, Ts_sub_inter,
                                                           a,
                                                           b,
                                                           num_iter=3000,
-                                                          lr=0.1, dis=True,
+                                                          lr=0.1, dis=False,
                                                           lam=0,
                                                           T_known=T_constant)
 
