@@ -1,6 +1,6 @@
 """
 
-This module saves the A matrix learnt using P = HAS, for various
+This module saves the A matrix learnt using P = HAS in parallel, for various
 combinations of parameters, such as number of iterations,
 number of season and home factors, Lambda
 

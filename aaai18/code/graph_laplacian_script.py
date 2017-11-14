@@ -1,8 +1,7 @@
 from create_matrix import create_matrix_region_appliance_year
 from subprocess import Popen
 import os
-# region = "Austin"
-# year = 2014
+
 import delegator
 
 # Enter your username on the cluster
@@ -23,12 +22,12 @@ import time
 
 
 for setting in ['normal', 'transfer']:
-	for case in [4]:
-		for constant_use in ['True']:
-			for static_use in ['False']:
-				for source in ['SanDiego']:
-					for target in ['Austin']:
-						for random_seed in range(5):
+	for case in [2, 4]:
+		for constant_use in ['True', 'False']:
+			for static_use in ['True', 'False']:
+				for source in ['Austin']:
+					for target in ['SanDiego']:
+						for random_seed in range(10):
 							for train_percentage in [6,8,9,10,15,20,30,40,50,60,70,80,90,100]:
 								OFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}.out".format(SLURM_OUT, setting, case, constant_use, static_use, source, target, random_seed, train_percentage)
 								EFILE = "{}/{}-{}-{}-{}-{}-{}-{}-{}.err".format(SLURM_OUT, setting, case, constant_use, static_use, source, target, random_seed, train_percentage)

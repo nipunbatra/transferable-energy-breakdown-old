@@ -1,30 +1,35 @@
 """
-This module computes results for transfer learning
+This module computes results for transfer learning with parallel
+It will used all the cpu cores to compute the nested cross validation
+The number of cores can be modifies in line 228: pool = mp.Pool()
 
->>>python graph_laplacian.py setting case static_use source target random_seed train_percentage
-setting: transfer or normal
-case: 1, 2, 3, 4; 2 is for our proposed approach, 4 is for standard TF
-static_use: "True" or "False"- If False, we don't use static household properties 
-and the corresponding laplacian penalty term is set to 0
-constant_use: "True" or "False" - If True, we add the constraint that one column of seasonal factors to be 1.
-source:
-target:
-random_seed:
-train_percentage:
-
+>>>python graph_laplacian.py setting case constant_use static_use source target random_seed train_percentage start stop
+         setting: transfer or normal
+            case: 1, 2, 3, 4; 2 is for our proposed approach, 4 is for standard TF
+      static_use: "True" or "False"
+                  - If False, we don't use static household properties and the corresponding laplacian penalty term is set to 0
+    constant_use: "True" or "False" 
+                  - If True, we add the constraint that one column of seasonal factors to be 1.
+          source: Source Domain, 'Austin' for example
+          target: Target Domain, 'SanDiego' for example
+     random_seed: Random seed for selecting the adaptation homes
+train_percentage: Training percentage of adaptation homes
+           start: Starting from [start]th month
+            stop: Stop at [stop]th month
 NB: Prediction region is always called target. So, if we are doing n
 normal learning on SD, we don't care about source, but target will be SD
 
 Example:
-# Transfer learning from Austin -> SD, case 2, 10% data used, 0th random seed, static_data used
->>> python graph_laplacian.py transfer 2 True Austin SanDiego 0 10
+# Transfer learning from Austin -> SD, case 2, 10% data used, 0th random seed, static_data used, constant seasonal factor used, from January to December
+>>> python graph_laplacian.py transfer 2 True True Austin SanDiego 0 10 1 13
 
-# Normal training in SD, case 2, 10% data used, 0th random seed, static data used
->>> python graph_laplacian.py normal 2 True None SanDiego 0 10
+# Normal training in SD, case 2, 10% data used, 0th random seed, static data used. constant seasonal factor used, from May to October
+>>> python graph_laplacian.py normal 2 True True None SanDiego 0 10 5 11
 
 TODO: mention the objective being solved here
 
 """
+
 
 import datetime
 from sklearn.model_selection import train_test_split, KFold
@@ -90,7 +95,6 @@ if os.path.exists(filename):
 
 
 def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, num_season_factors_cv,num_home_factors_cv, lam_cv, A_source):
-	# overall_df_inner, num_iterations_cv, num_season_factors_cv, num_home_factors_cv, lam_cv = param
 	print num_iterations_cv, num_season_factors_cv,num_home_factors_cv,lam_cv
 	inner_kf = KFold(n_splits=2)
 	pred_inner = {}
@@ -98,11 +102,6 @@ def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, n
 
 		train_ix_inner = overall_df_inner.index[train_inner]
 		test_ix_inner = overall_df_inner.index[test_inner]
-
-		# H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
-		#                                                                                 num_home_factors_cv, num_season_factors_cv, 
-		#                                                                                 num_iter=num_iterations_cv, lr=1, dis=False, 
-		#                                                                                 lam=lam_cv, T_known = np.ones(12).reshape(-1, 1))
 
 		train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
 		df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[train_test_ix_inner]
@@ -156,7 +155,6 @@ def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, n
 	for appliance in appliance_to_weight:
 		err_weight[appliance] = err[appliance]*contri[target][appliance]
 	mean_err = pd.Series(err_weight).sum()
-	# error[num_iterations_cv][num_season_factors_cv][num_home_factors_cv][lam_cv] = mean_err
 	return mean_err
 
 pred = {}

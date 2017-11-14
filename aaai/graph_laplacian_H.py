@@ -98,11 +98,6 @@ def compute_inner_error(overall_df_inner, learning_rate_cv, num_iterations_cv, n
 		train_ix_inner = overall_df_inner.index[train_inner]
 		test_ix_inner = overall_df_inner.index[test_inner]
 
-		# H_source, A_source, T_source, Hs, As, Ts, HATs, costs = learn_HAT_adagrad_graph(case, source_tensor, source_L, 
-		#                                                                                 num_home_factors_cv, num_season_factors_cv, 
-		#                                                                                 num_iter=num_iterations_cv, lr=1, dis=False, 
-		#                                                                                 lam=lam_cv, T_known = np.ones(12).reshape(-1, 1))
-
 		train_test_ix_inner = np.concatenate([test_ix_inner, train_ix_inner])
 		df_t_inner, dfc_t_inner = target_df.loc[train_test_ix_inner], target_dfc.loc[train_test_ix_inner]
 		tensor_inner = get_tensor(df_t_inner)

@@ -1,26 +1,28 @@
 """
 This module computes results for transfer learning
 
->>>python graph_laplacian.py setting case static_use source target random_seed train_percentage
-setting: transfer or normal
-case: 1, 2, 3, 4; 2 is for our proposed approach, 4 is for standard TF
-static_use: "True" or "False"- If False, we don't use static household properties 
-and the corresponding laplacian penalty term is set to 0
-constant_use: "True" or "False" - If True, we add the constraint that one column of seasonal factors to be 1.
-source:
-target:
-random_seed:
-train_percentage:
-
+>>>python graph_laplacian.py setting case constant_use static_use source target random_seed train_percentage start stop
+         setting: transfer or normal
+            case: 1, 2, 3, 4; 2 is for our proposed approach, 4 is for standard TF
+      static_use: "True" or "False"
+                  - If False, we don't use static household properties and the corresponding laplacian penalty term is set to 0
+    constant_use: "True" or "False" 
+                  - If True, we add the constraint that one column of seasonal factors to be 1.
+          source: Source Domain, 'Austin' for example
+          target: Target Domain, 'SanDiego' for example
+     random_seed: Random seed for selecting the adaptation homes
+train_percentage: Training percentage of adaptation homes
+           start: Starting from [start]th month
+            stop: Stop at [stop]th month
 NB: Prediction region is always called target. So, if we are doing n
 normal learning on SD, we don't care about source, but target will be SD
 
 Example:
-# Transfer learning from Austin -> SD, case 2, 10% data used, 0th random seed, static_data used
->>> python graph_laplacian.py transfer 2 True Austin SanDiego 0 10
+# Transfer learning from Austin -> SD, case 2, 10% data used, 0th random seed, static_data used, constant seasonal factor used, from January to December
+>>> python graph_laplacian.py transfer 2 True True Austin SanDiego 0 10 1 13
 
-# Normal training in SD, case 2, 10% data used, 0th random seed, static data used
->>> python graph_laplacian.py normal 2 True None SanDiego 0 10
+# Normal training in SD, case 2, 10% data used, 0th random seed, static data used. constant seasonal factor used, from May to October
+>>> python graph_laplacian.py normal 2 True True None SanDiego 0 10 5 11
 
 TODO: mention the objective being solved here
 
@@ -101,7 +103,6 @@ for outer_loop_iteration, (train_max, test) in enumerate(kf.split(target_df)):
 	if train_percentage == 100:
 		train = train_max
 		train_ix = target_df.index[train]
-		# print("Train set {}".format(train_ix.values))
 		test_ix = target_df.index[test]
 	else:
 		# Sample `train_percentage` homes
