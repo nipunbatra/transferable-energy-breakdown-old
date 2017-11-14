@@ -105,10 +105,10 @@ def cost_graph_laplacian(H, A, T, L, E_np_masked, lam, weight_matrix, case):
 def learn_HAT_adagrad_graph(case, tensor, L, num_home_factors, num_season_factors, weight_matrix, num_iter=2000, lr=0.01, dis=False,
                             lam=1, random_seed=0, eps=1e-8, A_known = None, T_known = None):
     np.random.seed(random_seed)
-    if L == 0:
-        cost = cost_abs
-    else:
+    if L is not None:
         cost = cost_graph_laplacian
+    else:
+        cost = cost_abs
     
     args_num=[0,1,2]
     mg = multigrad(cost, argnums=args_num)
