@@ -18,10 +18,11 @@ def multiply_case(H, A, T, case):
     return HAT
 
 
-def cost_abs(H, A, T, E_np_masked, case):
+def cost_abs(H, A, T, L, E_np_masked, lam, weight_matrix, case):
     HAT = multiply_case(H, A, T, case)
     mask = ~np.isnan(E_np_masked)
-    error = (HAT - E_np_masked)[mask].flatten()
+    # error = (HAT - E_np_masked)[mask].flatten()
+    error = np.multiply((HAT - E_np_masked), weight_matrix)[mask].flatten()
     return np.sqrt((error ** 2).mean())
 
 def cost_fraction(H, A, T, E_np_masked, case):
@@ -104,7 +105,10 @@ def cost_graph_laplacian(H, A, T, L, E_np_masked, lam, weight_matrix, case):
 def learn_HAT_adagrad_graph(case, tensor, L, num_home_factors, num_season_factors, weight_matrix, num_iter=2000, lr=0.01, dis=False,
                             lam=1, random_seed=0, eps=1e-8, A_known = None, T_known = None):
     np.random.seed(random_seed)
-    cost = cost_graph_laplacian
+    if L == 0:
+        cost = cost_abs
+    else:
+        cost = cost_graph_laplacian
     
     args_num=[0,1,2]
     mg = multigrad(cost, argnums=args_num)
