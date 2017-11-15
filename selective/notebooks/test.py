@@ -18,9 +18,6 @@ import os
 def un_normalize(x, maximum, minimum):
     return (maximum - minimum) * x + minimum
 
-
-# In[113]:
-
 import sys
 from degree_days import dds
 case = 2

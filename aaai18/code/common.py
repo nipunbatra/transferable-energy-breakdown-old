@@ -2,10 +2,27 @@ from sklearn.metrics import mean_squared_error
 
 from create_matrix import *
 
+def get_tensor_appliance(df, appliance):
+    start, stop = 1, 13
+    energy_cols = np.array(
+        [['%s_%d' % (appliance, month) for month in range(start, stop)] ]).flatten()
+    static_cols = ['area', 'total_occupants', 'num_rooms']
+    static_df = df[static_cols]
+    static_df = static_df.div(static_df.max())
+    # weather_values = np.array(dds[2014][region][start - 1:stop - 1]).reshape(-1, 1)
+    dfc = df.copy()
+    df = dfc[energy_cols]
+    col_max = df.max().max()
+    col_min = df.min().min()
+    # df = (1.0 * (df - col_min)) / (col_max - col_min)
+    tensor = df.values.reshape((len(df), 1, stop - start))
+    M, N, O = tensor.shape
+    return tensor
 
 def get_tensor(df, start=1, stop=13):
 	# start, stop = 1, 13
 	energy_cols = np.array(
+		
 		[['%s_%d' % (appliance, month) for month in range(start, stop)] for appliance in APPLIANCES_ORDER]).flatten()
 
 	dfc = df.copy()
